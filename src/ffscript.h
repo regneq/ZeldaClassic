@@ -135,6 +135,9 @@ void do_loadnpc_by_script_uid(const bool v);
 void do_loaditem_by_script_uid(const bool v);
 void do_loadlweapon_by_script_uid(const bool v);
 void do_loadeweapon_by_script_uid(const bool v);
+void RunItemScript(const bool v);
+
+void do_warp();
 //int do_get_internal_uid
 
     //virtual ~FFScript();
@@ -1545,6 +1548,7 @@ enum ASM_DEFINE
 	FXZAPV,
 	GREYSCALER,
 	GREYSCALEV,
+	RUNITEMSCRIPT,
 		
 	NUMCOMMANDS           //0x013B
 };

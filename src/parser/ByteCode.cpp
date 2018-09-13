@@ -1660,6 +1660,7 @@ string VarArgument::toString()
 	case DEBUGD: return "DEBUGD";
 	case GETPIXEL: return "GETPIXEL";
 	case DOUNTYPE: return "DOUNTYPE";
+	//case RUNITEMSCRIPT: return "RUNITEMSCRIPT";
 	
     default:
     {
@@ -2259,6 +2260,11 @@ string OGetDMapMusicFilename::toString()
 string OGetDMapMusicTrack::toString()
 {
     return "GETMUSICTRACK " + getArgument()->toString();
+}
+
+string ORunItemScript::toString()
+{
+    return "RUNITEMSCRIPT " + getArgument()->toString();
 }
 
 // Audio->

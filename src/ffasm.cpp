@@ -694,6 +694,7 @@ script_command command_list[NUMCOMMANDS+1]=
     
     { "GREYSCALER",             1,   0,   0,   0},
     { "GREYSCALEV",             1,   1,   0,   0},
+    { "RUNITEMSCRIPT",       1,   0,   0,   0},
     { "",                    0,   0,   0,   0}
 };
 
@@ -1677,6 +1678,7 @@ script_variable variable_list[]=
 	{"DEBUGD", DEBUGD, 0, 0 },
 	{"GETPIXEL", GETPIXEL, 0, 0 },
 	{"DOUNTYPE", DOUNTYPE, 0, 0 },
+	
 	
 	{ " ",                       -1,             0,             0 }
 };

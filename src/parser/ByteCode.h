@@ -2596,6 +2596,17 @@ namespace ZScript
 		}
 	};
 
+	class ORunItemScript : public UnaryOpcode
+	{
+	public:
+		ORunItemScript(Argument *A) : UnaryOpcode(A) {}
+		string toString();
+		Opcode *clone()
+		{
+			return new ORunItemScript(a->clone());
+		}
+	};
+
 	class OSetDMapEnhancedMusic : public Opcode
 	{
 	public:
