@@ -5734,7 +5734,7 @@ void register_used_tiles()
     
     for(int u=0; u<4; u++)
     {
-        for(int t=zc_max(misc.icons[u],0); t<zc_min(misc.icons[u]+1,NEWMAXTILES); ++t)
+        for(int t=zc_max(misc.new_icons[u],0); t<zc_min(misc.new_icons[u]+1,NEWMAXTILES); ++t)
         {
             used_tile_table[t]=true;
         }
@@ -6764,14 +6764,14 @@ bool copy_tiles_united(int &tile,int &tile2,int &copy,int &copycnt, bool rect, b
                     
                     if(rect)
                     {
-                        i=move_intersection_sr(misc.icons[u], misc.icons[u], selection_left, selection_top, selection_width, selection_height);
+                        i=move_intersection_sr(misc.new_icons[u], misc.new_icons[u], selection_left, selection_top, selection_width, selection_height);
                     }
                     else
                     {
-                        i=move_intersection_ss(misc.icons[u], misc.icons[u], selection_first, selection_last);
+                        i=move_intersection_ss(misc.new_icons[u], misc.new_icons[u], selection_first, selection_last);
                     }
                     
-                    if((i!=ti_none)&&(misc.icons[u]!=0))
+                    if((i!=ti_none)&&(misc.new_icons[u]!=0))
                     {
                         if(i==ti_broken || q==0)
                         {
@@ -7534,7 +7534,7 @@ bool copy_tiles_united(int &tile,int &tile2,int &copy,int &copycnt, bool rect, b
             {
                 if(move_game_icons_list[u])
                 {
-                    misc.icons[u]+=diff;
+                    misc.new_icons[u]+=diff;
                 }
             }
             
@@ -11871,7 +11871,7 @@ int onIcons()
     
     for(int i=0; i<4; i++)
     {
-        icon_dlg[i+2].d1 = misc.icons[i];
+        icon_dlg[i+2].d1 = misc.new_icons[i];
         icon_dlg[i+2].fg = i+6;
         load_cset(pal, i+6, pSprite(i+spICON1));
     }
@@ -11887,9 +11887,9 @@ int onIcons()
     {
         for(int i=0; i<4; i++)
         {
-            if(misc.icons[i] != icon_dlg[i+2].d1)
+            if(misc.new_icons[i] != icon_dlg[i+2].d1)
             {
-                misc.icons[i] = icon_dlg[i+2].d1;
+                misc.new_icons[i] = icon_dlg[i+2].d1;
                 saved=false;
             }
         }

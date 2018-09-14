@@ -172,7 +172,7 @@ enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_2
 #define V_HEADER           3
 #define V_RULES           14
 #define V_STRINGS          6
-#define V_MISC             9
+#define V_MISC             10
 #define V_TILES            2 //2 will be either unsigned short, or long
 #define V_COMBOS           11
 #define V_CSETS            4
@@ -2713,6 +2713,7 @@ struct miscQdata
     long questmisc[32]; //Misc init values for the user. Used by scripts.
     char questmisc_strings[32][128]; //needs to be memset then data allocated from IntiData
 	//We probably want a way to access these in ZScript by their string, or to get the strings stored.
+	int new_icons[4];
 };
 
 #define MFORMAT_MIDI 0

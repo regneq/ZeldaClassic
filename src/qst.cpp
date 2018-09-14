@@ -4037,8 +4037,8 @@ int readmisccolors(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keep
     {
 	al_trace("Copying misc.colors.*tile to misc.colors.new_*tile.\n");
 	temp_misc.colors.new_triforce_tile = temp_misc.colors.triforce_tile;
-	    al_trace("Old triforce tile: %d\n", temp_misc.colors.triforce_tile);
-	    al_trace("New triforce tile: %d\n", temp_misc.colors.new_triforce_tile);
+	    //al_trace("Old triforce tile: %d\n", temp_misc.colors.triforce_tile);
+	    //al_trace("New triforce tile: %d\n", temp_misc.colors.new_triforce_tile);
     }
     if ( s_version >= 3 ) //expanded tile pages to 825
     {
@@ -4050,8 +4050,8 @@ int readmisccolors(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keep
     else
     {
 	temp_misc.colors.new_triframe_tile = temp_misc.colors.triframe_tile;
-	    al_trace("Old triframe tile: %d\n", temp_misc.colors.triframe_tile);
-	    al_trace("New triframe tile: %d\n", temp_misc.colors.new_triframe_tile);
+	    //al_trace("Old triframe tile: %d\n", temp_misc.colors.triframe_tile);
+	    //al_trace("New triframe tile: %d\n", temp_misc.colors.new_triframe_tile);
 	    
     }
     if ( s_version >= 3 ) //expanded tile pages to 825
@@ -4064,8 +4064,8 @@ int readmisccolors(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keep
     else
     {
 	temp_misc.colors.new_overworld_map_tile = temp_misc.colors.overworld_map_tile;    
-	    al_trace("Old overworld map tile: %d\n", temp_misc.colors.overworld_map_tile);
-	    al_trace("New overworld map tile: %d\n", temp_misc.colors.new_overworld_map_tile);
+	    //al_trace("Old overworld map tile: %d\n", temp_misc.colors.overworld_map_tile);
+	    //al_trace("New overworld map tile: %d\n", temp_misc.colors.new_overworld_map_tile);
 	    
     }
     if ( s_version >= 3 ) //expanded tile pages to 825
@@ -4078,8 +4078,8 @@ int readmisccolors(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keep
     else
     {
 	temp_misc.colors.new_dungeon_map_tile = temp_misc.colors.dungeon_map_tile;    
-	al_trace("Old dungeon map tile: %d\n", temp_misc.colors.dungeon_map_tile);
-	    al_trace("New dungeon map tile: %d\n", temp_misc.colors.new_dungeon_map_tile);
+	//al_trace("Old dungeon map tile: %d\n", temp_misc.colors.dungeon_map_tile);
+	    //al_trace("New dungeon map tile: %d\n", temp_misc.colors.new_dungeon_map_tile);
     }
     if ( s_version >= 3 ) //expanded tile pages to 825
     {
@@ -4091,8 +4091,8 @@ int readmisccolors(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keep
     else
     {
 	temp_misc.colors.new_blueframe_tile = temp_misc.colors.blueframe_tile;
-	al_trace("Old blueframe tile: %d\n", temp_misc.colors.blueframe_tile);
-	    al_trace("New blueframe tile: %d\n", temp_misc.colors.new_blueframe_tile);
+	//al_trace("Old blueframe tile: %d\n", temp_misc.colors.blueframe_tile);
+	    //al_trace("New blueframe tile: %d\n", temp_misc.colors.new_blueframe_tile);
     }
     if ( s_version >= 3 ) //expanded tile pages to 825
     {
@@ -4104,24 +4104,10 @@ int readmisccolors(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keep
     else
     {	    
 	temp_misc.colors.new_HCpieces_tile = temp_misc.colors.HCpieces_tile;  
-	al_trace("Old HCP tile: %d\n", temp_misc.colors.HCpieces_tile);
-	    al_trace("New HCP tile: %d\n", temp_misc.colors.new_HCpieces_tile);	    
+	//al_trace("Old HCP tile: %d\n", temp_misc.colors.HCpieces_tile);
+	    //al_trace("New HCP tile: %d\n", temp_misc.colors.new_HCpieces_tile);	    
     }
     
-    //else //expanded tile pages to 825
-    //{
-	    //al_trace("Copying misc.colors.*tile to misc.colors.new_*tile.\n");
-	//temp_misc.colors.new_triforce_tile = temp_misc.colors.triforce_tile;
-	   // al_trace("Old triforce tile: %d\n", temp_misc.colors.triforce_tile);
-	   // al_trace("New triforce tile: %d\n", temp_misc.colors.new_triforce_tile);
-	//temp_misc.colors.new_triframe_tile = temp_misc.colors.triframe_tile;
-	   // al_trace("Old triframe tile: %d\n", temp_misc.colors.triframe_tile);
-	   // al_trace("New triframe tile: %d\n", temp_misc.colors.new_triframe_tile);
-	//temp_misc.colors.new_overworld_map_tile = temp_misc.colors.overworld_map_tile;
-	//temp_misc.colors.new_dungeon_map_tile = temp_misc.colors.dungeon_map_tile;
-	//temp_misc.colors.new_blueframe_tile = temp_misc.colors.blueframe_tile;
-	//temp_misc.colors.new_HCpieces_tile = temp_misc.colors.HCpieces_tile;
-    //}
     if(keepdata==true)
     {
         memcpy(Misc, &temp_misc, sizeof(temp_misc));
@@ -4163,12 +4149,31 @@ int readgameicons(PACKFILE *f, zquestheader *, miscQdata *Misc, bool keepdata)
     
     icons=4;
     
+
     for(int i=0; i<icons; i++)
     {
         if(!p_igetw(&temp_misc.icons[i],f,true))
         {
             return qe_invalid;
         }
+    }
+    
+    if ( s_version >= 10 ) 
+    {
+	    for(int i=0; i<icons; i++)
+	    {
+		if(!p_igetl(&temp_misc.new_icons[i],f,true))
+		{
+		    return qe_invalid;
+		}
+	    }
+    }
+    else
+    {
+	    for ( int q = 0; q < 4; q++ )
+	    {
+		temp_misc.new_icons[q] = temp_misc.icons[q];
+	    }
     }
     
     if(keepdata==true)
@@ -4850,6 +4855,24 @@ int readmisc(PACKFILE *f, zquestheader *Header, miscQdata *Misc, bool keepdata)
 		if(!p_getc(&temp_misc.questmisc_strings[q][j],f,true))
                     return qe_invalid;
 	}
+    }
+    if(s_version >= 10)
+    {
+	for(int i=0; i<4; i++)
+        {
+            if(!p_igetl(&temp_misc.new_icons[i],f,true))
+            {
+                return qe_invalid;
+            }
+        }    
+    }
+    else
+    {
+	for(int i=0; i<4; i++)
+        {
+            temp_misc.new_icons[i] = temp_misc.icons[i];
+        }  
+	    
     }
     
     if(keepdata==true)

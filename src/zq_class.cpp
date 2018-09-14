@@ -6985,6 +6985,15 @@ int writegameicons(PACKFILE *f, zquestheader *Header, miscQdata *Misc)
                 new_return(5);
             }
         }
+	
+	for(int i=0; i<4; i++)
+        {
+            if(!p_iputl(Misc->new_icons[i],f))
+            {
+                new_return(6);
+            }
+        }
+        
         
         if(writecycle==0)
         {
@@ -7183,8 +7192,16 @@ int writemisc(PACKFILE *f, zquestheader *Header, miscQdata *Misc)
 		if(!p_putc(Misc->questmisc_strings[q][j],f))
                      new_return(22);
 	}
-	
-        
+	//V_MISC >= 10, expanded tile pages to 825
+        /* Game icons aren't written here?! -Z
+	for(int i=0; i<4; i++)
+        {
+            if(!p_iputl(Misc->new_icons[i],f))
+            {
+                new_return(23);
+            }
+        }  
+	*/
         if(writecycle==0)
         {
             section_size=writesize;

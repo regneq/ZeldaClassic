@@ -1939,7 +1939,7 @@ void load_game_icon_to_buffer(bool forceDefault, int index)
     
     for(int i=0; i<4; i++)
     {
-        t = QMisc.icons[i];
+        t = QMisc.new_icons[i];
         
         if(t<0 || t>=NEWMAXTILES)
         {
