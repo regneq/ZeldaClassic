@@ -6327,11 +6327,21 @@ int readweapons(PACKFILE *f, zquestheader *Header, bool keepdata)
     
     for(int i=0; i<weapons_to_read; i++)
     {
-        if(!p_igetw(&tempweapon.tile,f,true))
-        {
-            return qe_invalid;
-        }
-        
+	    //For some reason, making wpn.tile an int wrecks the display of weapon sprites int he ZQ editor. -Z
+	//if ( s_version > 6 )
+	//{
+		if(!p_igetl(&tempweapon.tile,f,true))
+		{
+		    return qe_invalid;
+		}
+	//}
+	//else
+	//{
+		if(!p_igetw(&tempweapon.tile,f,true))
+		{
+		    return qe_invalid;
+		}
+        //}
         if(!p_getc(&tempweapon.misc,f,true))
         {
             return qe_invalid;

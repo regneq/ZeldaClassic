@@ -7683,7 +7683,7 @@ int writeweapons(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<wMAX; i++)
         {
-            if(!p_iputw(wpnsbuf[i].tile,f))
+            if(!p_iputl(wpnsbuf[i].tile,f))
             {
                 new_return(6);
             }

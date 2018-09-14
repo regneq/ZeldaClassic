@@ -180,7 +180,7 @@ enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_2
 #define V_DMAPS            10
 #define V_DOORS            1
 #define V_ITEMS           36
-#define V_WEAPONS          6
+#define V_WEAPONS          7
 #define V_COLORS           2
 #define V_ICONS            1
 #define V_GRAPHICSPACK     1
@@ -1480,7 +1480,9 @@ struct wpndata
     byte type;                                                // used by certain weapons
 //  byte wpn_type;
     word script;
-//  byte exp;                                                 // not used
+	int newtile;
+//  byte exp;   
+                                              // not used
 };
 
 #define		WF_BEHIND			0x10	//Weapon renders behind other sprites
