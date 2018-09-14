@@ -7226,7 +7226,7 @@ int writeitems(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<iMax; i++)
         {
-            if(!p_iputw(itemsbuf[i].tile,f))
+            if(!p_iputl(itemsbuf[i].tile,f))
             {
                 new_return(6);
             }
@@ -7683,7 +7683,7 @@ int writeweapons(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<wMAX; i++)
         {
-            if(!p_iputw(wpnsbuf[i].tile,f))
+            if(!p_iputl(wpnsbuf[i].tile,f))
             {
                 new_return(6);
             }
@@ -8439,7 +8439,7 @@ int writecombos(PACKFILE *f, word version, word build, word start_combo, word ma
         
         for(int i=start_combo; i<start_combo+combos_used; i++)
         {
-            if(!p_iputw(combobuf[i].tile,f))
+            if(!p_iputl(combobuf[i].tile,f))
             {
                 new_return(6);
             }
@@ -8819,7 +8819,7 @@ int writestrings(PACKFILE *f, word version, word build, word start_msgstr, word 
                 return qe_invalid;
             }
             
-            if(!p_iputw(MsgStrings[i].tile,f))
+            if(!p_iputl(MsgStrings[i].tile,f))
             {
                 return qe_invalid;
             }
@@ -9322,7 +9322,7 @@ int writeguys(PACKFILE *f, zquestheader *Header)
                 new_return(7);
             }
             
-            if(!p_iputw(guysbuf[i].tile,f))
+            if(!p_iputl(guysbuf[i].tile,f))
             {
                 new_return(8);
             }
@@ -9337,7 +9337,7 @@ int writeguys(PACKFILE *f, zquestheader *Header)
                 new_return(10);
             }
             
-            if(!p_iputw(guysbuf[i].s_tile,f))
+            if(!p_iputl(guysbuf[i].s_tile,f))
             {
                 new_return(11);
             }
@@ -9352,7 +9352,7 @@ int writeguys(PACKFILE *f, zquestheader *Header)
                 new_return(13);
             }
             
-            if(!p_iputw(guysbuf[i].e_tile,f))
+            if(!p_iputl(guysbuf[i].e_tile,f))
             {
                 new_return(14);
             }

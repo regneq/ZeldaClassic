@@ -171,21 +171,21 @@ enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_2
 //Version number of the different section types
 #define V_HEADER           3
 #define V_RULES           14
-#define V_STRINGS          5
+#define V_STRINGS          6
 #define V_MISC             9
 #define V_TILES            2 //2 will be either unsigned short, or long
-#define V_COMBOS           10
+#define V_COMBOS           11
 #define V_CSETS            4
 #define V_MAPS            19
 #define V_DMAPS            10
 #define V_DOORS            1
-#define V_ITEMS           35
-#define V_WEAPONS          6
+#define V_ITEMS           36
+#define V_WEAPONS          8
 #define V_COLORS           2
 #define V_ICONS            1
 #define V_GRAPHICSPACK     1
 #define V_INITDATA        18
-#define V_GUYS            35
+#define V_GUYS            36
 #define V_MIDIS            4
 #define V_CHEATS           1
 #define V_SAVEGAME        11
@@ -1356,7 +1356,7 @@ enum
 
 struct itemdata
 {
-    word tile;
+    int tile;
     byte misc;                                                // 0000vhtf (vh:flipping, t:two hands, f:flash)
     byte csets;                                               // ffffcccc (f:flash cset, c:cset)
     byte frames;                                              // animation frame count
@@ -1472,7 +1472,7 @@ struct itemdata
 
 struct wpndata
 {
-    word tile;
+    int tile;
     byte misc;                                                // 000bvhff (vh:flipping, f:flash (1:NES, 2:BSZ))
     byte csets;                                               // ffffcccc (f:flash cset, c:cset)
     byte frames;                                              // animation frame count
@@ -1608,13 +1608,13 @@ struct guydata
 {
     dword flags;
     dword flags2;
-    word  tile;
+    int  tile;
     byte  width;
     byte  height; //0=striped, 1+=rectangular
-    word  s_tile; //secondary (additional) tile(s)
+    int  s_tile; //secondary (additional) tile(s)
     byte  s_width;
     byte  s_height;  //0=striped, 1+=rectangular
-    word  e_tile;
+    int  e_tile;
     byte  e_width;
     byte  e_height;
     
@@ -2216,7 +2216,7 @@ without needing the user to have bit precision. -Z
 
 struct newcombo
 {
-    word tile; //16 bits
+    int tile; //16 bits
     byte flip; //8 bits
     byte walk; //8 bits
     byte type; //8 bits
@@ -2422,7 +2422,7 @@ struct MsgStr
 {
     char s[MSGSIZE+1];
     word nextstring;
-    word tile;
+    int tile;
     byte cset;
     bool trans;
     byte font;

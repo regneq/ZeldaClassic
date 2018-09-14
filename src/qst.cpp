@@ -2833,11 +2833,21 @@ int readstrings(PACKFILE *f, zquestheader *Header, bool keepdata)
                 
                 tempMsgString.s[MSGSIZE]='\0';
                 
-                if(!p_igetw(&tempMsgString.tile,f,true))
-                {
-                    return qe_invalid;
-                }
-                
+		//expanded tiles
+		//if ( s_version >=6 )
+		//{
+		//	if(!p_igetl(&tempMsgString.tile,f,true))
+		//	{
+		//	    return qe_invalid;
+		//	}
+		//}
+		//else
+		//{
+			if(!p_igetw(&tempMsgString.tile,f,true))
+			{
+			    return qe_invalid;
+			}
+		//}
                 if(!p_getc(&tempMsgString.cset,f,true))
                 {
                     return qe_invalid;
@@ -4810,11 +4820,22 @@ int readitems(PACKFILE *f, word version, word build, bool keepdata, bool zgpmode
         memset(&tempitem, 0, sizeof(itemdata));
         reset_itembuf(&tempitem,i);
         
-        if(!p_igetw(&tempitem.tile,f,true))
-        {
-            return qe_invalid;
-        }
-        
+	    //expanded tiles
+	//if ( s_version>= 36 )
+	//{
+	//	if(!p_igetl(&tempitem.tile,f,true))
+	//	{
+	//	    return qe_invalid;
+	//	}
+	//}
+	//else
+	//{		
+		if(!p_igetw(&tempitem.tile,f,true))
+		{
+		    return qe_invalid;
+		}
+	//}
+		
         if(!p_getc(&tempitem.misc,f,true))
         {
             return qe_invalid;
@@ -6306,11 +6327,22 @@ int readweapons(PACKFILE *f, zquestheader *Header, bool keepdata)
     
     for(int i=0; i<weapons_to_read; i++)
     {
-        if(!p_igetw(&tempweapon.tile,f,true))
-        {
-            return qe_invalid;
-        }
-        
+	    //expanded tiles
+	//if ( s_version >= 8 )
+	//{	
+	//	if(!p_igetl(&tempweapon.tile,f,true))
+	//	{
+	//	    return qe_invalid;
+	//	}
+	//}
+	//else
+	//{
+		if(!p_igetw(&tempweapon.tile,f,true))
+		{
+			return qe_invalid;
+		}
+	//}
+	
         if(!p_getc(&tempweapon.misc,f,true))
         {
             return qe_invalid;
@@ -8889,11 +8921,21 @@ int readguys(PACKFILE *f, zquestheader *Header, bool keepdata)
                 return qe_invalid;
             }
             
-            if(!p_igetw(&(tempguy.tile),f,keepdata))
-            {
-                return qe_invalid;
-            }
-            
+	    //expanded tiles
+	    //if ( guyversion >=36 )
+	    //{
+	//	    if(!p_igetl(&(tempguy.tile),f,keepdata))
+	//	    {
+	//		return qe_invalid;
+	//	    }
+	//    }
+	//    else
+	//    {
+		    if(!p_igetw(&(tempguy.tile),f,keepdata))
+		    {
+			return qe_invalid;
+		    }
+        //    }
             if(!p_getc(&(tempguy.width),f,keepdata))
             {
                 return qe_invalid;
@@ -8903,12 +8945,21 @@ int readguys(PACKFILE *f, zquestheader *Header, bool keepdata)
             {
                 return qe_invalid;
             }
-            
-            if(!p_igetw(&(tempguy.s_tile),f,keepdata))
-            {
-                return qe_invalid;
-            }
-            
+	    //expanded tiles
+            //if ( guyversion >=36 )
+	    //{
+		//    if(!p_igetl(&(tempguy.s_tile),f,keepdata))
+		//    {
+		//	return qe_invalid;
+		//    }
+	    //}
+	    //else
+	    //{
+		    if(!p_igetw(&(tempguy.s_tile),f,keepdata))
+		    {
+			return qe_invalid;
+		    }
+            //}
             if(!p_getc(&(tempguy.s_width),f,keepdata))
             {
                 return qe_invalid;
@@ -8918,12 +8969,21 @@ int readguys(PACKFILE *f, zquestheader *Header, bool keepdata)
             {
                 return qe_invalid;
             }
-            
-            if(!p_igetw(&(tempguy.e_tile),f,keepdata))
-            {
-                return qe_invalid;
-            }
-            
+            //expanded tiles
+	    //if ( guyversion >=36 )
+	    //{
+		//    if(!p_igetl(&(tempguy.e_tile),f,keepdata))
+		//    {
+		//	return qe_invalid;
+		//    }
+	    //}
+	    //else
+	    //{
+		    if(!p_igetw(&(tempguy.e_tile),f,keepdata))
+		    {
+			return qe_invalid;
+		    }
+	    //}
             if(!p_getc(&(tempguy.e_width),f,keepdata))
             {
                 return qe_invalid;
@@ -11917,12 +11977,21 @@ int readcombos(PACKFILE *f, zquestheader *Header, word version, word build, word
     for(int i=0; i<combos_used; i++)
     {
         memset(&temp_combo,0,sizeof(temp_combo));
-        
-        if(!p_igetw(&temp_combo.tile,f,true))
-        {
-            return qe_invalid;
-        }
-        
+        //expanded tiles
+	//if ( section_version >= 11 )
+	//{
+	//	if(!p_igetl(&temp_combo.tile,f,true))
+	//	{
+	//	    return qe_invalid;
+	//	}
+	//}
+	//else
+	//{
+		if(!p_igetw(&temp_combo.tile,f,true))
+		{
+		    return qe_invalid;
+		}
+        //}
         if(!p_getc(&temp_combo.flip,f,true))
         {
             return qe_invalid;
