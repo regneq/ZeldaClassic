@@ -162,61 +162,6 @@ namespace ZScript
 	class AST
 	{
 	public:
-		// Clone a single node pointer.
-		template <class Node>
-		static Node* clone(Node* node) {return node ? node->clone() : NULL;}
-		// Clone a single node auto pointer.
-		template <class Node>
-		static std::auto_ptr<Node> clone(std::auto_ptr<Node> const& node) {
-			return node.get()
-				? std::auto_ptr<Node>(node->clone())
-				: std::auto_ptr<Node>();}
-		// Clone a vector of AST nodes.
-		template <class Node>
-		static std::vector<Node*> clone(std::vector<Node*> const& nodes)
-		{
-			std::vector<Node*> clones;
-			for (typename std::vector<Node*>::const_iterator it = nodes.begin();
-			     it != nodes.end(); ++it)
-				clones.push_back((*it)->clone());
-			return clones;
-		}	
-		// Clone a list of AST nodes.
-		template <class Node> static std::list<Node*> clone(std::list<Node*> const& nodes)
-		{
-			std::list<Node*> clones;
-			for (typename std::list<Node*>::const_iterator it = nodes.begin();
-			     it != nodes.end(); ++it)
-				clones.push_back((*it)->clone());
-			return clones;
-		}
-		// Execute a single node pointer.
-		template <class Node>
-		static void execute(Node* node, ASTVisitor& visitor, void* param = NULL)
-		{
-			if (node) node->execute(visitor, param);
-		}
-		// Execute a vector of AST nodes.
-		template <class Node>
-		static void execute(
-				std::vector<Node*> const& nodes, ASTVisitor& visitor,
-				void* param = NULL)
-		{
-			for (typename std::vector<Node*>::const_iterator it = nodes.begin();
-			     it != nodes.end(); ++it)
-				(*it)->execute(visitor, param);
-		}
-		// Execute a list of AST nodes.
-		template <class Node>
-		static void execute(
-				std::list<Node*> const& nodes, ASTVisitor& visitor,
-				void* param = NULL)
-		{
-			for (typename std::list<Node*>::const_iterator it = nodes.begin();
-			     it != nodes.end(); ++it)
-				(*it)->execute(visitor, param);
-		}
-
 		AST(Location const& location = Location::NONE);
 		virtual ~AST() {}
 		// Calls subclass's copy constructor on self.
