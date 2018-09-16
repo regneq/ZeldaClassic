@@ -131,10 +131,10 @@ namespace ZScript
 	class ASTDataType;
 
 	//////////////////////////////////////////////////////////////////////////////
-	class LocationData
+	class Location
 	{
 	public:
-		static LocationData const NONE;
+		static Location const NONE;
 
 		int first_line;
 		int last_line;
@@ -142,13 +142,13 @@ namespace ZScript
 		int last_column;
 		std::string fname;
 
-		LocationData()
+		Location()
 			: first_line(-1), last_line(-1),
 			  first_column(-1), last_column(-1),
 			  fname(curfilename)
 		{}
 
-		LocationData(YYLTYPE loc)
+		Location(YYLTYPE loc)
 			: first_line(loc.first_line), last_line(loc.last_line),
 			  first_column(loc.first_column), last_column(loc.last_column),
 			  fname(curfilename)
@@ -217,7 +217,7 @@ namespace ZScript
 				(*it)->execute(visitor, param);
 		}
 
-		AST(LocationData const& location = LocationData::NONE);
+		AST(Location const& location = Location::NONE);
 		virtual ~AST() {}
 		// Calls subclass's copy constructor on self.
 		virtual AST* clone() const = 0;
@@ -226,7 +226,7 @@ namespace ZScript
 		virtual std::string asString() const {return "unknown";}
 
 		// Filename and linenumber.
-		LocationData location;
+		Location location;
 
 		// List of expected compile error ids for this node. They are
 		// removed as they are encountered.
@@ -251,7 +251,7 @@ namespace ZScript
 	class ASTFile : public AST
 	{
 	public:
-		ASTFile(LocationData const& location = LocationData::NONE);
+		ASTFile(Location const& location = Location::NONE);
 		virtual ASTFile* clone() const {return new ASTFile(*this);}
     
 		virtual void execute(ASTVisitor& visitor, void* param = NULL);
@@ -276,13 +276,13 @@ namespace ZScript
 		enum Type {TYPE_DECIMAL, TYPE_BINARY, TYPE_HEX};
 	
 		ASTFloat(char* value, Type type,
-		         LocationData const& location = LocationData::NONE);
+		         Location const& location = Location::NONE);
 		ASTFloat(char const* value, Type type,
-		         LocationData const& location = LocationData::NONE);
+		         Location const& location = Location::NONE);
 		ASTFloat(std::string const& value, Type type,
-		         LocationData const& location = LocationData::NONE);
+		         Location const& location = Location::NONE);
 		ASTFloat(long value, Type type,
-		         LocationData const& location = LocationData::NONE);
+		         Location const& location = Location::NONE);
 		ASTFloat* clone() const {return new ASTFloat(*this);}
 	
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -298,9 +298,9 @@ namespace ZScript
 	{
 	public:
 		ASTString(const char* str,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTString(std::string const& str,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTString* clone() const {return new ASTString(*this);}
 	
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -314,10 +314,10 @@ namespace ZScript
 	{
 	public:
 		ASTSetOption(std::string const& name, ASTExprConst* expr,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTSetOption(std::string const& name,
 		             CompileOptionSetting setting,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		virtual ASTSetOption* clone() const {return new ASTSetOption(*this);}
 
 		virtual void execute(ASTVisitor& visitor, void* param = NULL);
@@ -338,7 +338,7 @@ namespace ZScript
 	class ASTStmt : public AST
 	{
 	public:
-		ASTStmt(LocationData const& location = LocationData::NONE);
+		ASTStmt(Location const& location = Location::NONE);
 		virtual ASTStmt* clone() const = 0;
 
 		bool isDisabled() const {return disabled_;}
@@ -351,7 +351,7 @@ namespace ZScript
 	class ASTBlock : public ASTStmt
 	{
 	public:
-		ASTBlock(LocationData const& location = LocationData::NONE);
+		ASTBlock(Location const& location = Location::NONE);
 		ASTBlock* clone() const {return new ASTBlock(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -364,7 +364,7 @@ namespace ZScript
 	{
 	public:
 		ASTStmtIf(ASTExpr* condition, ASTStmt* thenStatement,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTStmtIf* clone() const {return new ASTStmtIf(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -378,7 +378,7 @@ namespace ZScript
 	public:
 		ASTStmtIfElse(
 				ASTExpr* condition, ASTStmt* thenStatement, ASTStmt* elseStatement,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		ASTStmtIfElse* clone() const {return new ASTStmtIfElse(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -390,7 +390,7 @@ namespace ZScript
 	class ASTStmtSwitch : public ASTStmt
 	{
 	public:
-		ASTStmtSwitch(LocationData const& location = LocationData::NONE);
+		ASTStmtSwitch(Location const& location = Location::NONE);
 		ASTStmtSwitch* clone() const {return new ASTStmtSwitch(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -406,7 +406,7 @@ namespace ZScript
 	class ASTSwitchCases : public AST
 	{
 	public:
-		ASTSwitchCases(LocationData const& location = LocationData::NONE);
+		ASTSwitchCases(Location const& location = Location::NONE);
 		ASTSwitchCases* clone() const {return new ASTSwitchCases(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -427,7 +427,7 @@ namespace ZScript
 		           ASTExpr* test = NULL,
 		           ASTStmt* increment = NULL,
 		           ASTStmt* body = NULL,
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		ASTStmtFor* clone() const {return new ASTStmtFor(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -443,7 +443,7 @@ namespace ZScript
 	public:
 		ASTStmtWhile(ASTExpr* test = NULL,
 		             ASTStmt* body = NULL,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTStmtWhile* clone() const {return new ASTStmtWhile(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -457,7 +457,7 @@ namespace ZScript
 	public:
 		ASTStmtDo(ASTExpr* test = NULL,
 		          ASTStmt* body = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTStmtDo* clone() const {return new ASTStmtDo(*this);}
 	
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -469,7 +469,7 @@ namespace ZScript
 	class ASTStmtReturn : public ASTStmt
 	{
 	public:
-		ASTStmtReturn(LocationData const& location = LocationData::NONE);
+		ASTStmtReturn(Location const& location = Location::NONE);
 		ASTStmtReturn* clone() const {return new ASTStmtReturn(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -479,7 +479,7 @@ namespace ZScript
 	{
 	public:
 		ASTStmtReturnVal(ASTExpr* value = NULL,
-		                 LocationData const& location = LocationData::NONE);
+		                 Location const& location = Location::NONE);
 		ASTStmtReturnVal* clone() const {return new ASTStmtReturnVal(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -490,7 +490,7 @@ namespace ZScript
 	class ASTStmtBreak : public ASTStmt
 	{
 	public:
-		ASTStmtBreak(LocationData const& location = LocationData::NONE);
+		ASTStmtBreak(Location const& location = Location::NONE);
 		ASTStmtBreak* clone() const {return new ASTStmtBreak(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -499,7 +499,7 @@ namespace ZScript
 	class ASTStmtContinue : public ASTStmt
 	{
 	public:
-		ASTStmtContinue(LocationData const& location = LocationData::NONE);
+		ASTStmtContinue(Location const& location = Location::NONE);
 		ASTStmtContinue* clone() const {return new ASTStmtContinue(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -508,7 +508,7 @@ namespace ZScript
 	class ASTStmtEmpty : public ASTStmt
 	{
 	public:
-		ASTStmtEmpty(LocationData const& location = LocationData::NONE);
+		ASTStmtEmpty(Location const& location = Location::NONE);
 		ASTStmtEmpty* clone() const {return new ASTStmtEmpty(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -535,7 +535,7 @@ namespace ZScript
 			TYPE_SCRIPTTYPE
 		};
 
-		ASTDecl(LocationData const& location = LocationData::NONE);
+		ASTDecl(Location const& location = Location::NONE);
 		ASTDecl* clone() const /*override*/ = 0;
 
 		// Return the subclass id.
@@ -546,7 +546,7 @@ namespace ZScript
 	class ASTScript : public ASTDecl
 	{
 	public:
-		ASTScript(LocationData const& location = LocationData::NONE);
+		ASTScript(Location const& location = Location::NONE);
 		ASTScript* clone() const /*override*/ {return new ASTScript(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
@@ -568,7 +568,7 @@ namespace ZScript
 	{
 	public:
 		ASTImportDecl(std::string const& filename,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTImportDecl* clone() /*override*/ const {
 			return new ASTImportDecl(*this);}
     
@@ -589,7 +589,7 @@ namespace ZScript
 	class ASTFuncDecl : public ASTDecl
 	{
 	public:
-		ASTFuncDecl(LocationData const& location = LocationData::NONE);
+		ASTFuncDecl(Location const& location = Location::NONE);
 		ASTFuncDecl* clone() const /*override*/ {
 			return new ASTFuncDecl(*this);}
     
@@ -608,7 +608,7 @@ namespace ZScript
 	class ASTDataDeclList : public ASTDecl
 	{
 	public:
-		ASTDataDeclList(LocationData const& location = LocationData::NONE);
+		ASTDataDeclList(Location const& location = Location::NONE);
 		ASTDataDeclList(ASTDataDeclList const&);
 		ASTDataDeclList& operator=(ASTDataDeclList const& rhs);
 		ASTDataDeclList* clone() const /*override*/ {
@@ -634,7 +634,7 @@ namespace ZScript
 	class ASTDataDecl : public ASTDecl
 	{
 	public:
-		ASTDataDecl(LocationData const& location = LocationData::NONE);
+		ASTDataDecl(Location const& location = Location::NONE);
 		ASTDataDecl(ASTDataDecl const&);
 		ASTDataDecl& operator=(ASTDataDecl const& rhs);
 		ASTDataDecl* clone() const /*override*/ {return new ASTDataDecl(*this);}
@@ -682,7 +682,7 @@ namespace ZScript
 	class ASTDataDeclExtraArray : public AST
 	{
 	public:
-		ASTDataDeclExtraArray(LocationData const& location = LocationData::NONE);
+		ASTDataDeclExtraArray(Location const& location = Location::NONE);
 		ASTDataDeclExtraArray* clone() const /*override*/ {
 			return new ASTDataDeclExtraArray(*this);}
 
@@ -705,7 +705,7 @@ namespace ZScript
 	public:
 		ASTDataTypeDef(ASTDataType* type = NULL,
 		           std::string const& name = "",
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		ASTDataTypeDef* clone() const /*override*/ {
 			return new ASTDataTypeDef(*this);}
 
@@ -723,7 +723,7 @@ namespace ZScript
 		ASTScriptTypeDef(
 			ASTScriptType* oldType,
 			std::string const& newName,
-			LocationData const& location = LocationData::NONE);
+			Location const& location = Location::NONE);
 		ASTScriptTypeDef* clone() const /*override*/ {
 			return new ASTScriptTypeDef(*this);}
 
@@ -742,7 +742,7 @@ namespace ZScript
 	class ASTExpr : public ASTStmt
 	{
 	public:
-		ASTExpr(LocationData const& location = LocationData::NONE);
+		ASTExpr(Location const& location = Location::NONE);
 		virtual ASTExpr* clone() const = 0;
 
 		virtual bool isConstant() const = 0;
@@ -765,7 +765,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprConst(ASTExpr* content = NULL,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTExprConst* clone() const {return new ASTExprConst(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -787,7 +787,7 @@ namespace ZScript
 	public:
 		ASTExprAssign(ASTExpr* left = NULL,
 		              ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprAssign* clone() const {return new ASTExprAssign(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -810,7 +810,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprIdentifier(std::string const& name = "",
-		                  LocationData const& location = LocationData::NONE);
+		                  Location const& location = Location::NONE);
 		ASTExprIdentifier* clone() const {return new ASTExprIdentifier(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -841,7 +841,7 @@ namespace ZScript
 	public:
 		ASTExprArrow(ASTExpr* left = NULL,
 		             std::string const& right = "",
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTExprArrow* clone() const {return new ASTExprArrow(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -867,7 +867,7 @@ namespace ZScript
 	public:
 		ASTExprIndex(ASTExpr* array = NULL,
 		             ASTExpr* index = NULL,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTExprIndex* clone() const /*override*/ {
 			return new ASTExprIndex(*this);}
 
@@ -886,7 +886,7 @@ namespace ZScript
 	class ASTExprCall : public ASTExpr
 	{
 	public:
-		ASTExprCall(LocationData const& location = LocationData::NONE);
+		ASTExprCall(Location const& location = Location::NONE);
 		ASTExprCall* clone() const {return new ASTExprCall(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -906,7 +906,7 @@ namespace ZScript
 	class ASTUnaryExpr : public ASTExpr
 	{
 	public:
-		ASTUnaryExpr(LocationData const& location = LocationData::NONE);
+		ASTUnaryExpr(Location const& location = Location::NONE);
 		virtual ASTUnaryExpr* clone() const = 0;
 
 		virtual bool isConstant() const {return operand->isConstant();}
@@ -917,7 +917,7 @@ namespace ZScript
 	class ASTExprNegate : public ASTUnaryExpr
 	{
 	public:
-		ASTExprNegate(LocationData const& location = LocationData::NONE);
+		ASTExprNegate(Location const& location = Location::NONE);
 		ASTExprNegate* clone() const {return new ASTExprNegate(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -932,7 +932,7 @@ namespace ZScript
 	class ASTExprNot : public ASTUnaryExpr
 	{
 	public:
-		ASTExprNot(LocationData const& location = LocationData::NONE);
+		ASTExprNot(Location const& location = Location::NONE);
 		ASTExprNot* clone() const {return new ASTExprNot(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -947,7 +947,7 @@ namespace ZScript
 	class ASTExprBitNot : public ASTUnaryExpr
 	{
 	public:
-		ASTExprBitNot(LocationData const& location = LocationData::NONE);
+		ASTExprBitNot(Location const& location = Location::NONE);
 		ASTExprBitNot* clone() const {return new ASTExprBitNot(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -962,7 +962,7 @@ namespace ZScript
 	class ASTExprIncrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprIncrement(LocationData const& location = LocationData::NONE);
+		ASTExprIncrement(Location const& location = Location::NONE);
 		ASTExprIncrement* clone() const {return new ASTExprIncrement(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -977,7 +977,7 @@ namespace ZScript
 	class ASTExprPreIncrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprPreIncrement(LocationData const& location = LocationData::NONE);
+		ASTExprPreIncrement(Location const& location = Location::NONE);
 		ASTExprPreIncrement* clone() const {return new ASTExprPreIncrement(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -992,7 +992,7 @@ namespace ZScript
 	class ASTExprDecrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprDecrement(LocationData const& location = LocationData::NONE);
+		ASTExprDecrement(Location const& location = Location::NONE);
 		ASTExprDecrement* clone() const {return new ASTExprDecrement(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1007,7 +1007,7 @@ namespace ZScript
 	class ASTExprPreDecrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprPreDecrement(LocationData const& location = LocationData::NONE);
+		ASTExprPreDecrement(Location const& location = Location::NONE);
 		ASTExprPreDecrement* clone() const {
 			return new ASTExprPreDecrement(*this);}
 
@@ -1026,7 +1026,7 @@ namespace ZScript
 	public:
 		ASTBinaryExpr(ASTExpr* left = NULL,
 		              ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		virtual ASTBinaryExpr* clone() const = 0;
 
 		bool isConstant() const;
@@ -1044,7 +1044,7 @@ namespace ZScript
 	public:
 		ASTLogExpr(ASTExpr* left = NULL,
 		           ASTExpr* right = NULL,
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		virtual ASTLogExpr* clone() const = 0;
 
 		DataType const* getReadType() const {return &DataType::BOOL;}
@@ -1056,7 +1056,7 @@ namespace ZScript
 	public:
 		ASTExprAnd(ASTExpr* left = NULL,
 		           ASTExpr* right = NULL,
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		ASTExprAnd* clone() const {return new ASTExprAnd(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1071,7 +1071,7 @@ namespace ZScript
 	public:
 		ASTExprOr(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprOr* clone() const {return new ASTExprOr(*this);}
     
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1087,7 +1087,7 @@ namespace ZScript
 	public:
 		ASTRelExpr(ASTExpr* left = NULL,
 		           ASTExpr* right = NULL,
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		virtual ASTRelExpr* clone() const = 0;
 
 		DataType const* getReadType() const {return &DataType::BOOL;}
@@ -1099,7 +1099,7 @@ namespace ZScript
 	public:
 		ASTExprGT(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprGT* clone() const {return new ASTExprGT(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1114,7 +1114,7 @@ namespace ZScript
 	public:
 		ASTExprGE(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprGE* clone() const {return new ASTExprGE(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1129,7 +1129,7 @@ namespace ZScript
 	public:
 		ASTExprLT(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprLT* clone() const {return new ASTExprLT(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1144,7 +1144,7 @@ namespace ZScript
 	public:
 		ASTExprLE(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprLE* clone() const {return new ASTExprLE(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1159,7 +1159,7 @@ namespace ZScript
 	public:
 		ASTExprEQ(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprEQ* clone() const {return new ASTExprEQ(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1174,7 +1174,7 @@ namespace ZScript
 	public:
 		ASTExprNE(ASTExpr* left = NULL,
 		          ASTExpr* right = NULL,
-		          LocationData const& location = LocationData::NONE);
+		          Location const& location = Location::NONE);
 		ASTExprNE* clone() const {return new ASTExprNE(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1190,7 +1190,7 @@ namespace ZScript
 	public:
 		ASTAddExpr(ASTExpr* left = NULL,
 		           ASTExpr* right = NULL,
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		virtual ASTAddExpr* clone() const = 0;
 
 		DataType const* getReadType() const {return &DataType::FLOAT;}
@@ -1202,7 +1202,7 @@ namespace ZScript
 	public:
 		ASTExprPlus(ASTExpr* left = NULL,
 		            ASTExpr* right = NULL,
-		            LocationData const& location = LocationData::NONE);
+		            Location const& location = Location::NONE);
 		ASTExprPlus* clone() const {return new ASTExprPlus(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1217,7 +1217,7 @@ namespace ZScript
 	public:
 		ASTExprMinus(ASTExpr* left = NULL,
 		             ASTExpr* right = NULL,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTExprMinus* clone() const {return new ASTExprMinus(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1233,7 +1233,7 @@ namespace ZScript
 	public:
 		ASTMultExpr(ASTExpr* left = NULL,
 		            ASTExpr* right = NULL,
-		            LocationData const& location = LocationData::NONE);
+		            Location const& location = Location::NONE);
 		virtual ASTMultExpr* clone() const = 0;
 
 		DataType const* getReadType() const {return &DataType::FLOAT;}
@@ -1245,7 +1245,7 @@ namespace ZScript
 	public:
 		ASTExprTimes(ASTExpr* left = NULL,
 		             ASTExpr* right = NULL,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTExprTimes* clone() const {return new ASTExprTimes(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1260,7 +1260,7 @@ namespace ZScript
 	public:
 		ASTExprDivide(ASTExpr* left = NULL,
 		              ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprDivide* clone() const {return new ASTExprDivide(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1275,7 +1275,7 @@ namespace ZScript
 	public:
 		ASTExprModulo(ASTExpr* left = NULL,
 		              ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprModulo* clone() const {return new ASTExprModulo(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1290,7 +1290,7 @@ namespace ZScript
 	{
 	public:
 		ASTBitExpr(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		           LocationData const& location = LocationData::NONE);
+		           Location const& location = Location::NONE);
 		virtual ASTBitExpr* clone() const = 0;
 
 		DataType const* getReadType() const {return &DataType::FLOAT;}
@@ -1301,7 +1301,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprBitAnd(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprBitAnd* clone() const {return new ASTExprBitAnd(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1315,7 +1315,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprBitOr(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		             LocationData const& location = LocationData::NONE);
+		             Location const& location = Location::NONE);
 		ASTExprBitOr* clone() const {return new ASTExprBitOr(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1329,7 +1329,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprBitXor(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprBitXor* clone() const {return new ASTExprBitXor(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1345,7 +1345,7 @@ namespace ZScript
 	public:
 		ASTShiftExpr(
 				ASTExpr* left = NULL, ASTExpr* right = NULL,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		virtual ASTShiftExpr* clone() const = 0;
 
 		DataType const* getReadType() const {return &DataType::FLOAT;}
@@ -1356,7 +1356,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprLShift(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprLShift* clone() const {return new ASTExprLShift(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1370,7 +1370,7 @@ namespace ZScript
 	{
 	public:
 		ASTExprRShift(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              LocationData const& location = LocationData::NONE);
+		              Location const& location = Location::NONE);
 		ASTExprRShift* clone() const {return new ASTExprRShift(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1386,7 +1386,7 @@ namespace ZScript
 	class ASTLiteral : public ASTExpr
 	{
 	public:
-		ASTLiteral(LocationData const& location = LocationData::NONE);
+		ASTLiteral(Location const& location = Location::NONE);
 		virtual ASTLiteral* clone() const = 0;
 
 		DataType const* getWriteType() const {return NULL;}
@@ -1399,7 +1399,7 @@ namespace ZScript
 	public:
 		ASTNumberLiteral(
 				ASTFloat* value = NULL,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		ASTNumberLiteral* clone() const {return new ASTNumberLiteral(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1419,7 +1419,7 @@ namespace ZScript
 	public:
 		ASTBoolLiteral(
 				bool value = false,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		ASTBoolLiteral* clone() const {return new ASTBoolLiteral(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1440,10 +1440,10 @@ namespace ZScript
 	public:
 		ASTStringLiteral(
 				char const* str = "",
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		ASTStringLiteral(
 				std::string const& str,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		ASTStringLiteral(ASTString const& raw);
 		ASTStringLiteral(ASTStringLiteral const& base);
 		ASTStringLiteral& operator=(ASTStringLiteral const& rhs);
@@ -1468,7 +1468,7 @@ namespace ZScript
 	class ASTArrayLiteral : public ASTLiteral
 	{
 	public:
-		ASTArrayLiteral(LocationData const& location = LocationData::NONE);
+		ASTArrayLiteral(Location const& location = Location::NONE);
 		ASTArrayLiteral(ASTArrayLiteral const& base);
 		ASTArrayLiteral& operator=(ASTArrayLiteral const& rhs);
 		ASTArrayLiteral* clone() const {return new ASTArrayLiteral(*this);}
@@ -1502,7 +1502,7 @@ namespace ZScript
 	{
 	public:
 		ASTOptionValue(std::string const& name = "",
-		               LocationData const& location = LocationData::NONE);
+		               Location const& location = Location::NONE);
 		ASTOptionValue* clone() const {return new ASTOptionValue(*this);}
 
 		virtual void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1523,8 +1523,8 @@ namespace ZScript
 	class ASTScriptType : public AST
 	{
 	public:
-		ASTScriptType(ScriptType type, LocationData const& location);
-		ASTScriptType(std::string const& name, LocationData const& location);
+		ASTScriptType(ScriptType type, Location const& location);
+		ASTScriptType(std::string const& name, Location const& location);
 		ASTScriptType* clone() const {return new ASTScriptType(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
@@ -1542,11 +1542,11 @@ namespace ZScript
 		// Takes ownership of type.
 		ASTDataType(
 				DataType* type = NULL,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		// Clones type.
 		ASTDataType(
 				DataType const& type,
-				LocationData const& location = LocationData::NONE);
+				Location const& location = Location::NONE);
 		ASTDataType* clone() const {return new ASTDataType(*this);}
 	
 		void execute(ASTVisitor& visitor, void* param = NULL);

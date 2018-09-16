@@ -15,9 +15,9 @@ using std::vector;
 using namespace ZScript;
 
 ////////////////////////////////////////////////////////////////
-// LocationData
+// Location
 
-string LocationData::asString() const
+string Location::asString() const
 {
 	ostringstream out;
 	if (fname != "tmp" && fname != "")
@@ -44,13 +44,13 @@ string LocationData::asString() const
 
 // AST
 
-AST::AST(LocationData const& location)
+AST::AST(Location const& location)
 	: location(location), disabled(false)
 {}
 
 // ASTFile
 
-ASTFile::ASTFile(LocationData const& location) : AST(location) {}
+ASTFile::ASTFile(Location const& location) : AST(location) {}
 
 void ASTFile::execute(ASTVisitor& visitor, void* param)
 {
@@ -99,22 +99,22 @@ bool ASTFile::hasDeclarations() const
 
 // ASTFloat
 
-ASTFloat::ASTFloat(char* value, Type type, LocationData const& location)
+ASTFloat::ASTFloat(char* value, Type type, Location const& location)
 	: AST(location), type(type), negative(false),
 	  value(static_cast<string>(value))
 {}
     
-ASTFloat::ASTFloat(char const* value, Type type, LocationData const& location)
+ASTFloat::ASTFloat(char const* value, Type type, Location const& location)
 	: AST(location), type(type), negative(false),
 	  value(static_cast<string>(value))
 {}
     
 ASTFloat::ASTFloat(
-		string const& value, Type type, LocationData const& location)
+		string const& value, Type type, Location const& location)
 	: AST(location), type(type), negative(false), value(value)
 {}
 
-ASTFloat::ASTFloat(long value, Type type, LocationData const& location)
+ASTFloat::ASTFloat(long value, Type type, Location const& location)
 	: AST(location), type(type), negative(false)
 {
 	char tmp[15];
@@ -218,11 +218,11 @@ pair<string, string> ASTFloat::parseValue() const
 
 // ASTString
 
-ASTString::ASTString(const char* str, LocationData const& location)
+ASTString::ASTString(const char* str, Location const& location)
 	: AST(location), str(static_cast<string>(str))
 {}
 
-ASTString::ASTString(string const& str, LocationData const& location)
+ASTString::ASTString(string const& str, Location const& location)
 	: AST(location), str(str)
 {}
 
@@ -235,7 +235,7 @@ void ASTString::execute(ASTVisitor& visitor, void* param)
 
 ASTSetOption::ASTSetOption(
 		string const& name, ASTExprConst* expr,
-		LocationData const& location)
+		Location const& location)
 	: AST(location), name(name),
 	  option(CompileOption::get(name).value_or(CompileOption::Invalid)),
 	  expr(expr)
@@ -243,7 +243,7 @@ ASTSetOption::ASTSetOption(
 
 ASTSetOption::ASTSetOption(
 		string const& name, CompileOptionSetting setting,
-		LocationData const& location)
+		Location const& location)
 	: AST(location), name(name),
 	  option(CompileOption::get(name).value_or(CompileOption::Invalid)),
 	  expr(NULL), setting(setting)
@@ -279,13 +279,13 @@ CompileOptionSetting ASTSetOption::getSetting(
 
 // ASTStmt
 
-ASTStmt::ASTStmt(LocationData const& location)
+ASTStmt::ASTStmt(Location const& location)
 	: AST(location), disabled_(false)
 {}
 
 // ASTBlock
 
-ASTBlock::ASTBlock(LocationData const& location) : ASTStmt(location) {}
+ASTBlock::ASTBlock(Location const& location) : ASTStmt(location) {}
     
 void ASTBlock::execute(ASTVisitor& visitor, void* param)
 {
@@ -296,7 +296,7 @@ void ASTBlock::execute(ASTVisitor& visitor, void* param)
 
 ASTStmtIf::ASTStmtIf(ASTExpr* condition,
 					 ASTStmt* thenStatement,
-					 LocationData const& location)
+					 Location const& location)
 	: ASTStmt(location), condition(condition), thenStatement(thenStatement)
 {}
 
@@ -309,7 +309,7 @@ void ASTStmtIf::execute(ASTVisitor& visitor, void* param)
     
 ASTStmtIfElse::ASTStmtIfElse(
 		ASTExpr* condition, ASTStmt* thenStatement,
-		ASTStmt* elseStatement, LocationData const& location)
+		ASTStmt* elseStatement, Location const& location)
 	: ASTStmtIf(condition, thenStatement, location),
 	  elseStatement(elseStatement)
 {}
@@ -321,7 +321,7 @@ void ASTStmtIfElse::execute(ASTVisitor& visitor, void* param)
 
 // ASTStmtSwitch
 
-ASTStmtSwitch::ASTStmtSwitch(LocationData const& location)
+ASTStmtSwitch::ASTStmtSwitch(Location const& location)
 	: ASTStmt(location), key(NULL)
 {}
 
@@ -332,7 +332,7 @@ void ASTStmtSwitch::execute(ASTVisitor& visitor, void* param)
 
 // ASTSwitchCases
 
-ASTSwitchCases::ASTSwitchCases(LocationData const& location)
+ASTSwitchCases::ASTSwitchCases(Location const& location)
 	: AST(location), isDefault(false), block(NULL)
 {}
 
@@ -345,7 +345,7 @@ void ASTSwitchCases::execute(ASTVisitor& visitor, void* param)
 
 ASTStmtFor::ASTStmtFor(
 		ASTStmt* setup, ASTExpr* test, ASTStmt* increment, ASTStmt* body,
-		LocationData const& location)
+		Location const& location)
 	: ASTStmt(location), setup(setup), test(test), increment(increment),
 	  body(body)
 {}
@@ -358,7 +358,7 @@ void ASTStmtFor::execute(ASTVisitor& visitor, void* param)
 // ASTStmtWhile
 
 ASTStmtWhile::ASTStmtWhile(
-		ASTExpr* test, ASTStmt* body, LocationData const& location)
+		ASTExpr* test, ASTStmt* body, Location const& location)
 	: ASTStmt(location), test(test), body(body)
 {}
 
@@ -370,7 +370,7 @@ void ASTStmtWhile::execute(ASTVisitor& visitor, void* param)
 // ASTStmtDo
 
 ASTStmtDo::ASTStmtDo(
-		ASTExpr* test, ASTStmt* body, LocationData const& location)
+		ASTExpr* test, ASTStmt* body, Location const& location)
 	: ASTStmt(location), test(test), body(body)
 {}
 
@@ -381,7 +381,7 @@ void ASTStmtDo::execute(ASTVisitor& visitor, void* param)
 
 // ASTStmtReturn
 
-ASTStmtReturn::ASTStmtReturn(LocationData const& location)
+ASTStmtReturn::ASTStmtReturn(Location const& location)
 	: ASTStmt(location)
 {}
 
@@ -393,7 +393,7 @@ void ASTStmtReturn::execute(ASTVisitor& visitor, void* param)
 // ASTStmtReturnVal
 
 ASTStmtReturnVal::ASTStmtReturnVal(
-		ASTExpr* value, LocationData const& location)
+		ASTExpr* value, Location const& location)
 	: ASTStmtReturn(location), value(value)
 {}
 
@@ -404,7 +404,7 @@ void ASTStmtReturnVal::execute(ASTVisitor& visitor, void* param)
 
 // ASTStmtBreak
 
-ASTStmtBreak::ASTStmtBreak(LocationData const& location)
+ASTStmtBreak::ASTStmtBreak(Location const& location)
 	: ASTStmt(location)
 {}
 
@@ -415,7 +415,7 @@ void ASTStmtBreak::execute(ASTVisitor& visitor, void* param)
 
 // ASTStmtContinue
 
-ASTStmtContinue::ASTStmtContinue(LocationData const& location)
+ASTStmtContinue::ASTStmtContinue(Location const& location)
 	: ASTStmt(location)
 {}
 
@@ -426,7 +426,7 @@ void ASTStmtContinue::execute(ASTVisitor& visitor, void* param)
 
 // ASTStmtEmpty
 
-ASTStmtEmpty::ASTStmtEmpty(LocationData const& location)
+ASTStmtEmpty::ASTStmtEmpty(Location const& location)
 	: ASTStmt(location)
 {}
 
@@ -440,13 +440,13 @@ void ASTStmtEmpty::execute(ASTVisitor& visitor, void* param)
 
 // ASTDecl
 
-ASTDecl::ASTDecl(LocationData const& location)
+ASTDecl::ASTDecl(Location const& location)
 	: ASTStmt(location)
 {}
 
 // ASTScript
 
-ASTScript::ASTScript(LocationData const& location)
+ASTScript::ASTScript(Location const& location)
 	: ASTDecl(location), type(NULL), name("") {}
 
 void ASTScript::execute(ASTVisitor& visitor, void* param)
@@ -473,7 +473,7 @@ void ASTScript::addDeclaration(ASTDecl& declaration)
 // ASTImportDecl
 
 ASTImportDecl::ASTImportDecl(
-		string const& filename, LocationData const& location)
+		string const& filename, Location const& location)
 	: ASTDecl(location), filename_(filename)
 {}
 
@@ -484,7 +484,7 @@ void ASTImportDecl::execute(ASTVisitor& visitor, void* param)
 
 // ASTFuncDecl
 
-ASTFuncDecl::ASTFuncDecl(LocationData const& location)
+ASTFuncDecl::ASTFuncDecl(Location const& location)
 	: ASTDecl(location), returnType(NULL), block(NULL)
 {}
 
@@ -495,7 +495,7 @@ void ASTFuncDecl::execute(ASTVisitor& visitor, void* param)
 
 // ASTDataDeclList
 
-ASTDataDeclList::ASTDataDeclList(LocationData const& location)
+ASTDataDeclList::ASTDataDeclList(Location const& location)
 	: ASTDecl(location), baseType(NULL)
 {}
 
@@ -538,7 +538,7 @@ void ASTDataDeclList::addDeclaration(ASTDataDecl* declaration)
 
 // ASTDataDecl
 
-ASTDataDecl::ASTDataDecl(LocationData const& location)
+ASTDataDecl::ASTDataDecl(Location const& location)
 	: ASTDecl(location), list(NULL), manager(NULL),
 	  baseType(NULL), initializer_(NULL)
 {}
@@ -620,7 +620,7 @@ bool ZScript::hasSize(ASTDataDecl const& decl)
 
 // ASTDataDeclExtraArray
 
-ASTDataDeclExtraArray::ASTDataDeclExtraArray(LocationData const& location)
+ASTDataDeclExtraArray::ASTDataDeclExtraArray(Location const& location)
 	: AST(location)
 {}
 
@@ -650,7 +650,7 @@ optional<int> ASTDataDeclExtraArray::getCompileTimeSize(
 // ASTDataTypeDef
 
 ASTDataTypeDef::ASTDataTypeDef(
-		ASTDataType* type, string const& name, LocationData const& location)
+		ASTDataType* type, string const& name, Location const& location)
 	 : ASTDecl(location), type(type), name(name)
 {}
 
@@ -663,7 +663,7 @@ void ASTDataTypeDef::execute(ASTVisitor& visitor, void* param)
 
 ASTScriptTypeDef::ASTScriptTypeDef(ASTScriptType* oldType,
                                    std::string const& newName,
-                                   LocationData const& location)
+                                   Location const& location)
 		: ASTDecl(location), oldType(oldType), newName(newName)
 {}
 
@@ -677,13 +677,13 @@ void ASTScriptTypeDef::execute(ASTVisitor& visitor, void* param)
 
 // ASTExpr
 
-ASTExpr::ASTExpr(LocationData const& location)
+ASTExpr::ASTExpr(Location const& location)
 	: ASTStmt(location)
 {}
 
 // ASTExprConst
 
-ASTExprConst::ASTExprConst(ASTExpr* content, LocationData const& location)
+ASTExprConst::ASTExprConst(ASTExpr* content, Location const& location)
 	: ASTExpr(location), content(content)
 {}
 
@@ -702,7 +702,7 @@ optional<long> ASTExprConst::getCompileTimeValue(
 // ASTExprAssign
 
 ASTExprAssign::ASTExprAssign(ASTExpr* left, ASTExpr* right,
-							 LocationData const& location)
+							 Location const& location)
 	: ASTExpr(location), left(left), right(right) {}
 
 void ASTExprAssign::execute(ASTVisitor& visitor, void* param)
@@ -720,7 +720,7 @@ optional<long> ASTExprAssign::getCompileTimeValue(
 // ASTExprIdentifier
 
 ASTExprIdentifier::ASTExprIdentifier(string const& name,
-									 LocationData const& location)
+									 Location const& location)
 	: ASTExpr(location), binding(NULL), constant_(false)
 {
 	if (name != "") components.push_back(name);
@@ -764,7 +764,7 @@ DataType const* ASTExprIdentifier::getWriteType() const
 // ASTExprArrow
 
 ASTExprArrow::ASTExprArrow(ASTExpr* left, string const& right,
-						   LocationData const& location)
+						   Location const& location)
 	: ASTExpr(location), left(left), right(right), index(NULL),
 	  readFunction(NULL), writeFunction(NULL), leftClass(NULL)
 {}
@@ -794,7 +794,7 @@ DataType const* ASTExprArrow::getWriteType() const
 // ASTExprIndex
 
 ASTExprIndex::ASTExprIndex(ASTExpr* array, ASTExpr* index,
-						   LocationData const& location)
+						   Location const& location)
 	: ASTExpr(location), array(array), index(index)
 {}
 
@@ -833,7 +833,7 @@ DataType const* ASTExprIndex::getWriteType() const
 	
 // ASTExprCall
 
-ASTExprCall::ASTExprCall(LocationData const& location)
+ASTExprCall::ASTExprCall(Location const& location)
 	: ASTExpr(location), binding(NULL)
 {}
 
@@ -854,13 +854,13 @@ DataType const* ASTExprCall::getWriteType() const
 
 // ASTUnaryExpr
 
-ASTUnaryExpr::ASTUnaryExpr(LocationData const& location)
+ASTUnaryExpr::ASTUnaryExpr(Location const& location)
 	: ASTExpr(location)
 {}
 
 // ASTExprNegate
 
-ASTExprNegate::ASTExprNegate(LocationData const& location)
+ASTExprNegate::ASTExprNegate(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -881,7 +881,7 @@ optional<long> ASTExprNegate::getCompileTimeValue(
 
 // ASTExprNot
 
-ASTExprNot::ASTExprNot(LocationData const& location)
+ASTExprNot::ASTExprNot(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -902,7 +902,7 @@ optional<long> ASTExprNot::getCompileTimeValue(
 
 // ASTExprBitNot
 
-ASTExprBitNot::ASTExprBitNot(LocationData const& location)
+ASTExprBitNot::ASTExprBitNot(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -923,7 +923,7 @@ optional<long> ASTExprBitNot::getCompileTimeValue(
 
 // ASTExprIncrement
 
-ASTExprIncrement::ASTExprIncrement(LocationData const& location)
+ASTExprIncrement::ASTExprIncrement(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -934,7 +934,7 @@ void ASTExprIncrement::execute(ASTVisitor& visitor, void* param)
 
 // ASTExprPreIncrement
 
-ASTExprPreIncrement::ASTExprPreIncrement(LocationData const& location)
+ASTExprPreIncrement::ASTExprPreIncrement(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -945,7 +945,7 @@ void ASTExprPreIncrement::execute(ASTVisitor& visitor, void* param)
 
 // ASTExprDecrement
 
-ASTExprDecrement::ASTExprDecrement(LocationData const& location)
+ASTExprDecrement::ASTExprDecrement(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -956,7 +956,7 @@ void ASTExprDecrement::execute(ASTVisitor& visitor, void* param)
 
 // ASTExprPreDecrement
 
-ASTExprPreDecrement::ASTExprPreDecrement(LocationData const& location)
+ASTExprPreDecrement::ASTExprPreDecrement(Location const& location)
 	: ASTUnaryExpr(location)
 {}
 
@@ -968,7 +968,7 @@ void ASTExprPreDecrement::execute(ASTVisitor& visitor, void* param)
 // ASTBinaryExpr
 
 ASTBinaryExpr::ASTBinaryExpr(ASTExpr* left, ASTExpr* right,
-							 LocationData const& location)
+							 Location const& location)
 	: ASTExpr(location), left(left), right(right)
 {}
 
@@ -982,14 +982,14 @@ bool ASTBinaryExpr::isConstant() const
 // ASTLogExpr
 
 ASTLogExpr::ASTLogExpr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBinaryExpr(left, right, location)
 {}
 
 // ASTExprAnd
 
 ASTExprAnd::ASTExprAnd(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTLogExpr(left, right, location)
 {}
 
@@ -1013,7 +1013,7 @@ optional<long> ASTExprAnd::getCompileTimeValue(
 // ASTExprOr
 
 ASTExprOr::ASTExprOr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTLogExpr(left, right, location)
 {}
 
@@ -1037,14 +1037,14 @@ optional<long> ASTExprOr::getCompileTimeValue(
 // ASTRelExpr
 
 ASTRelExpr::ASTRelExpr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBinaryExpr(left, right, location)
 {}
 
 // ASTExprGT
 
 ASTExprGT::ASTExprGT(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTRelExpr(left, right, location)
 {}
 
@@ -1068,7 +1068,7 @@ optional<long> ASTExprGT::getCompileTimeValue(
 // ASTExprGE
 
 ASTExprGE::ASTExprGE(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTRelExpr(left, right, location)
 {}
 
@@ -1092,7 +1092,7 @@ optional<long> ASTExprGE::getCompileTimeValue(
 // ASTExprLT
 
 ASTExprLT::ASTExprLT(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTRelExpr(left, right, location)
 {}
 
@@ -1116,7 +1116,7 @@ optional<long> ASTExprLT::getCompileTimeValue(
 // ASTExprLE
 
 ASTExprLE::ASTExprLE(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTRelExpr(left, right, location)
 {}
 
@@ -1140,7 +1140,7 @@ optional<long> ASTExprLE::getCompileTimeValue(
 // ASTExprEQ
 
 ASTExprEQ::ASTExprEQ(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTRelExpr(left, right, location)
 {}
 
@@ -1164,7 +1164,7 @@ optional<long> ASTExprEQ::getCompileTimeValue(
 // ASTExprNE
 
 ASTExprNE::ASTExprNE(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTRelExpr(left, right, location)
 {}
 
@@ -1188,14 +1188,14 @@ optional<long> ASTExprNE::getCompileTimeValue(
 // ASTAddExpr
 
 ASTAddExpr::ASTAddExpr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBinaryExpr(left, right, location)
 {}
 
 // ASTExprPlus
 
 ASTExprPlus::ASTExprPlus(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTAddExpr(left, right, location)
 {}
 
@@ -1219,7 +1219,7 @@ optional<long> ASTExprPlus::getCompileTimeValue(
 // ASTExprMinus
 
 ASTExprMinus::ASTExprMinus(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTAddExpr(left, right, location)
 {}
 
@@ -1243,14 +1243,14 @@ optional<long> ASTExprMinus::getCompileTimeValue(
 // ASTMultExpr
 
 ASTMultExpr::ASTMultExpr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBinaryExpr(left, right, location)
 {}
 
 // ASTExprTimes
 
 ASTExprTimes::ASTExprTimes(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTMultExpr(left, right, location)
 {}
 
@@ -1275,7 +1275,7 @@ optional<long> ASTExprTimes::getCompileTimeValue(
 // ASTExprDivide
 
 ASTExprDivide::ASTExprDivide(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTMultExpr(left, right, location)
 {}
 
@@ -1306,7 +1306,7 @@ optional<long> ASTExprDivide::getCompileTimeValue(
 // ASTExprModulo
     
 ASTExprModulo::ASTExprModulo(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTMultExpr(left, right, location)
 {}
 
@@ -1337,14 +1337,14 @@ optional<long> ASTExprModulo::getCompileTimeValue(
 // ASTBitExpr
 
 ASTBitExpr::ASTBitExpr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBinaryExpr(left, right, location)
 {}
 
 // ASTExprBitAnd
 
 ASTExprBitAnd::ASTExprBitAnd(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBitExpr(left, right, location)
 {}
 
@@ -1369,7 +1369,7 @@ optional<long> ASTExprBitAnd::getCompileTimeValue(
 // ASTExprBitOr
 
 ASTExprBitOr::ASTExprBitOr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBitExpr(left, right, location)
 {}
 
@@ -1394,7 +1394,7 @@ optional<long> ASTExprBitOr::getCompileTimeValue(
 // ASTExprBitXor
 
 ASTExprBitXor::ASTExprBitXor(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBitExpr(left, right, location)
 {}
 
@@ -1419,14 +1419,14 @@ optional<long> ASTExprBitXor::getCompileTimeValue(
 // ASTShiftExpr
 
 ASTShiftExpr::ASTShiftExpr(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTBinaryExpr(left, right, location)
 {}
 
 // ASTExprLShift
 
 ASTExprLShift::ASTExprLShift(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTShiftExpr(left, right, location)
 {}
 
@@ -1458,7 +1458,7 @@ optional<long> ASTExprLShift::getCompileTimeValue(
 // ASTExprRShift
 
 ASTExprRShift::ASTExprRShift(
-		ASTExpr* left, ASTExpr* right, LocationData const& location)
+		ASTExpr* left, ASTExpr* right, Location const& location)
 	: ASTShiftExpr(left, right, location)
 {}
 
@@ -1492,14 +1492,14 @@ optional<long> ASTExprRShift::getCompileTimeValue(
 
 // ASTLiteral
 
-ASTLiteral::ASTLiteral(LocationData const& location)
+ASTLiteral::ASTLiteral(Location const& location)
 	: ASTExpr(location), manager(NULL)
 {}
 
 // ASTNumberLiteral
 
 ASTNumberLiteral::ASTNumberLiteral(
-		ASTFloat* value, LocationData const& location)
+		ASTFloat* value, Location const& location)
 	: ASTLiteral(location), value(value)
 {}
 
@@ -1523,7 +1523,7 @@ optional<long> ASTNumberLiteral::getCompileTimeValue(
 
 // ASTBoolLiteral
 
-ASTBoolLiteral::ASTBoolLiteral(bool value, LocationData const& location)
+ASTBoolLiteral::ASTBoolLiteral(bool value, Location const& location)
 	: ASTLiteral(location), value(value)
 {}
 
@@ -1534,12 +1534,12 @@ void ASTBoolLiteral::execute(ASTVisitor& visitor, void* param)
 
 // ASTStringLiteral
 
-ASTStringLiteral::ASTStringLiteral(char const* str, LocationData const& location)
+ASTStringLiteral::ASTStringLiteral(char const* str, Location const& location)
 	: ASTLiteral(location), value(str), declaration(NULL)
 {}
 
 ASTStringLiteral::ASTStringLiteral(
-		string const& str, LocationData const& location)
+		string const& str, Location const& location)
 	: ASTLiteral(location), value(str), declaration(NULL)
 {}
 
@@ -1577,7 +1577,7 @@ DataTypeArray const* ASTStringLiteral::getReadType() const
 
 // ASTArrayLiteral
 
-ASTArrayLiteral::ASTArrayLiteral(LocationData const& location)
+ASTArrayLiteral::ASTArrayLiteral(Location const& location)
 	: ASTLiteral(location), type(NULL), size(NULL), declaration(NULL),
 	  readType_(NULL)
 {}
@@ -1612,7 +1612,7 @@ void ASTArrayLiteral::execute(ASTVisitor& visitor, void* param)
 // ASTOptionValue
 
 ASTOptionValue::ASTOptionValue(
-		string const& name, LocationData const& location)
+		string const& name, Location const& location)
 	: ASTLiteral(location),
 	  name(name),
 	  option(CompileOption::get(name).value_or(CompileOption::Invalid)),
@@ -1634,11 +1634,11 @@ std::string ASTOptionValue::asString() const
 
 // ASTScriptType
 
-ASTScriptType::ASTScriptType(ScriptType type, LocationData const& location)
+ASTScriptType::ASTScriptType(ScriptType type, Location const& location)
 		: AST(location), type(type)
 {}
 
-ASTScriptType::ASTScriptType(string const& name, LocationData const& location)
+ASTScriptType::ASTScriptType(string const& name, Location const& location)
 		: AST(location), name(name)
 {}
 
@@ -1656,11 +1656,11 @@ ScriptType ZScript::resolveScriptType(ASTScriptType const& node,
 
 // ASTDataType
 
-ASTDataType::ASTDataType(DataType* type, LocationData const& location)
+ASTDataType::ASTDataType(DataType* type, Location const& location)
 	: AST(location), type(type)
 {}
 
-ASTDataType::ASTDataType(DataType const& type, LocationData const& location)
+ASTDataType::ASTDataType(DataType const& type, Location const& location)
 	: AST(location), type(type.clone())
 {}
 
