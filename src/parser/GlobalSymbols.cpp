@@ -328,46 +328,13 @@ const int radsperdeg = 572958;
 	for(int _i(0); _i < num_args; ++_i) \
 		code.push_back(new OPopRegister(new VarArgument(t)))
 
-LibrarySymbols* LibrarySymbols::getTypeInstance(DataTypeId typeId)
+LibrarySymbols* LibrarySymbols::getTypeInstance(DataType type)
 {
-    switch (typeId)
-    {
-    case ZVARTYPEID_FFC: return &FFCSymbols::getInst();
-    case ZVARTYPEID_LINK: return &LinkSymbols::getInst();
-    case ZVARTYPEID_SCREEN: return &ScreenSymbols::getInst();
-    case ZVARTYPEID_GAME: return &GameSymbols::getInst();
-    case ZVARTYPEID_ITEM: return &ItemSymbols::getInst();
-    case ZVARTYPEID_ITEMCLASS: return &ItemclassSymbols::getInst();
-    case ZVARTYPEID_NPC: return &NPCSymbols::getInst();
-    case ZVARTYPEID_LWPN: return &LinkWeaponSymbols::getInst();
-    case ZVARTYPEID_EWPN: return &EnemyWeaponSymbols::getInst();
-    case ZVARTYPEID_NPCDATA: return &NPCDataSymbols::getInst();
-    case ZVARTYPEID_DEBUG: return &DebugSymbols::getInst();
-    case ZVARTYPEID_AUDIO: return &AudioSymbols::getInst();
-    case ZVARTYPEID_COMBOS: return &CombosPtrSymbols::getInst();
-    case ZVARTYPEID_SPRITEDATA: return &SpriteDataSymbols::getInst();
-    case ZVARTYPEID_GRAPHICS: return &GraphicsSymbols::getInst();
-    case ZVARTYPEID_BITMAP: return &BitmapSymbols::getInst();
-    case ZVARTYPEID_TEXT: return &TextPtrSymbols::getInst();
-    case ZVARTYPEID_INPUT: return &InputSymbols::getInst();
-    case ZVARTYPEID_MAPDATA: return &MapDataSymbols::getInst();
-    case ZVARTYPEID_DMAPDATA: return &DMapDataSymbols::getInst();
-    case ZVARTYPEID_ZMESSAGE: return &MessageDataSymbols::getInst();
-    case ZVARTYPEID_SHOPDATA: return &ShopDataSymbols::getInst();
-    case ZVARTYPEID_UNTYPED: return &UntypedSymbols::getInst();
-    case ZVARTYPEID_DROPSET: return &DropsetSymbols::getInst();
-    case ZVARTYPEID_PONDS: return &PondSymbols::getInst();
-    case ZVARTYPEID_WARPRING: return &WarpringSymbols::getInst();
-    case ZVARTYPEID_DOORSET: return &DoorsetSymbols::getInst();
-    case ZVARTYPEID_ZUICOLOURS: return &MiscColourSymbols::getInst();
-    case ZVARTYPEID_RGBDATA: return &RGBSymbols::getInst();
-    case ZVARTYPEID_PALETTE: return &PaletteSymbols::getInst();
-    case ZVARTYPEID_TUNES: return &TunesSymbols::getInst();
-    case ZVARTYPEID_PALCYCLE: return &PalCycleSymbols::getInst();
-    case ZVARTYPEID_GAMEDATA: return &GamedataSymbols::getInst();
-    case ZVARTYPEID_CHEATS: return &CheatsSymbols::getInst();
-    default: return NULL;
-    }
+#	define X(NAME, TYPE) \
+	if (type == DataType::std##NAME) return &NAME##Symbols::getInst();
+#	include "classes.xtable"
+#	undef X
+    return NULL;
 }
 
 void getVariable(int refVar, Function* function, int var)
@@ -480,18 +447,16 @@ void setIndexedVariable(int refVar, Function* function, int var)
 
 void LibrarySymbols::addSymbolsToScope(Scope& scope)
 {
-	TypeStore& typeStore = scope.getTypeStore();
-    
-    for (int i = 0; table[i].name != ""; i++)
-    {
+	for (int i = 0; table[i].name != ""; i++)
+	{
 		AccessorTable& entry = table[i];
         
-		DataType const* returnType = typeStore.getType(entry.rettype);
-		vector<DataType const*> paramTypes;
-        for (int k = 0; entry.params[k] != -1 && k < 20; k++)
-			paramTypes.push_back(typeStore.getType(entry.params[k]));
+		DataType returnType = static_cast<DataTypeIdBuiltin>(entry.rettype);
+		vector<DataType> paramTypes;
+		for (int k = 0; entry.params[k] != -1 && k < 20; k++)
+			paramTypes.push_back(static_cast<DataTypeIdBuiltin>(entry.params[k]));
                 
-        string const& name = entry.name;
+		string const& name = entry.name;
 		string varName = name;
             
 		// Strip out the array at the end.
@@ -502,28 +467,30 @@ void LibrarySymbols::addSymbolsToScope(Scope& scope)
 		// Create function object.
 		Function* function;
 		if (entry.setorget == SETTER && name.substr(0, 3) == "set")
-            {
+		{
 			varName = varName.substr(3); // Strip out "set".
 			function = scope.addSetter(returnType, varName, paramTypes);
-            }
+		}
 		else if (entry.setorget == GETTER && name.substr(0, 3) == "get")
-                {
+		{
 			varName = varName.substr(3); // Strip out "get".
 			function = scope.addGetter(returnType, varName, paramTypes);
-                }
-                else
+		}
+		else
 			function = scope.addFunction(returnType, varName, paramTypes);
+		assert(function);
+
 		functions[name] = function;
 
 		// Generate function code for getters/setters
 		int label = function->getLabel();
 		if (entry.setorget == GETTER)
-                {
+		{
 			if (isArray)
 				getIndexedVariable(refVar, function, entry.var);
 			else
 				getVariable(refVar, function, entry.var);
-                }
+		}
 		if (entry.setorget == SETTER)
 		{
 			if (isArray)
@@ -532,11 +499,11 @@ void LibrarySymbols::addSymbolsToScope(Scope& scope)
 				setBoolVariable(refVar, function, entry.var);
 			else
 				setVariable(refVar, function, entry.var);
-            }
+		}
             
-    }
+	}
     
-    generateCode();
+	generateCode();
     functions.clear();
 }
 
@@ -549,8 +516,6 @@ LibrarySymbols::~LibrarySymbols()
 {
     return;
 }
-
-GlobalSymbols GlobalSymbols::singleton;
 
 static AccessorTable GlobalTable[] =
 {
@@ -1338,8 +1303,6 @@ void GlobalSymbols::generateCode()
     
 }
 
-FFCSymbols FFCSymbols::singleton = FFCSymbols();
-
 static AccessorTable FFCTable[] =
 {
     //name,                     rettype,                        setorget,     var,              numindex,      params
@@ -1388,13 +1351,13 @@ static AccessorTable FFCTable[] =
       { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-FFCSymbols::FFCSymbols()
+FfcSymbols::FfcSymbols()
 {
     table = FFCTable;
     refVar = REFFFC;
 }
 
-void FFCSymbols::generateCode()
+void FfcSymbols::generateCode()
 {
 	//void ChangeFFCScript(ffc, int)
     {
@@ -1445,8 +1408,6 @@ void FFCSymbols::generateCode()
     }*/
     
 }
-
-LinkSymbols LinkSymbols::singleton = LinkSymbols();
 
 static AccessorTable LinkSTable[] =
 {
@@ -1775,8 +1736,6 @@ void LinkSymbols::generateCode()
     
     
 }
-
-ScreenSymbols ScreenSymbols::singleton = ScreenSymbols();
 
 static AccessorTable ScreenTable[] =
 {
@@ -3044,7 +3003,7 @@ void ScreenSymbols::generateCode()
     
 }
 
-ItemSymbols ItemSymbols::singleton = ItemSymbols();
+
 
 static AccessorTable itemTable[] =
 {
@@ -3148,7 +3107,7 @@ void ItemSymbols::generateCode()
     
 }
 
-ItemclassSymbols ItemclassSymbols::singleton = ItemclassSymbols();
+
 
 static AccessorTable itemclassTable[] =
 {
@@ -3333,13 +3292,13 @@ static AccessorTable itemclassTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-ItemclassSymbols::ItemclassSymbols()
+ItemDataSymbols::ItemDataSymbols()
 {
     table = itemclassTable;
     refVar = REFITEMCLASS;
 }
 
-void ItemclassSymbols::generateCode()
+void ItemDataSymbols::generateCode()
 {
     //void GetName(itemclass, int)
     {
@@ -3359,7 +3318,7 @@ void ItemclassSymbols::generateCode()
     }
 }
 
-GameSymbols GameSymbols::singleton = GameSymbols();
+
 
 static AccessorTable gameTable[] =
 {
@@ -5473,7 +5432,7 @@ void GameSymbols::generateCode()
     
 }
 
-NPCSymbols NPCSymbols::singleton = NPCSymbols();
+
 
 static AccessorTable npcTable[] =
 {
@@ -5600,13 +5559,13 @@ static AccessorTable npcTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-NPCSymbols::NPCSymbols()
+NpcSymbols::NpcSymbols()
 {
     table = npcTable;
     refVar = REFNPC;
 }
 
-void NPCSymbols::generateCode()
+void NpcSymbols::generateCode()
 {
     //bool isValid(npc)
     {
@@ -5657,7 +5616,7 @@ void NPCSymbols::generateCode()
     
 }
 
-LinkWeaponSymbols LinkWeaponSymbols::singleton = LinkWeaponSymbols();
+
 
 static AccessorTable lwpnTable[] =
 {
@@ -5792,7 +5751,7 @@ void LinkWeaponSymbols::generateCode()
     
 }
 
-EnemyWeaponSymbols EnemyWeaponSymbols::singleton = EnemyWeaponSymbols();
+
 
 static AccessorTable ewpnTable[] =
 {
@@ -5924,7 +5883,7 @@ void EnemyWeaponSymbols::generateCode()
 /////// New Types
 
 
-TextPtrSymbols TextPtrSymbols::singleton = TextPtrSymbols();
+
 
 static AccessorTable TextTable[] =
 {
@@ -5935,20 +5894,20 @@ static AccessorTable TextTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-TextPtrSymbols::TextPtrSymbols()
+TextSymbols::TextSymbols()
 {
     table = TextTable;
     refVar = NUL;
 }
 
-void TextPtrSymbols::generateCode()
+void TextSymbols::generateCode()
 {
 }
 
 
 //MapData
 
-MapDataSymbols MapDataSymbols::singleton = MapDataSymbols();
+
 
 static AccessorTable MapDataTable[] =
 {
@@ -6574,7 +6533,7 @@ void MapDataSymbols::generateCode()
 
 //Input
 
-InputSymbols InputSymbols::singleton = InputSymbols();
+
 
 static AccessorTable InputTable[] =
 {
@@ -6647,7 +6606,7 @@ void InputSymbols::generateCode()
     }
 }
 
-GraphicsSymbols GraphicsSymbols::singleton = GraphicsSymbols();
+
 
 static AccessorTable GraphicsTable[] =
 {
@@ -6713,7 +6672,7 @@ void GraphicsSymbols::generateCode()
 	}
 }
 
-BitmapSymbols BitmapSymbols::singleton = BitmapSymbols();
+
 
 static AccessorTable BitmapTable[] =
 {
@@ -6748,7 +6707,7 @@ void BitmapSymbols::generateCode()
 	}
 }
 
-SpriteDataSymbols SpriteDataSymbols::singleton = SpriteDataSymbols();
+
 
 static AccessorTable SpriteDataTable[] =
 {
@@ -7004,7 +6963,7 @@ void SpriteDataSymbols::generateCode()
     */
 }
 
-CombosPtrSymbols CombosPtrSymbols::singleton = CombosPtrSymbols();
+
 
 static AccessorTable CombosTable[] =
 {
@@ -7349,13 +7308,13 @@ static AccessorTable CombosTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-CombosPtrSymbols::CombosPtrSymbols()
+ComboDataSymbols::ComboDataSymbols()
 {
     table = CombosTable;
     refVar = REFCOMBODATA; //NUL;
 }
 
-void CombosPtrSymbols::generateCode()
+void ComboDataSymbols::generateCode()
 {
     {
         ONE_INPUT_ONE_RETURN("GetBlockEnemies",OCDataBlockEnemy);
@@ -7831,7 +7790,7 @@ void CombosPtrSymbols::generateCode()
     }
 }
 
-AudioSymbols AudioSymbols::singleton = AudioSymbols();
+
 
 static AccessorTable AudioTable[] =
 {
@@ -8067,7 +8026,7 @@ void AudioSymbols::generateCode()
 }
 
 
-DebugSymbols DebugSymbols::singleton = DebugSymbols();
+
 
 static AccessorTable DebugTable[] =
 {
@@ -8392,7 +8351,7 @@ void DebugSymbols::generateCode()
 }
 
 
-NPCDataSymbols NPCDataSymbols::singleton = NPCDataSymbols();
+
 
 static AccessorTable NPCDataTable[] =
 {
@@ -8604,13 +8563,13 @@ static AccessorTable NPCDataTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-NPCDataSymbols::NPCDataSymbols()
+NpcDataSymbols::NpcDataSymbols()
 {
     table = NPCDataTable;
     refVar = REFNPCCLASS; // NUL; //
 }
 
-void NPCDataSymbols::generateCode()
+void NpcDataSymbols::generateCode()
 {
 	//GetTile(NPCData, int)
     {
@@ -9584,7 +9543,7 @@ void NPCDataSymbols::generateCode()
     }
 }
 
-DMapDataSymbols DMapDataSymbols::singleton = DMapDataSymbols();
+
 
 static AccessorTable DMapDataTable[] =
 {
@@ -9657,7 +9616,7 @@ void DMapDataSymbols::generateCode()
 }
 
 
-ShopDataSymbols ShopDataSymbols::singleton = ShopDataSymbols();
+
 
 static AccessorTable ShopDataTable[] =
 {
@@ -9690,7 +9649,7 @@ void ShopDataSymbols::generateCode()
 }
 
 
-MessageDataSymbols MessageDataSymbols::singleton = MessageDataSymbols();
+
 
 static AccessorTable MessageDataTable[] =
 {
@@ -9771,29 +9730,6 @@ void MessageDataSymbols::generateCode()
     */
 }
 
-UntypedSymbols UntypedSymbols::singleton = UntypedSymbols();
-
-static AccessorTable NilTable[] =
-{
-    //name,                     rettype,                        setorget,     var,              numindex,      params
-	//All of these return a function label error when used:
-	//{ "getTest",               ZVARTYPEID_UNTYPED,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_UNTYPED,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
-	
-    { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
-};
-
-UntypedSymbols::UntypedSymbols()
-{
-    table = NilTable;
-    refVar = REFNIL;
-}
-
-void UntypedSymbols::generateCode()
-{
-}
-
-DropsetSymbols DropsetSymbols::singleton = DropsetSymbols();
-
 static AccessorTable DropsetTable[] =
 {
     //name,                     rettype,                        setorget,     var,              numindex,      params
@@ -9803,38 +9739,16 @@ static AccessorTable DropsetTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-DropsetSymbols::DropsetSymbols()
+DropSetSymbols::DropSetSymbols()
 {
     table = DropsetTable;
     refVar = REFDROPS;
 }
 
-void DropsetSymbols::generateCode()
+void DropSetSymbols::generateCode()
 {
 }
 
-PondSymbols PondSymbols::singleton = PondSymbols();
-
-static AccessorTable PondsTable[] =
-{
-    //name,                     rettype,                        setorget,     var,              numindex,      params
-	//All of these return a function label error when used:
-	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_PONDS,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
-	
-    { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
-};
-
-PondSymbols::PondSymbols()
-{
-    table = PondsTable;
-    refVar = REFPONDS;
-}
-
-void PondSymbols::generateCode()
-{
-}
-
-WarpringSymbols WarpringSymbols::singleton = WarpringSymbols();
 
 static AccessorTable WarpringTable[] =
 {
@@ -9845,17 +9759,17 @@ static AccessorTable WarpringTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-WarpringSymbols::WarpringSymbols()
+WarpRingSymbols::WarpRingSymbols()
 {
     table = WarpringTable;
     refVar = REFWARPRINGS;
 }
 
-void WarpringSymbols::generateCode()
+void WarpRingSymbols::generateCode()
 {
 }
 
-DoorsetSymbols DoorsetSymbols::singleton = DoorsetSymbols();
+
 
 static AccessorTable DoorsetTable[] =
 {
@@ -9866,38 +9780,38 @@ static AccessorTable DoorsetTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-DoorsetSymbols::DoorsetSymbols()
+DoorSetSymbols::DoorSetSymbols()
 {
     table = DoorsetTable;
     refVar = REFDOORS;
 }
 
-void DoorsetSymbols::generateCode()
+void DoorSetSymbols::generateCode()
 {
 }
 
-MiscColourSymbols MiscColourSymbols::singleton = MiscColourSymbols();
+
 
 static AccessorTable MiscColoursTable[] =
 {
     //name,                     rettype,                        setorget,     var,              numindex,      params
 	//All of these return a function label error when used:
-	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_ZUICOLOURS,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_MISCCOLOR,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-MiscColourSymbols::MiscColourSymbols()
+MiscColorSymbols::MiscColorSymbols()
 {
     table = MiscColoursTable;
     refVar = REFUICOLOURS;
 }
 
-void MiscColourSymbols::generateCode()
+void MiscColorSymbols::generateCode()
 {
 }
 
-RGBSymbols RGBSymbols::singleton = RGBSymbols();
+
 
 static AccessorTable RGBTable[] =
 {
@@ -9908,17 +9822,17 @@ static AccessorTable RGBTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-RGBSymbols::RGBSymbols()
+RgbSymbols::RgbSymbols()
 {
     table = RGBTable;
     refVar = REFRGB;
 }
 
-void RGBSymbols::generateCode()
+void RgbSymbols::generateCode()
 {
 }
 
-PaletteSymbols PaletteSymbols::singleton = PaletteSymbols();
+
 
 static AccessorTable PaletteTable[] =
 {
@@ -9939,28 +9853,28 @@ void PaletteSymbols::generateCode()
 {
 }
 
-TunesSymbols TunesSymbols::singleton = TunesSymbols();
 
-static AccessorTable TunesTable[] =
+
+static AccessorTable MidiTable[] =
 {
     //name,                     rettype,                        setorget,     var,              numindex,      params
 	//All of these return a function label error when used:
-	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_TUNES,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_MIDI,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-TunesSymbols::TunesSymbols()
+MidiSymbols::MidiSymbols()
 {
-    table = TunesTable;
+    table = MidiTable;
     refVar = REFTUNES;
 }
 
-void TunesSymbols::generateCode()
+void MidiSymbols::generateCode()
 {
 }
 
-PalCycleSymbols PalCycleSymbols::singleton = PalCycleSymbols();
+
 
 static AccessorTable PalCycleTable[] =
 {
@@ -9981,7 +9895,7 @@ void PalCycleSymbols::generateCode()
 {
 }
 
-GamedataSymbols GamedataSymbols::singleton = GamedataSymbols();
+
 
 static AccessorTable GameDataTable[] =
 {
@@ -9992,34 +9906,51 @@ static AccessorTable GameDataTable[] =
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-GamedataSymbols::GamedataSymbols()
+GameDataSymbols::GameDataSymbols()
 {
     table = GameDataTable;
     refVar = REFGAMEDATA;
 }
 
-void GamedataSymbols::generateCode()
+void GameDataSymbols::generateCode()
 {
 }
 
-CheatsSymbols CheatsSymbols::singleton = CheatsSymbols();
+
 
 static AccessorTable CheatTable[] =
 {
     //name,                     rettype,                        setorget,     var,              numindex,      params
 	//All of these return a function label error when used:
-	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_CHEATS,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "getTest",               ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,            1,      {  ZVARTYPEID_CHEAT,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	
     { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
-CheatsSymbols::CheatsSymbols()
+CheatSymbols::CheatSymbols()
 {
     table = CheatTable;
     refVar = REFCHEATS;
 }
 
-void CheatsSymbols::generateCode()
+void CheatSymbols::generateCode()
 {
 }
 
+/*
+static AccessorTable InfoShopDataTable[] =
+{
+    //name,                     rettype,                        setorget,     var,              numindex,      params
+    { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
+};
+
+InfoShopDataSymbols::InfoShopDataSymbols()
+{
+    table = InfoShopDataTable;
+    refVar = REFINFOSHOPDATA;
+}
+
+void InfoShopDataSymbols::generateCode()
+{
+}
+*/

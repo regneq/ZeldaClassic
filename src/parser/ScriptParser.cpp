@@ -35,12 +35,13 @@ int main(int argc, char *argv[])
 
 void ScriptParser::initialize()
 {
+	CompileError::initialize();
+	CompileOption::initialize();
 	vid = 0;
 	fid = 0;
 	gid = 1;
-	lid = 0;
-	CompileError::initialize();
-	CompileOption::initialize();
+	lid = 1;
+	ZClass::generateStandard();
 }
 
 ScriptsData* ZScript::compile(string const& filename)
@@ -161,7 +162,6 @@ bool ScriptParser::preprocess(ASTFile* root, int reclimit)
 IntermediateData* ScriptParser::generateOCode(FunctionData& fdata)
 {
 	Program& program = fdata.program;
-	TypeStore* typeStore = &program.getTypeStore();
 	vector<Datum*>& globalVariables = fdata.globalVariables;
 
 	// Z_message("yes");
@@ -187,7 +187,7 @@ IntermediateData* ScriptParser::generateOCode(FunctionData& fdata)
 		Datum& variable = **it;
 		AST& node = *variable.getNode();
         
-		OpcodeContext oc(typeStore);
+		OpcodeContext oc;
         
 		BuildOpcodes bo;
 		node.execute(bo, &oc);
@@ -248,7 +248,7 @@ IntermediateData* ScriptParser::generateOCode(FunctionData& fdata)
 		// Set up the stack frame register
 		funccode.push_back(new OSetRegister(new VarArgument(SFRAME),
 		                                    new VarArgument(SP)));
-		OpcodeContext oc(typeStore);
+		OpcodeContext oc;
 		BuildOpcodes bo;
 		node.execute(bo, &oc);
         

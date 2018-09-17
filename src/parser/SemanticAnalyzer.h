@@ -87,7 +87,7 @@ namespace ZScript
 		// Current scope.
 		ZScript::Scope* scope;
 		// Current function return type.
-		ZScript::DataType const* returnType;
+		ZScript::DataType returnType;
 
 		bool deprecateGlobals;
 

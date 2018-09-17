@@ -46,10 +46,3 @@ IntermediateData::IntermediateData(FunctionData const& functionData)
 	: program(functionData.program)
 {}
 
-////////////////////////////////////////////////////////////////
-// OpcodeContext
-
-OpcodeContext::OpcodeContext(ZScript::TypeStore* typeStore)
-	: typeStore(typeStore)
-{}
-

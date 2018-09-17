@@ -5,6 +5,7 @@
 #include "CompilerUtils.h"
 #include "CompileError.h"
 #include "DataStructs.h"
+#include "GlobalSymbols.h"
 #include "Types.h"
 #include "Scope.h"
 
@@ -15,7 +16,7 @@ using namespace ZScript;
 // ZScript::Program
 
 Program::Program(ASTFile& root, CompileErrorHandler* errorHandler)
-	: root_(root), rootScope_(new RootScope(typeStore_))
+	: root_(root), rootScope_(new RootScope())
 {
 	// Create the ~Init script.
 	if (Script* initScript =
@@ -85,7 +86,17 @@ vector<Function*> Program::getUserFunctions() const
 vector<Function*> ZScript::getFunctions(Program const& program)
 {
 	vector<Function*> functions = getFunctionsInBranch(program.getScope());
-	appendElements(functions, getClassFunctions(program.getTypeStore()));
+
+	vector<ZClass*> classes = getClassesInBranch(program.getScope());
+	for (vector<ZClass*>::const_iterator it = classes.begin();
+	     it != classes.end(); ++it)
+	{
+		Scope const& scope = (*it)->getScope();
+		appendElements(functions, scope.getLocalFunctions());
+		appendElements(functions, scope.getLocalGetters());
+		appendElements(functions, scope.getLocalSetters());
+	}
+	
 	return functions;
 }
 
@@ -194,7 +205,7 @@ optional<int> ZScript::getLabel(Script const& script)
 ////////////////////////////////////////////////////////////////
 // ZScript::Datum
 
-Datum::Datum(Scope& scope, DataType const& type)
+Datum::Datum(Scope& scope, DataType type)
 	: scope(scope), type(type), id(ScriptParser::getUniqueVarID())
 {}
 
@@ -318,7 +329,7 @@ BuiltinConstant::BuiltinConstant(
 // ZScript::FunctionSignature
 
 FunctionSignature::FunctionSignature(
-		string const& name, vector<DataType const*> const& parameterTypes)
+		string const& name, vector<DataType> const& parameterTypes)
 	: name(name), parameterTypes(parameterTypes)
 {}
 
@@ -326,68 +337,94 @@ FunctionSignature::FunctionSignature(Function const& function)
 	: name(function.name), parameterTypes(function.paramTypes)
 {}
 		
-int FunctionSignature::compare(FunctionSignature const& other) const
+int FunctionSignature::compare(FunctionSignature const& rhs) const
 {
-	int c = name.compare(other.name);
+	int c = name.compare(rhs.name);
 	if (c) return c;
-	c = parameterTypes.size() - other.parameterTypes.size();
+	c = parameterTypes.size() - rhs.parameterTypes.size();
 	if (c) return c;
 	for (int i = 0; i < (int)parameterTypes.size(); ++i)
 	{
-		c = parameterTypes[i]->compare(*other.parameterTypes[i]);
+		c = parameterTypes[i].compare(rhs.parameterTypes[i]);
 		if (c) return c;
 	}
 	return 0;
-}
-
-bool FunctionSignature::operator==(FunctionSignature const& other) const
-{
-	return compare(other) == 0;
-}
-
-bool FunctionSignature::operator<(FunctionSignature const& other) const
-{
-	return compare(other) < 0;
 }
 
 string FunctionSignature::asString() const
 {
 	ostringstream oss;
 	oss << name << "(";
-	for (vector<DataType const*>::const_iterator it = parameterTypes.begin();
+	for (vector<DataType>::const_iterator it = parameterTypes.begin();
 		 it != parameterTypes.end(); ++it)
 	{
 		if (it != parameterTypes.begin()) oss << ", ";
-		oss << (*it)->getName();
+		oss << it->toString();
 	}
 	oss << ")";
 	return oss.str();
 }
 
+bool ZScript::operator==(
+		FunctionSignature const& lhs, FunctionSignature const& rhs)
+{
+	return lhs.compare(rhs) == 0;
+}
+
+bool ZScript::operator!=(
+		FunctionSignature const& lhs, FunctionSignature const& rhs)
+{
+	return lhs.compare(rhs) != 0;
+}
+
+bool ZScript::operator<=(
+		FunctionSignature const& lhs, FunctionSignature const& rhs)
+{
+	return lhs.compare(rhs) <= 0;
+}
+
+bool ZScript::operator<(
+		FunctionSignature const& lhs, FunctionSignature const& rhs)
+{
+	return lhs.compare(rhs) < 0;
+}
+
+bool ZScript::operator>=(
+		FunctionSignature const& lhs, FunctionSignature const& rhs)
+{
+	return lhs.compare(rhs) >= 0;
+}
+
+bool ZScript::operator>(
+		FunctionSignature const& lhs, FunctionSignature const& rhs)
+{
+	return lhs.compare(rhs) > 0;
+}
+
 // ZScript::Function
 
-Function::Function(DataType const* returnType, string const& name,
-				   vector<DataType const*> paramTypes, int id)
+Function::Function(DataType returnType, string const& name,
+				   vector<DataType> const& paramTypes, int id)
 	: node(NULL), internalScope(NULL), thisVar(NULL),
 	  returnType(returnType), name(name), paramTypes(paramTypes),
-	  id(id), label(nullopt)
+	  id(id), label_(nullopt)
 {}
 
 Function::~Function()
 {
-	deleteElements(ownedCode);
+	deleteElements(ownedCode_);
 }
 
 vector<Opcode*> Function::takeCode()
 {
-	vector<Opcode*> code = ownedCode;
-	ownedCode.clear();
+	vector<Opcode*> code = ownedCode_;
+	ownedCode_.clear();
 	return code;
 }
 
 void Function::giveCode(vector<Opcode*>& code)
 {
-	appendElements(ownedCode, code);
+	appendElements(ownedCode_, code);
 	code.clear();
 }
 
@@ -404,21 +441,26 @@ Script* Function::getScript() const
 
 int Function::getLabel() const
 {
-	if (!label) label = ScriptParser::getUniqueLabelID();
-	return *label;
+	if (!label_) label_ = ScriptParser::getUniqueLabelID();
+	return *label_;
+}
+
+void Function::clearLabel()
+{
+	label_ = nullopt;
 }
 
 bool Function::isTracing() const
 {
 	std::string prefix = name.substr(0, 5);
-	return *returnType == DataType::ZVOID
+	return returnType == DataType::stdVoid
 		&& (prefix == "Trace" || prefix == "print");
 }
 
 bool ZScript::isRun(Function const& function)
 {
 	return function.internalScope->getParent()->isScript()
-		&& *function.returnType == DataType::ZVOID
+		&& function.returnType == DataType::stdVoid
 		&& function.name == "run";
 }
 
@@ -430,4 +472,40 @@ int ZScript::getStackSize(Function const& function)
 int ZScript::getParameterCount(Function const& function)
 {
 	return function.paramTypes.size() + (isRun(function) ? 1 : 0);
+}
+
+////////////////////////////////////////////////////////////////
+// ZClass
+
+vector<ZClass*> ZClass::std_;
+
+void ZClass::generateStandard()
+{
+	deleteElements(std_);
+	std_.clear();
+#	define X(NAME, TYPE) \
+	std_.push_back(new ZClass(#NAME, DataType::std##NAME));
+#	include "classes.xtable"
+#	undef X
+}
+
+void ZClass::clearStandard()
+{
+	std_.clear();
+}
+
+ZClass* ZClass::getStandard(StdId id)
+{
+	return std_[int(id)];
+}
+
+ZClass::ZClass(string const& name, DataType const& type)
+		: name(name), scope_(new ClassScope())
+{
+	LibrarySymbols::getTypeInstance(type)->addSymbolsToScope(*scope_);
+}
+
+ZClass::~ZClass()
+{
+	delete scope_;
 }

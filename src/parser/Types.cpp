@@ -1,173 +1,171 @@
-#include <cstdio>
+#include "../precompiled.h" // always first
+#include "Types.h"
+
+#include <cassert>
+#include <set>
 #include <string>
 #include <typeinfo>
+
 #include "CompileError.h"
 #include "DataStructs.h"
 #include "Scope.h"
-#include "Types.h"
 
 using namespace std;
 using namespace ZScript;
 
 ////////////////////////////////////////////////////////////////
-// TypeStore
+// Forward Declarations
 
-TypeStore::TypeStore()
+class DataTypeImplSimple;
+class DataTypeImplArray;
+class DataTypeImplBuiltinClass;
+		
+////////////////////////////////////////////////////////////////
+// DataTypeIds
+
+enum DataTypeId
 {
-	// Assign builtin types.
-	for (DataTypeId id = ZVARTYPEID_START; id < ZVARTYPEID_END; ++id)
-		assignTypeId(*DataType::get(id));
+	idStart = 0,
+	idVoid = 0,
+	idUntyped,
+	idBool,
+	idFloat,
+	idConstFloat,
+	idEnd
+};
 
-	// Assign builtin classes.
-	for (int id = ZVARTYPEID_CLASS_START; id < ZVARTYPEID_CLASS_END; ++id)
-	{
-		DataTypeClass& type = *(DataTypeClass*)DataType::get(id);
-		assert(type.getClassId() == ownedClasses.size());
-		ownedClasses.push_back(
-				new ZClass(*this, type.getClassName(), type.getClassId()));
-	}
-}
+////////////////////////////////////////////////////////////////
+// DataTypeImpl
 
-TypeStore::~TypeStore()
+class DataType::Impl : private NoCopy
 {
-	deleteElements(ownedTypes);
-	deleteElements(ownedClasses);
-}
-
-// Types
-
-DataType const* TypeStore::getType(DataTypeId typeId) const
-{
-	if (typeId < 0 || typeId > (int)ownedTypes.size()) return NULL;
-	return ownedTypes[typeId];
-}
-
-optional<DataTypeId> TypeStore::getTypeId(DataType const& type) const
-{
-	return find<DataTypeId>(typeIdMap, &type);
-}
-
-optional<DataTypeId> TypeStore::assignTypeId(DataType const& type)
-{
-	if (!type.isResolved())
-	{
-		box_out_err(CompileError::UnresolvedType(NULL, type.getName()));
-		return nullopt;
-	}
-
-	if (find<DataTypeId>(typeIdMap, &type)) return nullopt;
-
-	DataTypeId id = ownedTypes.size();
-	DataType const* storedType = type.clone();
-	ownedTypes.push_back(storedType);
-	typeIdMap[storedType] = id;
-	return id;
-}
-
-optional<DataTypeId> TypeStore::getOrAssignTypeId(DataType const& type)
-{
-	if (!type.isResolved())
-	{
-		box_out_err(CompileError::UnresolvedType(NULL, type.getName()));
-		return nullopt;
-	}
-
-	if (optional<DataTypeId> typeId = find<DataTypeId>(typeIdMap, &type))
-		return typeId;
+public:
+	// Standard types.
+	static DataTypeImplSimple const stdVoid;
+	static DataTypeImplSimple const stdUntyped;
+	static DataTypeImplSimple const stdBool;
+	static DataTypeImplSimple const stdFloat;
+	static DataTypeImplSimple const stdConstFloat;
+	static DataTypeImplArray const stdAryFloat;
+#	define X(NAME, TYPE) \
+	static DataTypeImplBuiltinClass const std##NAME;
+#	include "classes.xtable"
+#	undef X
 	
-	DataTypeId id = ownedTypes.size();
-	DataType* storedType = type.clone();
-	ownedTypes.push_back(storedType);
-	typeIdMap[storedType] = id;
-	return id;
-}
+	virtual ~Impl() {}
+	virtual Impl* clone() const = 0;
 
-// Classes
+	// Basics
+	virtual string toString() const = 0;
+	virtual bool canBeGlobal() const {return true;}
 
-ZClass* TypeStore::getClass(int classId) const
+	// Comparison. As per <=> operator.
+	int compare(DataType::Impl const& rhs) const;
+
+	// If this is a standard type and doesn't need to be deleted by its
+	// parent.
+	bool const standard;
+
+protected:
+	Impl(bool standard = false) : standard(standard) {}
+
+private:
+	// This is used to compare between instances of the same derived
+	// type in compare's implementation.  rhs is guaranteed to be
+	// the same class as the derived type.
+	virtual int selfCompare(DataType::Impl const& rhs) const = 0;
+
+};
+
+bool operator==(DataType::Impl const&, DataType::Impl const&);
+bool operator!=(DataType::Impl const&, DataType::Impl const&);
+bool operator<(DataType::Impl const&, DataType::Impl const&);
+bool operator<=(DataType::Impl const&, DataType::Impl const&);
+bool operator>(DataType::Impl const&, DataType::Impl const&);
+bool operator>=(DataType::Impl const&, DataType::Impl const&);
+
+bool canCast(DataType::Impl const& from, DataType::Impl const& to);
+DataType::Impl const& getNaiveType(DataType::Impl const& base);
+
+// Returns source if it's standard or NULL, clones it otherwise.
+DataType::Impl const* copy(DataType::Impl const* source)
 {
-	if (classId < 0 || classId > int(ownedClasses.size())) return NULL;
-	return ownedClasses[classId];
+	if (source && !source->standard) return source->clone();
+	return source;
 }
 
-ZClass* TypeStore::createClass(string const& name)
+class DataTypeImplSimple : public DataType::Impl
 {
-	ZClass* klass = new ZClass(*this, name, ownedClasses.size());
-	ownedClasses.push_back(klass);
-	return klass;
-}
+public:
+	DataTypeImplSimple(DataTypeId id, string const& name,
+	                   bool standard = false);
+	DataTypeImplSimple* clone() const /*override*/ {
+		return new DataTypeImplSimple(id_, name_);}
 
-vector<Function*> ZScript::getClassFunctions(TypeStore const& store)
+	virtual string toString() const {return name_;}
+
+private:
+	int selfCompare(DataType::Impl const& rhs) const;
+
+	DataTypeId id_;
+	string name_;
+};
+
+class DataTypeImplBuiltinClass : public DataType::Impl
 {
-	vector<Function*> functions;
-	vector<ZClass*> classes = store.getClasses();
-	for (vector<ZClass*>::const_iterator it = classes.begin();
-	     it != classes.end(); ++it)
-	{
-		appendElements(functions, (*it)->getLocalFunctions());
-		appendElements(functions, (*it)->getLocalGetters());
-		appendElements(functions, (*it)->getLocalSetters());
-	}
-	return functions;
-}
+public:
+	DataTypeImplBuiltinClass(ZClass::StdId, bool standard = false);
+	DataTypeImplBuiltinClass* clone() const /*override*/ {
+		return new DataTypeImplBuiltinClass(id);}
 
-// Internal
+	virtual string toString() const;
 
-bool TypeStore::TypeIdMapComparator::operator()(
-		DataType const* const& lhs, DataType const* const& rhs) const
+	ZClass::StdId id;
+
+private:
+	int selfCompare(DataType::Impl const& rhs) const;
+};
+
+class DataTypeImplArray : public DataType::Impl
 {
-	if (rhs == NULL) return false;
-	if (lhs == NULL) return true;
-	return *lhs < *rhs;
-}
+public:
+	DataTypeImplArray(DataType::Impl const* elementType,
+	                  bool standard = false);
+	DataTypeImplArray(DataTypeImplArray const&);
+	~DataTypeImplArray();
+	DataTypeImplArray& operator=(DataTypeImplArray const&);
+	DataTypeImplArray* clone() const /*override*/;
+	
+	virtual string toString() const;
+
+	DataType::Impl const* elementType;
+			
+private:
+	int selfCompare(DataType::Impl const& rhs) const;			
+};
 
 ////////////////////////////////////////////////////////////////
+// DataType::Impl
 
-// Standard Type definitions.
-DataTypeSimple const DataType::UNTYPED(ZVARTYPEID_UNTYPED, "untyped");
-DataTypeSimple const DataType::ZVOID(ZVARTYPEID_VOID, "void");
-DataTypeSimple const DataType::FLOAT(ZVARTYPEID_FLOAT, "float");
-DataTypeSimple const DataType::BOOL(ZVARTYPEID_BOOL, "bool");
-DataTypeArray const DataType::STRING(FLOAT);
-DataTypeClass const DataType::GAME(ZCLASSID_GAME, "Game");
-DataTypeClass const DataType::LINK(ZCLASSID_LINK, "Link");
-DataTypeClass const DataType::SCREEN(ZCLASSID_SCREEN, "Screen");
-DataTypeClass const DataType::FFC(ZCLASSID_FFC, "FFC");
-DataTypeClass const DataType::ITEM(ZCLASSID_ITEM, "Item");
-DataTypeClass const DataType::ITEMCLASS(ZCLASSID_ITEMCLASS, "ItemData");
-DataTypeClass const DataType::NPC(ZCLASSID_NPC, "NPC");
-DataTypeClass const DataType::LWPN(ZCLASSID_LWPN, "LWeapon");
-DataTypeClass const DataType::EWPN(ZCLASSID_EWPN, "EWeapon");
-DataTypeClass const DataType::AUDIO(ZCLASSID_AUDIO, "Audio");
-DataTypeClass const DataType::DEBUG(ZCLASSID_DEBUG, "Debug");
-DataTypeClass const DataType::NPCDATA(ZCLASSID_NPCDATA, "NPCData");
-DataTypeClass const DataType::COMBOS(ZCLASSID_COMBOS, "Combos");
-DataTypeClass const DataType::SPRITEDATA(ZCLASSID_SPRITEDATA, "SpriteData");
-DataTypeClass const DataType::GRAPHICS(ZCLASSID_GRAPHICS, "Graphics");
-DataTypeClass const DataType::BITMAP(ZCLASSID_BITMAP, "Bitmap");
-DataTypeClass const DataType::TEXT(ZCLASSID_TEXT, "Text");
-DataTypeClass const DataType::INPUT(ZCLASSID_INPUT, "Input");
-DataTypeClass const DataType::MAPDATA(ZCLASSID_MAPDATA, "MapData");
-DataTypeClass const DataType::DMAPDATA(ZCLASSID_DMAPDATA, "DMapData");
-DataTypeClass const DataType::ZMESSAGE(ZCLASSID_ZMESSAGE, "ZMessage");
-DataTypeClass const DataType::SHOPDATA(ZCLASSID_SHOPDATA, "ShopData");
-DataTypeClass const DataType::DROPSET(ZCLASSID_DROPSET, "DropSet");
-DataTypeClass const DataType::PONDS(ZCLASSID_PONDS, "Ponds");
-DataTypeClass const DataType::WARPRING(ZCLASSID_WARPRING, "WarpRing");
-DataTypeClass const DataType::DOORSET(ZCLASSID_DOORSET, "DoorSet");
-DataTypeClass const DataType::ZUICOLOURS(ZCLASSID_ZUICOLOURS, "ZuiColours");
-DataTypeClass const DataType::RGBDATA(ZCLASSID_RGBDATA, "RgbData");
-DataTypeClass const DataType::PALETTE(ZCLASSID_PALETTE, "Palette");
-DataTypeClass const DataType::TUNES(ZCLASSID_TUNES, "Tunes");
-DataTypeClass const DataType::PALCYCLE(ZCLASSID_PALCYCLE, "PalCycle");
-DataTypeClass const DataType::GAMEDATA(ZCLASSID_GAMEDATA, "GameData");
-DataTypeClass const DataType::CHEATS(ZCLASSID_CHEATS, "Cheats");
-DataTypeConstFloat const DataType::CONST_FLOAT;
+DataTypeImplSimple const DataType::Impl::stdVoid(
+	idVoid, "void", true);
+DataTypeImplSimple const DataType::Impl::stdUntyped(
+	idUntyped, "untyped", true);
+DataTypeImplSimple const DataType::Impl::stdBool(
+	idBool, "bool", true);
+DataTypeImplSimple const DataType::Impl::stdFloat(
+	idFloat, "float", true);
+DataTypeImplSimple const DataType::Impl::stdConstFloat(
+	idConstFloat, "const float", true);
+DataTypeImplArray const DataType::Impl::stdAryFloat(&stdFloat, true);
 
-////////////////////////////////////////////////////////////////
-// DataType
+#define X(NAME, TYPE) \
+DataTypeImplBuiltinClass const DataType::Impl::std##NAME( \
+	ZClass::stdId##NAME, true);
+#include "classes.xtable"
+#undef X
 
-int DataType::compare(DataType const& rhs) const
+int DataType::Impl::compare(DataType::Impl const& rhs) const
 {
 	type_info const& lhsType = typeid(*this);
 	type_info const& rhsType = typeid(rhs);
@@ -176,51 +174,375 @@ int DataType::compare(DataType const& rhs) const
 	return selfCompare(rhs);
 }
 
-DataType const* DataType::get(DataTypeId id)
+bool operator==(DataType::Impl const& lhs, DataType::Impl const& rhs)
+{
+	return lhs.compare(rhs) == 0;
+}
+
+bool operator!=(DataType::Impl const& lhs, DataType::Impl const& rhs)
+{
+	return lhs.compare(rhs) != 0;
+}
+
+bool operator<(DataType::Impl const& lhs, DataType::Impl const& rhs)
+{
+	return lhs.compare(rhs) < 0;
+}
+
+bool operator<=(DataType::Impl const& lhs, DataType::Impl const& rhs)
+{
+	return lhs.compare(rhs) <= 0;
+}
+
+bool operator>(DataType::Impl const& lhs, DataType::Impl const& rhs)
+{
+	return lhs.compare(rhs) > 0;
+}
+
+bool operator>=(DataType::Impl const& lhs, DataType::Impl const& rhs)
+{
+	return lhs.compare(rhs) >= 0;
+}
+
+bool ZScript::isArray(DataType type)
+{
+	return bool(type.getElementType());
+}
+
+bool ZScript::isClass(DataType type)
+{
+	return bool(type.getClass());
+}
+
+bool canCast(DataType::Impl const& from, DataType::Impl const& to)
+{	
+	DataType::Impl const& fn = getNaiveType(from);
+	DataType::Impl const& tn = getNaiveType(to);
+	
+	if (fn == DataType::Impl::stdVoid) return false;
+	if (tn == DataType::Impl::stdVoid) return false;
+	
+	if (fn == tn) return true;
+	if (fn == DataType::Impl::stdUntyped) return true;
+	if (tn == DataType::Impl::stdUntyped) return true;
+
+	if (fn == DataType::Impl::stdFloat && tn == DataType::Impl::stdConstFloat)
+		return true;
+	// We can cast from const float to float since it's a value type.
+	if (fn == DataType::Impl::stdConstFloat && tn == DataType::Impl::stdFloat)
+		return true;
+	
+	if ((fn == DataType::Impl::stdFloat || fn == DataType::Impl::stdConstFloat)
+	    && tn == DataType::Impl::stdBool)
+		return true;
+
+	return false;
+}
+
+DataType::Impl const& getNaiveType(DataType::Impl const& base)
+{
+	DataType::Impl const* current = &base;
+	while (DataTypeImplArray const* array =
+	       dynamic_cast<DataTypeImplArray const*>(current))
+		current = array->elementType;
+	return *current;
+}
+
+////////////////////////////////////////////////////////////////
+// DataTypeImplSimple
+
+DataTypeImplSimple::DataTypeImplSimple(
+	DataTypeId id, string const& name, bool standard)
+		: DataType::Impl(standard), id_(id), name_(name)
+{}
+
+int DataTypeImplSimple::selfCompare(DataType::Impl const& rhs) const
+{
+	return id_ - static_cast<DataTypeImplSimple const&>(rhs).id_;
+}
+
+////////////////////////////////////////////////////////////////
+// DataTypeImplBuiltinClass
+
+DataTypeImplBuiltinClass::DataTypeImplBuiltinClass(
+	ZClass::StdId id, bool standard)
+	: DataType::Impl(standard), id(id)
+{}
+
+string DataTypeImplBuiltinClass::toString() const
+{
+	return ZClass::getStandard(id)->name;
+}
+
+int DataTypeImplBuiltinClass::selfCompare(DataType::Impl const& rhs) const
+{
+	return id - static_cast<DataTypeImplBuiltinClass const&>(rhs).id;
+}
+
+////////////////////////////////////////////////////////////////
+// DataTypeImplArray
+
+DataTypeImplArray::DataTypeImplArray(
+	DataType::Impl const* elementType, bool standard)
+	: DataType::Impl(standard), elementType(elementType)
+{}
+
+DataTypeImplArray::DataTypeImplArray(DataTypeImplArray const& other)
+	: elementType(copy(other.elementType))
+{}
+
+DataTypeImplArray::~DataTypeImplArray()
+{
+	if (elementType && !elementType->standard) delete elementType;
+}
+
+DataTypeImplArray& DataTypeImplArray::operator=(DataTypeImplArray const& rhs)
+{
+	if (elementType && !elementType->standard) delete elementType;
+	elementType = copy(rhs.elementType);
+	return *this;
+}
+
+DataTypeImplArray* DataTypeImplArray::clone() const
+{
+	return new DataTypeImplArray(*this);
+}
+
+string DataTypeImplArray::toString() const
+{
+	return elementType->toString() + "[]";
+}
+
+int DataTypeImplArray::selfCompare(DataType::Impl const& rhs) const
+{
+	return elementType->compare(
+		*static_cast<DataTypeImplArray const&>(rhs).elementType);
+}
+
+////////////////////////////////////////////////////////////////
+// DataType
+
+DataType const DataType::stdInvalid;
+
+// Simple Types
+DataType const DataType::stdVoid(&DataType::Impl::stdVoid);
+DataType const DataType::stdUntyped(&DataType::Impl::stdUntyped);
+DataType const DataType::stdBool(&DataType::Impl::stdBool);
+DataType const DataType::stdFloat(&DataType::Impl::stdFloat);
+DataType const DataType::stdConstFloat(&DataType::Impl::stdConstFloat);
+DataType const DataType::stdAryFloat(&DataType::Impl::stdAryFloat);
+
+// Classes
+#define X(NAME, TYPE) \
+DataType const DataType::std##NAME(&DataType::Impl::std##NAME);
+#include "classes.xtable"
+#undef X
+
+DataType DataType::arrayOf(DataType type)
+{
+	return new DataTypeImplArray(copy(type.pimpl_));
+}
+
+DataType::DataType() : pimpl_(NULL) {}
+
+DataType::DataType(DataTypeIdBuiltin id)
 {
 	switch (id)
 	{
-	case ZVARTYPEID_UNTYPED: return &UNTYPED;
-	case ZVARTYPEID_VOID: return &ZVOID;
-	case ZVARTYPEID_FLOAT: return &FLOAT;
-	case ZVARTYPEID_BOOL: return &BOOL;
-	case ZVARTYPEID_CONST_FLOAT: return &CONST_FLOAT;
-	case ZVARTYPEID_GAME: return &GAME;
-	case ZVARTYPEID_LINK: return &LINK;
-	case ZVARTYPEID_SCREEN: return &SCREEN;
-	case ZVARTYPEID_FFC: return &FFC;
-	case ZVARTYPEID_ITEM: return &ITEM;
-	case ZVARTYPEID_ITEMCLASS: return &ITEMCLASS;
-	case ZVARTYPEID_NPC: return &NPC;
-	case ZVARTYPEID_LWPN: return &LWPN;
-	case ZVARTYPEID_EWPN: return &EWPN;
-	case ZVARTYPEID_NPCDATA: return &NPCDATA;
-	case ZVARTYPEID_DEBUG: return &DEBUG;
-	case ZVARTYPEID_AUDIO: return &AUDIO;
-	case ZVARTYPEID_COMBOS: return &COMBOS;
-	case ZVARTYPEID_SPRITEDATA: return &SPRITEDATA;
-	case ZVARTYPEID_GRAPHICS: return &GRAPHICS;
-	case ZVARTYPEID_BITMAP: return &BITMAP;
-	case ZVARTYPEID_TEXT: return &TEXT;
-	case ZVARTYPEID_INPUT: return &INPUT;
-	case ZVARTYPEID_MAPDATA: return &MAPDATA;
-	case ZVARTYPEID_DMAPDATA: return &DMAPDATA;
-	case ZVARTYPEID_ZMESSAGE: return &ZMESSAGE;
-	case ZVARTYPEID_SHOPDATA: return &SHOPDATA;
-	case ZVARTYPEID_DROPSET: return &DROPSET;
-	case ZVARTYPEID_PONDS: return &PONDS;
-	case ZVARTYPEID_WARPRING: return &WARPRING;
-	case ZVARTYPEID_DOORSET: return &DOORSET;
-	case ZVARTYPEID_ZUICOLOURS: return &ZUICOLOURS;
-	case ZVARTYPEID_RGBDATA: return &RGBDATA;
-	case ZVARTYPEID_PALETTE: return &PALETTE;
-	case ZVARTYPEID_TUNES: return &TUNES;
-	case ZVARTYPEID_PALCYCLE: return &PALCYCLE;
-	case ZVARTYPEID_GAMEDATA: return &GAMEDATA;
-	case ZVARTYPEID_CHEATS: return &CHEATS;
-	default: return NULL;
+	case ZVARTYPEID_VOID:
+		pimpl_ = &DataType::Impl::stdVoid;
+		break;
+	case ZVARTYPEID_UNTYPED:
+		pimpl_ = &DataType::Impl::stdUntyped;
+		break;
+	case ZVARTYPEID_BOOL:
+		pimpl_ = &DataType::Impl::stdBool;
+		break;
+	case ZVARTYPEID_FLOAT:
+		pimpl_ = &DataType::Impl::stdFloat;
+		break;
+	case ZVARTYPEID_CONST_FLOAT:
+		pimpl_ = &DataType::Impl::stdConstFloat;
+		break;
+	case ZVARTYPEID_ARY_FLOAT:
+		pimpl_ = &DataType::Impl::stdAryFloat;
+		break;
+	case ZVARTYPEID_AUDIO:
+		pimpl_ = &DataType::Impl::stdAudio;
+		break;
+	case ZVARTYPEID_DEBUG:
+		pimpl_ = &DataType::Impl::stdDebug;
+		break;
+	case ZVARTYPEID_GAME:
+		pimpl_ = &DataType::Impl::stdGame;
+		break;
+	case ZVARTYPEID_GRAPHICS:
+		pimpl_ = &DataType::Impl::stdGraphics;
+		break;
+	case ZVARTYPEID_INPUT:
+		pimpl_ = &DataType::Impl::stdInput;
+		break;
+	case ZVARTYPEID_LINK:
+		pimpl_ = &DataType::Impl::stdLink;
+		break;
+	case ZVARTYPEID_SCREEN:
+		pimpl_ = &DataType::Impl::stdScreen;
+		break;
+	case ZVARTYPEID_TEXT:
+		pimpl_ = &DataType::Impl::stdText;
+		break;
+	case ZVARTYPEID_BITMAP:
+		pimpl_ = &DataType::Impl::stdBitmap;
+		break;
+	case ZVARTYPEID_CHEAT:
+		pimpl_ = &DataType::Impl::stdCheat;
+		break;
+	case ZVARTYPEID_COMBOS:
+		pimpl_ = &DataType::Impl::stdComboData;
+		break;
+	case ZVARTYPEID_DMAPDATA:
+		pimpl_ = &DataType::Impl::stdDMapData;
+		break;
+	case ZVARTYPEID_DOORSET:
+		pimpl_ = &DataType::Impl::stdDoorSet;
+		break;
+	case ZVARTYPEID_DROPSET:
+		pimpl_ = &DataType::Impl::stdDropSet;
+		break;
+	case ZVARTYPEID_EWPN:
+		pimpl_ = &DataType::Impl::stdEnemyWeapon;
+		break;
+	case ZVARTYPEID_FFC:
+		pimpl_ = &DataType::Impl::stdFfc;
+		break;
+	case ZVARTYPEID_GAMEDATA:
+		pimpl_ = &DataType::Impl::stdGameData;
+		break;
+		/*
+	case ZVARTYPEID_INFOSHOPDATA:
+		pimpl_ = &DataType::Impl::stdInfoShopData;
+		break;
+		*/
+	case ZVARTYPEID_ITEM:
+		pimpl_ = &DataType::Impl::stdItem;
+		break;
+	case ZVARTYPEID_ITEMCLASS:
+		pimpl_ = &DataType::Impl::stdItemData;
+		break;
+	case ZVARTYPEID_LWPN:
+		pimpl_ = &DataType::Impl::stdLinkWeapon;
+		break;
+	case ZVARTYPEID_MAPDATA:
+		pimpl_ = &DataType::Impl::stdMapData;
+		break;
+	case ZVARTYPEID_ZMESSAGE:
+		pimpl_ = &DataType::Impl::stdMessageData;
+		break;
+	case ZVARTYPEID_MIDI:
+		pimpl_ = &DataType::Impl::stdMidi;
+		break;
+	case ZVARTYPEID_MISCCOLOR:
+		pimpl_ = &DataType::Impl::stdMiscColor;
+		break;
+	case ZVARTYPEID_NPC:
+		pimpl_ = &DataType::Impl::stdNpc;
+		break;
+	case ZVARTYPEID_NPCDATA:
+		pimpl_ = &DataType::Impl::stdNpcData;
+		break;
+	case ZVARTYPEID_PALCYCLE:
+		pimpl_ = &DataType::Impl::stdPalCycle;
+		break;
+	case ZVARTYPEID_PALETTE:
+		pimpl_ = &DataType::Impl::stdPalette;
+		break;
+	case ZVARTYPEID_RGBDATA:
+		pimpl_ = &DataType::Impl::stdRgb;
+		break;
+	case ZVARTYPEID_SHOPDATA:
+		pimpl_ = &DataType::Impl::stdShopData;
+		break;
+	case ZVARTYPEID_SPRITEDATA:
+		pimpl_ = &DataType::Impl::stdSpriteData;
+		break;
+	case ZVARTYPEID_WARPRING:
+		pimpl_ = &DataType::Impl::stdWarpRing;
+		break;
 	}
 }
+
+DataType::DataType(DataType const& other)
+{
+	pimpl_ = copy(other.pimpl_);
+}
+
+DataType::~DataType()
+{
+	if (pimpl_ && !pimpl_->standard) delete pimpl_;
+}
+
+DataType& DataType::operator=(DataType const& rhs)
+{
+	if (pimpl_ && !pimpl_->standard) delete pimpl_;
+	pimpl_ = copy(rhs.pimpl_);
+	return *this;
+}
+
+bool DataType::isValid() const
+{
+	return pimpl_;
+}
+
+bool DataType::safe_bool() const
+{
+	return pimpl_ && (*pimpl_ != *stdVoid.pimpl_);
+}
+
+int DataType::compare(DataType const& rhs) const
+{
+	if (pimpl_ == rhs.pimpl_) return 0;
+	if (!pimpl_) return -1;
+	if (!rhs.pimpl_) return 1;
+	return pimpl_->compare(*rhs.pimpl_);
+}
+
+string DataType::toString() const
+{
+	return pimpl_->toString();
+}
+
+bool DataType::canBeGlobal() const
+{
+	return pimpl_->canBeGlobal();
+}
+
+bool DataType::canCastTo(DataType target) const
+{
+	return canCast(*pimpl_, *target.pimpl_);
+}
+
+// Arrays
+
+optional<DataType> DataType::getElementType() const
+{
+	if (!pimpl_) return nullopt;
+	if (DataTypeImplArray const* a =
+	    dynamic_cast<DataTypeImplArray const*>(pimpl_))
+		return DataType(copy(a->elementType));
+	return nullopt;
+}
+
+// Classes
+
+ZClass* DataType::getClass() const
+{
+	if (DataTypeImplBuiltinClass const* pclass =
+	    dynamic_cast<DataTypeImplBuiltinClass const*>(pimpl_))
+		return ZClass::getStandard(pclass->id);
+	return NULL;
+}
+
+// Comparison
 
 bool ZScript::operator==(DataType const& lhs, DataType const& rhs)
 {
@@ -252,174 +574,22 @@ bool ZScript::operator>=(DataType const& lhs, DataType const& rhs)
 	return lhs.compare(rhs) >= 0;
 }
 
-DataType const& ZScript::getNaiveType(DataType const& type)
+int ZScript::getArrayDepth(DataType type)
 {
-	if (type == DataType::CONST_FLOAT) return DataType::FLOAT;
-
-	DataType const* t = &type;
-	while (DataTypeArray const* ta = dynamic_cast<DataTypeArray const*>(t))
-		t = &ta->getElementType();
-
-	return *t;
-}
-
-int ZScript::getArrayDepth(DataType const& type)
-{
-	DataType const* ptype = &type;
 	int depth = 0;
-	while (DataTypeArray const* t = dynamic_cast<DataTypeArray const*>(ptype))
+	while (optional<DataType> elementType = type.getElementType())
 	{
 		++depth;
-		ptype = &t->getElementType();
+		type = *elementType;
 	}
 	return depth;
 }
 
-////////////////////////////////////////////////////////////////
-// DataTypeUnresolved
-
-DataType* DataTypeUnresolved::resolve(Scope& scope)
+DataType ZScript::getNaiveType(DataType type)
 {
-	if (DataType const* type = lookupDataType(scope, name))
-		return type->clone();
-	return NULL;
-}
-
-int DataTypeUnresolved::selfCompare(DataType const& rhs) const
-{
-	DataTypeUnresolved const& o = static_cast<DataTypeUnresolved const&>(rhs);
-	return name.compare(o.name);
-}
-
-////////////////////////////////////////////////////////////////
-// DataTypeSimple
-
-DataTypeSimple::DataTypeSimple(int simpleId, string const& name)
-	: simpleId(simpleId), name(name)
-{}
-
-int DataTypeSimple::selfCompare(DataType const& rhs) const
-{
-	DataTypeSimple const& o = static_cast<DataTypeSimple const&>(rhs);
-	return simpleId - o.simpleId;
-}
-
-bool DataTypeSimple::canCastTo(DataType const& target) const
-{
-	if (simpleId == ZVARTYPEID_UNTYPED) return true;
-	if (target == UNTYPED) return true;
-	
-	if (DataTypeConstFloat const* t =
-			dynamic_cast<DataTypeConstFloat const*>(&target))
-		return canCastTo(DataType::FLOAT);
-
-	if (DataTypeArray const* t =
-			dynamic_cast<DataTypeArray const*>(&target))
-		return canCastTo(getBaseType(*t));
-
-	if (DataTypeSimple const* t =
-			dynamic_cast<DataTypeSimple const*>(&target))
-	{
-		if (simpleId == ZVARTYPEID_UNTYPED || t->simpleId == ZVARTYPEID_UNTYPED)
-			return true;
-		if (simpleId == ZVARTYPEID_VOID || t->simpleId == ZVARTYPEID_VOID)
-			return false;
-		if (simpleId == t->simpleId)
-			return true;
-		if (simpleId == ZVARTYPEID_FLOAT && t->simpleId == ZVARTYPEID_BOOL)
-			return true;
-	}
-	
-	return false;
-}
-
-bool DataTypeSimple::canBeGlobal() const
-{
-	return simpleId == ZVARTYPEID_FLOAT || simpleId == ZVARTYPEID_BOOL;
-}
-
-////////////////////////////////////////////////////////////////
-// DataTypeConstFloat
-
-bool DataTypeConstFloat::canCastTo(DataType const& target) const
-{
-	if (target == UNTYPED) return true;
-	
-	if (*this == target) return true;
-	return DataType::FLOAT.canCastTo(target);
-}
-
-////////////////////////////////////////////////////////////////
-// DataTypeClass
-
-DataTypeClass::DataTypeClass(int classId)
-	: classId(classId), className("")
-{}
-
-DataTypeClass::DataTypeClass(int classId, string const& className)
-	: classId(classId), className(className)
-{}
-
-DataTypeClass* DataTypeClass::resolve(Scope& scope)
-{
-	// Grab the proper name for the class the first time it's resolved.
-	if (className == "")
-		className = scope.getTypeStore().getClass(classId)->name;
-
-	return this;
-}
-
-string DataTypeClass::getName() const
-{
-	string name = className == "" ? "anonymous" : className;
-	char tmp[32];
-	sprintf(tmp, "%d", classId);
-	return name + "[class " + tmp + "]";
-}
-
-bool DataTypeClass::canCastTo(DataType const& target) const
-{
-	if (target == UNTYPED) return true;
-	
-	if (DataTypeArray const* t =
-			dynamic_cast<DataTypeArray const*>(&target))
-		return canCastTo(getBaseType(*t));
-
-	return *this == target;
-}
-
-int DataTypeClass::selfCompare(DataType const& rhs) const
-{
-	DataTypeClass const& o = static_cast<DataTypeClass const&>(rhs);
-	return classId - o.classId;
-}
-
-////////////////////////////////////////////////////////////////
-// DataTypeArray
-
-bool DataTypeArray::canCastTo(DataType const& target) const
-{
-	if (target == UNTYPED) return true;
-	
-	if (DataTypeArray const* t =
-			dynamic_cast<DataTypeArray const*>(&target))
-		return canCastTo(getBaseType(*t));
-	
-	return getBaseType(*this).canCastTo(target);
-}
-
-int DataTypeArray::selfCompare(DataType const& rhs) const
-{
-	DataTypeArray const& o = static_cast<DataTypeArray const&>(rhs);
-	return elementType.compare(o.elementType);
-}
-
-DataType const& ZScript::getBaseType(DataType const& type)
-{
-	DataType const* current = &type;
-	while (DataTypeArray const* t = dynamic_cast<DataTypeArray const*>(current))
-		current = &t->getElementType();
-	return *current;
+	while (optional<DataType> elementType = type.getElementType())
+		type = *elementType;
+	return type;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -430,14 +600,14 @@ namespace // file local
 	struct ScriptTypeData
 	{
 		string name;
-		DataTypeId thisTypeId;
+		DataType thisType;
 	};
 
 	ScriptTypeData scriptTypes[ScriptType::idEnd] = {
-		{"invalid", ZVARTYPEID_VOID},
-		{"global", ZVARTYPEID_VOID},
-		{"ffc", ZVARTYPEID_FFC},
-		{"item", ZVARTYPEID_ITEMCLASS},
+		{"invalid", DataType::stdInvalid},
+		{"global", DataType::stdVoid},
+		{"ffc", DataType::stdFfc},
+		{"item", DataType::stdItemData},
 	};
 }
 
@@ -452,10 +622,10 @@ string const& ScriptType::getName() const
 	return scriptTypes[idInvalid].name;
 }
 
-DataTypeId ScriptType::getThisTypeId() const
+DataType ScriptType::getThisType() const
 {
-	if (isValid()) return scriptTypes[id_].thisTypeId;
-	return scriptTypes[idInvalid].thisTypeId;
+	if (isValid()) return scriptTypes[id_].thisType;
+	return scriptTypes[idInvalid].thisType;
 }
 
 bool ZScript::operator==(ScriptType const& lhs, ScriptType const& rhs)

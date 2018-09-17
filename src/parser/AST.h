@@ -179,7 +179,9 @@ namespace ZScript
 
 		// If this node has been disabled due to an error.
 		bool disabled;
-	
+
+		void bindScope(Scope* scope) {scope_ = scope;}
+
 		// Subclass Predicates (replacing typeof and such).
 		virtual bool isTypeArrow() const {return false;}
 		virtual bool isTypeIndex() const {return false;}
@@ -188,6 +190,9 @@ namespace ZScript
 		virtual bool isTypeArrayDecl() const {return false;}
 		virtual bool isStringLiteral() const {return false;}
 		virtual bool isArrayLiteral() const {return false;}
+
+	private:
+		Scope* scope_;
 	};
 
 
@@ -585,10 +590,6 @@ namespace ZScript
 		ASTExpr const* getInitializer() const {return initializer_.get();}
 		void setInitializer(ASTExpr* initializer);
 
-		// Resolves the type, using either the list's or this node's own base type
-		// as appropriate.
-		DataType const* resolveType(Scope* scope);
-
 		// The list containing this declaration. Should be set by that list when
 		// this is added.
 		ASTDataDeclList* list;
@@ -613,6 +614,10 @@ namespace ZScript
 		// The initialization expression. Optional.
 		owning_ptr<ASTExpr> initializer_;
 	};
+
+	// Resolves the type, using either the list's or this node's own base type
+	// as appropriate.
+	DataType resolveType(ASTDataDecl const&, Scope* scope);
 
 	bool hasSize(ASTDataDecl const&);
 
@@ -688,10 +693,10 @@ namespace ZScript
 			const
 		{return nullopt;}
 
-		// Returns the read or write type for this expression. Null for either
-		// means that it can't be read from/written to.
-		virtual DataType const* getReadType() const {return NULL;}
-		virtual DataType const* getWriteType() const {return NULL;}
+		// Returns the read or write type for this expression. Void for
+		// either means that it can't be read from/written to.
+		virtual DataType getReadType() const {return DataType::stdVoid;}
+		virtual DataType getWriteType() const {return DataType::stdVoid;}
 	};
 
 	// Wrap around an expression to type it as constant.
@@ -708,8 +713,8 @@ namespace ZScript
 
 		optional<long> getCompileTimeValue(CompileErrorHandler* errorHandler)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/ {
-			return content ? content->getReadType() : NULL;}
+		DataType getReadType() const /*override*/ {
+			return content ? content->getReadType() : DataType::stdVoid;}
 	
 		owning_ptr<ASTExpr> content;
 	};
@@ -729,10 +734,10 @@ namespace ZScript
 
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/ {
-			return right ? right->getReadType() : NULL;}
-		DataType const* getWriteType() const /*override*/ {
-			return right ? right->getWriteType() : NULL;}
+		DataType getReadType() const /*override*/ {
+			return right ? right->getReadType() : DataType::stdVoid;}
+		DataType getWriteType() const /*override*/ {
+			return right ? right->getWriteType() : DataType::stdVoid;}
 	
 		owning_ptr<ASTExpr> left;
 		owning_ptr<ASTExpr> right;
@@ -754,8 +759,8 @@ namespace ZScript
 
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/;
-		DataType const* getWriteType() const /*override*/;
+		DataType getReadType() const /*override*/;
+		DataType getWriteType() const /*override*/;
 	
 		// The identifier components separated by '.'.
 		std::vector<std::string> components;
@@ -780,8 +785,8 @@ namespace ZScript
 		bool isTypeArrow() const /*override*/ {return true;}
 
 		bool isConstant() const /*override*/ {return false;}
-		DataType const* getReadType() const /*override*/;
-		DataType const* getWriteType() const /*override*/;
+		DataType getReadType() const /*override*/;
+		DataType getWriteType() const /*override*/;
 	
 		owning_ptr<ASTExpr> left;
 		std::string right;
@@ -803,8 +808,8 @@ namespace ZScript
 		bool isTypeIndex() const /*override*/ {return true;}
     
 		bool isConstant() const /*override*/;
-		DataType const* getReadType() const /*override*/;
-		DataType const* getWriteType() const /*override*/;
+		DataType getReadType() const /*override*/;
+		DataType getWriteType() const /*override*/;
 	
 		owning_ptr<ASTExpr> array;
 		owning_ptr<ASTExpr> index;
@@ -820,8 +825,7 @@ namespace ZScript
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		bool isConstant() const /*override*/ {return false;}
-		DataType const* getReadType() const /*override*/;
-		DataType const* getWriteType() const /*override*/;
+		DataType getReadType() const /*override*/;
 	
 		owning_ptr<ASTExpr> left;
 		owning_vector<ASTExpr> parameters;
@@ -852,8 +856,8 @@ namespace ZScript
 
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	};
 
 	class ASTExprNot : public ASTUnaryExpr
@@ -867,8 +871,8 @@ namespace ZScript
 
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::BOOL;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdBool;}
 	};
 
 	class ASTExprBitNot : public ASTUnaryExpr
@@ -882,8 +886,8 @@ namespace ZScript
 
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	};
 
 	class ASTExprIncrement : public ASTUnaryExpr
@@ -896,9 +900,9 @@ namespace ZScript
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		bool isConstant() const /*override*/ {return false;}
-		DataType const* getReadType() const /*override*/ {return &DataType::FLOAT;}
-		DataType const* getWriteType() const /*override*/ {
-			return operand ? operand->getWriteType() : NULL;}
+		DataType getReadType() const /*override*/ {return DataType::stdFloat;}
+		DataType getWriteType() const /*override*/ {
+			return operand ? operand->getWriteType() : DataType::stdVoid;}
 	};
 
 	class ASTExprPreIncrement : public ASTUnaryExpr
@@ -911,9 +915,9 @@ namespace ZScript
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		bool isConstant() const /*override*/ {return false;}
-		DataType const* getReadType() const /*override*/ {return &DataType::FLOAT;}
-		DataType const* getWriteType() const /*override*/ {
-			return operand ? operand->getWriteType() : NULL;}
+		DataType getReadType() const /*override*/ {return DataType::stdFloat;}
+		DataType getWriteType() const /*override*/ {
+			return operand ? operand->getWriteType() : DataType::stdVoid;}
 	};
 
 	class ASTExprDecrement : public ASTUnaryExpr
@@ -926,10 +930,10 @@ namespace ZScript
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		bool isConstant() const /*override*/ {return false;}
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
-		DataType const* getWriteType() const /*override*/ {
-			return operand ? operand->getWriteType() : NULL;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
+		DataType getWriteType() const /*override*/ {
+			return operand ? operand->getWriteType() : DataType::stdVoid;}
 	};
 
 	class ASTExprPreDecrement : public ASTUnaryExpr
@@ -942,10 +946,10 @@ namespace ZScript
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		bool isConstant() const /*override*/ {return false;}
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
-		DataType const* getWriteType() const /*override*/ {
-			return operand ? operand->getWriteType() : NULL;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
+		DataType getWriteType() const /*override*/ {
+			return operand ? operand->getWriteType() : DataType::stdVoid;}
 	};
 
 	// virtual
@@ -969,8 +973,7 @@ namespace ZScript
 		ASTLogExpr(ASTExpr* left, ASTExpr* right, Location const& location);
 		ASTLogExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::BOOL;}
+		DataType getReadType() const /*override*/ {return DataType::stdBool;}
 	};
 
 	class ASTExprAnd : public ASTLogExpr
@@ -1005,8 +1008,8 @@ namespace ZScript
 		ASTRelExpr(ASTExpr* left, ASTExpr* right, Location const& location);
 		ASTRelExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::BOOL;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdBool;}
 	};
 
 	class ASTExprGT : public ASTRelExpr
@@ -1088,8 +1091,8 @@ namespace ZScript
 		ASTAddExpr(ASTExpr* left, ASTExpr* right, Location const& location);
 		ASTAddExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	};
 
 	class ASTExprPlus : public ASTAddExpr
@@ -1126,8 +1129,8 @@ namespace ZScript
 		ASTMultExpr(ASTExpr* left, ASTExpr* right, Location const& location);
 		ASTMultExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	};
 
 	class ASTExprTimes : public ASTMultExpr
@@ -1179,8 +1182,8 @@ namespace ZScript
 		ASTBitExpr(ASTExpr* left, ASTExpr* right, Location const& location);
 		ASTBitExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	};
 
 	class ASTExprBitAnd : public ASTBitExpr
@@ -1233,8 +1236,8 @@ namespace ZScript
 		             Location const& location);
 		ASTShiftExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	};
 
 	class ASTExprLShift : public ASTShiftExpr
@@ -1289,8 +1292,8 @@ namespace ZScript
 		bool isConstant() const /*override*/ {return true;}
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/;
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 	
 		owning_ptr<ASTFloat> value;
 	};
@@ -1308,8 +1311,8 @@ namespace ZScript
 		optional<long> getCompileTimeValue(CompileErrorHandler*)
 			const /*override*/ {
 			return value ? 10000L : 0L;}
-		DataType const* getReadType() const /*override*/ {
-			return &DataType::BOOL;}
+		DataType getReadType() const /*override*/ {
+			return DataType::stdBool;}
 	
 		bool value;
 	};
@@ -1330,7 +1333,8 @@ namespace ZScript
 
 		bool isConstant() const /*override*/ {return true;}
 
-		DataTypeArray const* getReadType() const /*override*/;
+		DataType getReadType() const /*override*/ {
+			return DataType::stdAryFloat;}
 		
 		// The data declaration that this literal may be part of. If NULL that
 		// means this is not part of a data declaration. This should be managed by
@@ -1352,9 +1356,8 @@ namespace ZScript
 		bool isArrayLiteral() const /*override*/ {return true;}
 
 		bool isConstant() const /*override*/ {return true;}
-		DataTypeArray const* getReadType() const /*override*/ {
-			return readType_;}
-		void setReadType(DataTypeArray const* type) {readType_ = type;}
+		DataType getReadType() const /*override*/ {return readType_;}
+		void setReadType(DataType type) {readType_ = type;}
 
 		// The data declaration that this literal may be part of. If NULL that
 		// means this is not part of a data declaration. This should be managed by
@@ -1370,7 +1373,7 @@ namespace ZScript
 
 	private:
 		// Cached read type.
-		DataTypeArray const* readType_;
+		DataType readType_;
 	};
 
 	class ASTOptionValue : public ASTLiteral
@@ -1385,8 +1388,8 @@ namespace ZScript
 		virtual std::string asString() const /*override*/;
 
 		virtual bool isConstant() const /*override*/ {return true;}
-		virtual DataType const* getReadType() const /*override*/ {
-			return &DataType::FLOAT;}
+		virtual DataType getReadType() const /*override*/ {
+			return DataType::stdFloat;}
 
 		std::string name;
 		CompileOption option;
@@ -1415,19 +1418,19 @@ namespace ZScript
 	class ASTDataType : public AST
 	{
 	public:
-		// Takes ownership of type.
-		ASTDataType(DataType* type, Location const& location);
-		// Clones type.
-		ASTDataType(DataType const& type, Location const& location);
+		ASTDataType(DataType type, Location const& location);
+		ASTDataType(std::string const& name, Location const& location);
 		ASTDataType* clone() const /*override*/ {
 			return new ASTDataType(*this);}
 	
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		DataType const& resolve(Scope& scope);
-
-		owning_ptr<DataType> type;
+		// If type is invalid, try to resolve using name.
+		DataType type;
+		std::string name;
 	};
+
+	DataType resolveDataType(ASTDataType const&, Scope const&);
 }
 
 #endif

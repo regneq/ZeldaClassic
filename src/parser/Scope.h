@@ -20,7 +20,6 @@ namespace ZScript
 	
 	// Types.h
 	class DataType;
-	class TypeStore;
 	class ScriptType;
 
 	// ZScript.h
@@ -44,16 +43,14 @@ namespace ZScript
 		friend class Datum;
 		
 	public:
-		Scope(TypeStore&);
-		Scope(TypeStore&, std::string const& name);
+		Scope();
+		Scope(std::string const& name);
 
 		// Scope type.
 		virtual bool isGlobal() const {return false;}
 		virtual bool isScript() const {return false;}
 		
 		// Accessors
-		TypeStore const& getTypeStore() const {return typeStore_;}
-		TypeStore& getTypeStore() {return typeStore_;}
 		optional<std::string> const& getName() const {return name_;}
 		optional<std::string>& getName() {return name_;}
 
@@ -63,7 +60,7 @@ namespace ZScript
 		virtual std::vector<Scope*> getChildren() const = 0;
 	
 		// Lookup Local
-		virtual DataType const* getLocalDataType(std::string const& name)
+		virtual optional<DataType> getLocalDataType(std::string const& name)
 			const = 0;
 		virtual optional<ScriptType> getLocalScriptType(
 			std::string const& name) const = 0;
@@ -79,6 +76,7 @@ namespace ZScript
 				const = 0;
 	
 		// Get All Local.
+		virtual std::vector<ZClass*> getLocalClasses() const = 0;
 		virtual std::vector<Datum*> getLocalData() const = 0;
 		virtual std::vector<Function*> getLocalFunctions() const = 0;
 		virtual std::vector<Function*> getLocalGetters() const = 0;
@@ -92,25 +90,25 @@ namespace ZScript
 		virtual FileScope* makeFileChild(std::string const& filename) = 0;
 		virtual ScriptScope* makeScriptChild(Script& script) = 0;
 		virtual FunctionScope* makeFunctionChild(Function& function) = 0;
-		virtual DataType const* addDataType(
-				std::string const& name, DataType const* type, AST* node)
+		virtual bool addDataType(
+				std::string const& name, DataType type, AST* node)
 		= 0;
 		virtual bool addScriptType(
 			std::string const& name, ScriptType type, AST* node) = 0;
 		//virtual ZClass* addClass(string const& name, AST* node) = 0;
 		virtual Function* addGetter(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				DataType returnType, std::string const& name,
+				std::vector<DataType> const& paramTypes,
 				AST* node = NULL)
 		= 0;
 		virtual Function* addSetter(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				DataType returnType, std::string const& name,
+				std::vector<DataType> const& paramTypes,
 				AST* node = NULL)
 		= 0;
 		virtual Function* addFunction(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				DataType returnType, std::string const& name,
+				std::vector<DataType> const& paramTypes,
 				AST* node = NULL)
 		= 0;
 		virtual void setDefaultOption(CompileOptionSetting value) = 0;
@@ -136,7 +134,6 @@ namespace ZScript
 			return nullopt;}
 		
 	protected:
-		TypeStore& typeStore_;
 		optional<std::string> name_;
 
 	private:
@@ -171,7 +168,7 @@ namespace ZScript
 	// Lookup
 
 	// Attempt to resolve name to a type id under scope.
-	DataType const* lookupDataType(Scope const&, std::string const& name);
+	DataType lookupDataType(Scope const&, std::string const& name);
 	
 	// Attempt to resolve name to a script type id under scope.
 	ScriptType lookupScriptType(Scope const&, std::string const& name);
@@ -243,7 +240,10 @@ namespace ZScript
 	}
 
 	std::vector<Function*> getFunctionsInBranch(Scope const& scope);
-	
+	std::vector<Function*> getGettersInBranch(Scope const& scope);
+	std::vector<Function*> getSettersInBranch(Scope const& scope);
+	std::vector<ZClass*> getClassesInBranch(Scope const& scope);
+
 	////////////////////////////////////////////////////////////////
 	// BasicScope - Primary Scope implementation.
 	
@@ -253,73 +253,77 @@ namespace ZScript
 	public:
 		BasicScope(Scope* parent);
 		BasicScope(Scope* parent, std::string const& name);
-		virtual ~BasicScope();
+		~BasicScope() /*override*/;
 
 		// Inheritance
-		virtual Scope* getParent() const {return parent_;}
-		virtual Scope* getChild(std::string const& name) const;
-		virtual std::vector<Scope*> getChildren() const;
+		Scope* getParent() const /*override*/ {return parent_;}
+		Scope* getChild(std::string const& name) /*override*/ const;
+		std::vector<Scope*> getChildren() /*override*/ const;
 	
 		// Lookup Local
-		DataType const* getLocalDataType(std::string const& name)
+		optional<DataType> getLocalDataType(std::string const& name)
 			const /*override*/;
 		optional<ScriptType> getLocalScriptType(std::string const& name)
 			const /*override*/;
-		virtual ZClass* getLocalClass(std::string const& name) const;
-		virtual Datum* getLocalDatum(std::string const& name) const;
-		virtual Function* getLocalGetter(std::string const& name) const;
-		virtual Function* getLocalSetter(std::string const& name) const;
-		virtual Function* getLocalFunction(
-				FunctionSignature const& signature) const;
-		virtual std::vector<Function*> getLocalFunctions(
-				std::string const& name) const;
-		virtual CompileOptionSetting getLocalOption(CompileOption option) const;
+		ZClass* getLocalClass(std::string const& name) const /*override*/;
+		Datum* getLocalDatum(std::string const& name) const /*override*/;
+		Function* getLocalGetter(std::string const& name) const /*override*/;
+		Function* getLocalSetter(std::string const& name) const /*override*/;
+		Function* getLocalFunction(FunctionSignature const& signature)
+			const /*override*/;
+		std::vector<Function*> getLocalFunctions(std::string const& name)
+			const /*override*/;
+		CompileOptionSetting getLocalOption(CompileOption option)
+			const /*override*/;
 		
 		// Get All Local
-		virtual std::vector<ZScript::Datum*> getLocalData() const;
-		virtual std::vector<ZScript::Function*> getLocalFunctions() const;
-		virtual std::vector<ZScript::Function*> getLocalGetters() const;
-		virtual std::vector<ZScript::Function*> getLocalSetters() const;
-		virtual std::map<CompileOption, CompileOptionSetting>
-				getLocalOptions() const;
+		std::vector<ZClass*> getLocalClasses() const /*override*/;
+		std::vector<ZScript::Datum*> getLocalData() const /*override*/;
+		std::vector<ZScript::Function*> getLocalFunctions()
+			const /*override*/;
+		std::vector<ZScript::Function*> getLocalGetters() const /*override*/;
+		std::vector<ZScript::Function*> getLocalSetters() const /*override*/;
+		std::map<CompileOption, CompileOptionSetting> getLocalOptions()
+			const /*override*/;
 
 		// Add
-		virtual Scope* makeChild();
-		virtual Scope* makeChild(std::string const& name);
-		virtual FileScope* makeFileChild(std::string const& filename);
-		virtual ScriptScope* makeScriptChild(Script& script);
-		virtual FunctionScope* makeFunctionChild(Function& function);
-		virtual DataType const* addDataType(
-				std::string const& name, DataType const* type,
-				AST* node = NULL);
+		Scope* makeChild() /*override*/;
+		Scope* makeChild(std::string const& name) /*override*/;
+		FileScope* makeFileChild(std::string const& filename) /*override*/;
+		ScriptScope* makeScriptChild(Script& script) /*override*/;
+		FunctionScope* makeFunctionChild(Function& function) /*override*/;
+		bool addDataType(
+			std::string const& name, DataType type, AST* node = NULL)
+			/*override*/;
 		bool addScriptType(
 			std::string const& name, ScriptType type, AST* node)
 			/*override*/;
-		virtual Function* addGetter(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
-				AST* node = NULL);
-		virtual Function* addSetter(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
-				AST* node = NULL);
-		virtual Function* addFunction(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
-				AST* node = NULL);
-		virtual void setDefaultOption(CompileOptionSetting value);
-		virtual void setOption(
-				CompileOption option, CompileOptionSetting value);
+		Function* addGetter(
+			DataType returnType, std::string const& name,
+			std::vector<DataType> const& paramTypes, AST* node = NULL)
+			/*override*/;
+		Function* addSetter(
+			DataType returnType, std::string const& name,
+			std::vector<DataType> const& paramTypes, AST* node = NULL)
+			/*override*/;
+		Function* addFunction(
+			DataType returnType, std::string const& name,
+			std::vector<DataType> const& paramTypes, AST* node = NULL)
+			/*override*/;
+		void setDefaultOption(CompileOptionSetting value) /*override*/;
+		void setOption(CompileOption option, CompileOptionSetting value)
+			/*override*/;
 		
 		// Stack
-		virtual int getLocalStackDepth() const {return stackDepth_;}
-		virtual optional<int> getLocalStackOffset(Datum const& datum) const;
+		int getLocalStackDepth() const /*override*/ {return stackDepth_;}
+		optional<int> getLocalStackOffset(Datum const& datum) const
+			/*override*/;
 		
 	protected:
 		Scope* parent_;
 		std::map<std::string, Scope*> children_;
 		std::vector<Scope*> anonymousChildren_;
-		std::map<std::string, DataType const*> dataTypes_;
+		std::map<std::string, DataType> dataTypes_;
 		std::map<std::string, ScriptType> scriptTypes_;
 		std::map<std::string, ZClass*> classes_;
 		std::vector<Datum*> anonymousData_;
@@ -333,8 +337,8 @@ namespace ZScript
 		std::map<CompileOption, CompileOptionSetting> options_;
 		CompileOptionSetting defaultOption_;
 
-		BasicScope(TypeStore&);
-		BasicScope(TypeStore&, std::string const& name);
+		BasicScope();
+		BasicScope(std::string const& name);
 
 		virtual bool add(Datum&, CompileErrorHandler*);
 		
@@ -357,23 +361,23 @@ namespace ZScript
 		// Override to also register in the root scope, and fail if already
 		// present there as well.
 		virtual Scope* makeChild(std::string const& name);
-		virtual DataType const* addDataType(
-				std::string const& name, DataType const* type,
-				AST* node = NULL);
+		bool addDataType(
+			std::string const& name, DataType type, AST* node = NULL)
+			/*override*/;
 		bool addScriptType(
 			std::string const& name, ScriptType type, AST* node)
 			/*override*/;
 		virtual Function* addGetter(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				DataType returnType, std::string const& name,
+				std::vector<DataType> const& paramTypes,
 				AST* node = NULL);
 		virtual Function* addSetter(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				DataType returnType, std::string const& name,
+				std::vector<DataType> const& paramTypes,
 				AST* node = NULL);
 		virtual Function* addFunction(
-				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				DataType returnType, std::string const& name,
+				std::vector<DataType> const& paramTypes,
 				AST* node = NULL);
 
 	protected:
@@ -395,7 +399,8 @@ namespace ZScript
 	class RootScope : public BasicScope
 	{
 	public:
-		RootScope(TypeStore&);
+		RootScope();
+		~RootScope() /*override*/;
 		
 		virtual bool isGlobal() const {return true;}
 		virtual optional<int> getRootStackSize() const;
@@ -403,8 +408,8 @@ namespace ZScript
 		// Also check the descendant listings.
 		// Single
 		virtual Scope* getChild(std::string const& name) const;
-		virtual DataType const* getLocalDataType(
-				std::string const& name) const;
+		optional<DataType> getLocalDataType(std::string const& name)
+			const /*override*/;
 		optional<ScriptType> getLocalScriptType(std::string const& name)
 			const /*override*/;
 		virtual ZClass* getLocalClass(std::string const& name) const;
@@ -423,7 +428,7 @@ namespace ZScript
 
 		// Register a descendant's thing.
 		bool registerChild(std::string const& name, Scope* child);
-		bool registerDataType(std::string const& name, DataType const* type);
+		bool registerDataType(std::string const& name, DataType type);
 		bool registerScriptType(std::string const& name, ScriptType type);
 		bool registerClass(std::string const& name, ZClass* klass);
 		bool registerDatum(std::string const& name, Datum* datum);
@@ -436,7 +441,7 @@ namespace ZScript
 
 		// Unowned pointers to descendant's stuff.
 		std::map<std::string, Scope*> descChildren_;
-		std::map<std::string, DataType const*> descDataTypes_;
+		std::map<std::string, DataType> descDataTypes_;
 		std::map<std::string, ScriptType> descScriptTypes_;
 		std::map<std::string, ZClass*> descClasses_;
 		std::map<std::string, Datum*> descData_;
@@ -467,51 +472,10 @@ namespace ZScript
 		mutable optional<int> stackSize;
 	};
 
-	enum ZClassIdBuiltin
-	{
-		ZCLASSID_START = 0,
-		ZCLASSID_GAME = 0,
-		ZCLASSID_LINK,
-		ZCLASSID_SCREEN,
-		ZCLASSID_FFC,
-		ZCLASSID_ITEM,
-		ZCLASSID_ITEMCLASS,
-		ZCLASSID_NPC,
-		ZCLASSID_LWPN,
-		ZCLASSID_EWPN,
-		ZCLASSID_NPCDATA,
-		ZCLASSID_DEBUG,
-		ZCLASSID_AUDIO,
-		ZCLASSID_COMBOS,
-		ZCLASSID_SPRITEDATA,
-		ZCLASSID_GRAPHICS,
-		ZCLASSID_BITMAP,
-		ZCLASSID_TEXT,
-		ZCLASSID_INPUT,
-		ZCLASSID_MAPDATA,
-		ZCLASSID_DMAPDATA,
-		ZCLASSID_ZMESSAGE,
-		ZCLASSID_SHOPDATA,
-		ZCLASSID_DROPSET,
-		ZCLASSID_PONDS,
-		ZCLASSID_WARPRING,
-		ZCLASSID_DOORSET,
-		ZCLASSID_ZUICOLOURS,
-		ZCLASSID_RGBDATA,
-		ZCLASSID_PALETTE,
-		ZCLASSID_TUNES,
-		ZCLASSID_PALCYCLE,
-		ZCLASSID_GAMEDATA,
-		ZCLASSID_CHEATS,
-		ZCLASSID_END
-	};
-
-	class ZClass : public BasicScope
+	class ClassScope : public BasicScope
 	{
 	public:
-		ZClass(TypeStore&, std::string const& name, int id);
-		std::string const name;
-		int const id;
+		ClassScope() {}
 	};
 
 };

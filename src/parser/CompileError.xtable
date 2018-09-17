@@ -74,5 +74,5 @@ X(	NoReadType,			T,	A,	E,	STR,	VOID,	"\"%s\" cannot be read from."								)
 X(	NoWriteType,			T,	A,	E,	STR,	VOID,	"\"%s\" cannot be written to."								)
 X(	UnresolvedScriptType,		T,	A,	E,	STR,	VOID,	"Script Type %s has not been declared."    	     					)
 X(	RedefScriptType,		T,	A,	E,	STR,	STR,	"Script Type %s has already been defined as %s."    	     				)
-
+X(	CannotCompare,			T,	A,	E,	STR,	STR,	"Cannot compare %s to %s."								)
 #undef STR

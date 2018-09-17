@@ -1,0 +1,43 @@
+// Table of builtin zscript classes.
+
+//	Name,		Type
+X(	Audio,		Namespace	)
+X(	Debug,		Namespace	)
+X(	Game,		Namespace	)
+X(	Graphics,	Namespace	)
+X(	Input,		Namespace	)
+X(	Link,		Namespace	)
+X(	Screen,		Namespace	)
+X(	Text,		Namespace	)
+
+X(	Bitmap,		Namespace	)
+X(	Cheat,		Object		)
+X(	ComboData,	Object		)
+X(	DMapData,	Object		)
+X(	DoorSet,	Object		)
+X(	DropSet,	Object		)
+X(	EnemyWeapon,	Object		)
+X(	Ffc,		Object		)
+X(	GameData,	Object		)
+//X(	InfoShopData,	Object		)
+X(	Item,		Object		)
+X(	ItemData,	Object		)
+X(	LinkWeapon,	Object		)
+X(	MapData,	Object		)
+X(	MessageData,	Object		)
+X(	Midi,		Object		)
+X(	MiscColor,	Object		)
+X(	Npc,		Object		)
+X(	NpcData,	Object		)
+X(	PalCycle,	Object		)
+X(	Palette,	Object		)
+X(	Rgb,		Object		)
+X(	ShopData,	Object		)
+X(	SpriteData,	Object		)
+X(	WarpRing,	Object		)
+
+// Emacs Stuff:
+// Local Variables:
+// mode: c++
+// tab-width: 8
+// End:

@@ -9,19 +9,26 @@
 
 namespace ZScript
 {
+	////////////////////////////////////////////////////////////////
+	// Forward Declarations
+	
+	// from CompileError.h
 	class CompileErrorHandler;
 
-	class TypeStore;
+	// from Scope.h
+	class Scope;
+	class RootScope;
+	class ScriptScope;
+	class FunctionScope;
+	class ClassScope;
+	
+	// local
 	class Program;
 	class Script;
 	class Variable;
 	class BuiltinVariable;
 	class Function;
-	class Scope;
-	class RootScope;
-	class ScriptScope;
-	class FunctionScope;
-	
+
 	////////////////////////////////////////////////////////////////
 	// Program
 	
@@ -32,8 +39,6 @@ namespace ZScript
 		~Program();
 
 		ASTFile& getRoot() {return root_;}
-		TypeStore const& getTypeStore() const {return typeStore_;}
-		TypeStore& getTypeStore() {return typeStore_;}
 		RootScope& getScope() const {return *rootScope_;}
 
 		std::vector<Script*> scripts;
@@ -56,7 +61,6 @@ namespace ZScript
 		std::map<std::string, Script*> scriptsByName_;
 		std::map<ASTScript*, Script*> scriptsByNode_;
 
-		TypeStore typeStore_;
 		RootScope* rootScope_;
 		ASTFile& root_;
 	};
@@ -150,7 +154,7 @@ namespace ZScript
 		Scope& scope;
 
 		// The type of this data.
-		DataType const& type;
+		DataType type;
 
 		// Id for lookup tables.
 		int const id;
@@ -168,7 +172,7 @@ namespace ZScript
 		virtual optional<int> getGlobalId() const {return nullopt;}
 		
 	protected:
-		Datum(Scope& scope, DataType const& type);
+		Datum(Scope& scope, DataType type);
 
 		// Call in static creation function to register with scope.
 		bool tryAddToScope(CompileErrorHandler* = NULL);
@@ -276,25 +280,37 @@ namespace ZScript
 	////////////////////////////////////////////////////////////////
 	// FunctionSignature
 
-	// Comparable signature structure.
+	// Comparable signature structure. Value semantics.
 	class FunctionSignature
 	{
 	public:
 		FunctionSignature(
 				std::string const& name,
-				std::vector<DataType const*> const& parameterTypes);
+				std::vector<DataType> const& parameterTypes);
 		FunctionSignature(Function const& function);
 
-		int compare(FunctionSignature const& other) const;
-		bool operator==(FunctionSignature const& other) const;
-		bool operator<(FunctionSignature const& other) const;
+		// As per <=> operator.
+		int compare(FunctionSignature const& rhs) const;
+
 		std::string asString() const;
 		operator std::string() const {return asString();}
 
 		std::string name;
-		std::vector<DataType const*> parameterTypes;
+		std::vector<DataType> parameterTypes;
 	};
 	
+	bool operator==(
+			FunctionSignature const& lhs, FunctionSignature const& rhs);
+	bool operator!=(
+			FunctionSignature const& lhs, FunctionSignature const& rhs);
+	bool operator<=(
+			FunctionSignature const& lhs, FunctionSignature const& rhs);
+	bool operator<(
+			FunctionSignature const& lhs, FunctionSignature const& rhs);
+	bool operator>=(
+			FunctionSignature const& lhs, FunctionSignature const& rhs);
+	bool operator>(
+			FunctionSignature const& lhs, FunctionSignature const& rhs);
 	
 	////////////////////////////////////////////////////////////////
 	// Function
@@ -303,21 +319,12 @@ namespace ZScript
 	{
 	public:
 		
-		Function(DataType const* returnType, std::string const& name,
-		         std::vector<DataType const*> paramTypes, int id);
+		Function(DataType returnType, std::string const& name,
+		         std::vector<DataType> const& paramTypes, int id);
 		~Function();
 		
-		DataType const* returnType;
-		std::string name;
-		std::vector<DataType const*> paramTypes;
-		int id;
-
-		ASTFuncDecl* node;
-		FunctionScope* internalScope;
-		BuiltinVariable* thisVar;
-
 		// Get the opcodes.
-		std::vector<Opcode*> const& getCode() const {return ownedCode;}
+		std::vector<Opcode*> const& getCode() const {return ownedCode_;}
 		// Get and remove the code for this function.
 		std::vector<Opcode*> takeCode();
 		// Add code for this function, transferring ownership.
@@ -331,15 +338,25 @@ namespace ZScript
 		Script* getScript() const;
 
 		int getLabel() const;
+		void clearLabel();
 
 		// If this is a tracing function (enabled by #option trace)
 		bool isTracing() const;
-		
+
+		// Data
+		ASTFuncDecl* node;
+		FunctionScope* internalScope;
+		BuiltinVariable* thisVar;
+		DataType returnType;
+		std::string name;
+		std::vector<DataType> paramTypes;
+		int id;
+
 	private:
-		mutable optional<int> label;
+		mutable optional<int> label_;
 
 		// Code implementing this function.
-		std::vector<Opcode*> ownedCode;
+		std::vector<Opcode*> ownedCode_;
 	};
 
 	// Is this function a "run" function?
@@ -350,6 +367,40 @@ namespace ZScript
 
 	// Get the function's parameter count, including "this" if present.
 	int getParameterCount(Function const&);
+
+	////////////////////////////////////////////////////////////////
+	// ZClass
+
+	class ZClass
+	{
+	public:
+		// Ids for the builtin classes.
+		enum StdId
+		{
+#			define X(NAME, TYPE) \
+			stdId##NAME,
+#			include "classes.xtable"
+#			undef X
+			stdIdCount
+		};
+		
+		static void generateStandard();
+		static void clearStandard();
+		static ZClass* getStandard(StdId id);
+		
+		ZClass(std::string const& name, DataType const& type);
+		~ZClass();
+
+		ClassScope const& getScope() const {return *scope_;}
+
+		std::string const name;
+		
+	private:
+		// Owned by the root scope.
+		static std::vector<ZClass*> std_;
+		
+		ClassScope* scope_;
+	};
 }
 
 #endif

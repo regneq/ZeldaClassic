@@ -81,36 +81,36 @@ EXPECT_WARNING	TOKEN( EXPECTERROR );
 OPTION_VALUE	TOKEN( OPTIONVALUE );
 define		TOKEN( DEFINE );
 
- /* Types */
+ /* Basic Types */
 void		TOKEN( ZVOID );
 bool		TOKEN( ZBOOL );
 float		TOKEN( ZFLOAT );
 int		TOKEN( ZFLOAT );
+ /* Object Class Types */
 bitmap		TOKEN( BITMAP );
 cheat		TOKEN( CHEAT );
-combo		TOKEN( COMBO );
+combodata	TOKEN( COMBODATA );
+dmapdata	TOKEN( DMAPDATA );
 doorset		TOKEN( DOORSET );
 dropset		TOKEN( DROPSET );
-dmap		TOKEN( DMAP );
 eweapon		TOKEN( EWEAPON );
 ffc		TOKEN( FFC );
 gamedata	TOKEN( GAMEDATA );
+infoshopdata	TOKEN( INFOSHOPDATA );
 item		TOKEN( ITEM );
-itemdata	TOKEN( ITEMCLASS );
+itemdata	TOKEN( ITEMDATA );
 lweapon		TOKEN( LWEAPON );
-map		TOKEN( MAP );
-mapdata		TOKEN( MAP );
-messagedata	TOKEN( MESSAGE );
+mapdata		TOKEN( MAPDATA );
+messagedata	TOKEN( MESSAGEDATA );
+midi		TOKEN( MIDI );
 misccolor	TOKEN( MISCCOLOR );
 npc		TOKEN( NPC );
 npcdata		TOKEN( NPCDATA );
 palcycle	TOKEN( PALCYCLE );
 palette		TOKEN( PALETTE );
-ponddata	TOKEN( POND );
 rgb		TOKEN( RGB );
-shopdata	TOKEN( SHOP );
-spritedata	TOKEN( SPRITE );
-tune		TOKEN( TUNE );
+shopdata	TOKEN( SHOPDATA );
+spritedata	TOKEN( SPRITEDATA );
 warpring	TOKEN( WARPRING );
 
  /* Syntax */
