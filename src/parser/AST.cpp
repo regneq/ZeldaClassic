@@ -133,9 +133,9 @@ pair<string, string> ASTFloat::parseValue() const
 	string intpart;
 	string fpart;
 
-	switch(type)
+	switch (type)
 	{
-	case TYPE_DECIMAL:
+	case typeDecimal:
 	{
 		bool founddot = false;
 
@@ -161,7 +161,7 @@ pair<string, string> ASTFloat::parseValue() const
 		break;
 	}
 
-	case TYPE_HEX:
+	case typeHex:
 	{
 		// Trim off the "0x".
 		f = f.substr(2,f.size()-2);
@@ -190,7 +190,7 @@ pair<string, string> ASTFloat::parseValue() const
 		break;
 	}
 
-	case TYPE_BINARY:
+	case typeBinary:
 	{
 		//trim off the 'b'
 		f = f.substr(0,f.size()-1);
@@ -219,11 +219,11 @@ pair<string, string> ASTFloat::parseValue() const
 // ASTString
 
 ASTString::ASTString(const char* str, Location const& location)
-	: AST(location), str(static_cast<string>(str))
+	: AST(location), value(static_cast<string>(str))
 {}
 
 ASTString::ASTString(string const& str, Location const& location)
-	: AST(location), str(str)
+	: AST(location), value(str)
 {}
 
 void ASTString::execute(ASTVisitor& visitor, void* param)
@@ -870,11 +870,10 @@ void ASTExprNegate::execute(ASTVisitor& visitor, void* param)
 }
 
 optional<long> ASTExprNegate::getCompileTimeValue(
-		CompileErrorHandler* errorHandler)
-		const
+	CompileErrorHandler* ceh) const
 {
 	if (!operand) return nullopt;
-	if (optional<long> value = operand->getCompileTimeValue())
+	if (optional<long> value = operand->getCompileTimeValue(ceh))
 		return -*value;
 	return nullopt;
 }
@@ -891,11 +890,10 @@ void ASTExprNot::execute(ASTVisitor& visitor, void* param)
 }
 
 optional<long> ASTExprNot::getCompileTimeValue(
-		CompileErrorHandler* errorHandler)
-		const
+	CompileErrorHandler* ceh) const
 {
 	if (!operand) return nullopt;
-	if (optional<long> value = operand->getCompileTimeValue())
+	if (optional<long> value = operand->getCompileTimeValue(ceh))
 		return *value ? 0L : 10000L;
 	return nullopt;
 }
@@ -912,11 +910,10 @@ void ASTExprBitNot::execute(ASTVisitor& visitor, void* param)
 }
 
 optional<long> ASTExprBitNot::getCompileTimeValue(
-		CompileErrorHandler* errorHandler)
-		const
+	CompileErrorHandler* ceh) const
 {
 	if (!operand) return nullopt;
-	if (optional<long> value = operand->getCompileTimeValue())
+	if (optional<long> value = operand->getCompileTimeValue(ceh))
 		return ~(*value / 10000L) * 10000L;
 	return nullopt;
 }
@@ -1545,7 +1542,7 @@ ASTStringLiteral::ASTStringLiteral(
 
 ASTStringLiteral::ASTStringLiteral(ASTString const& raw)
 	: ASTLiteral(raw.location),
-	  value(raw.getValue()),
+	  value(raw.value),
 	  declaration(NULL)
 {}
 

@@ -468,7 +468,7 @@ void SemanticAnalyzer::caseExprConst(ASTExprConst& host, void*)
 	RecursiveVisitor::caseExprConst(host);
 	if (breakRecursion(host)) return;
 
-	if (!host.getCompileTimeValue())
+	if (!host.getCompileTimeValue(this))
 	{
 		handleError(CompileError::ExprNotConstant(&host));
 		return;

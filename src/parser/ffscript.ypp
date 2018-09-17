@@ -222,7 +222,7 @@ Global_Statement :
 
 Import : IMPORT QUOTEDSTRING {
 	ASTString* str = (ASTString*)$2;
-	$$ = new ASTImportDecl(str->getValue(), @$);
+	$$ = new ASTImportDecl(str->value, @$);
 	delete str;}
 	;
 
@@ -233,17 +233,17 @@ Option :
 	HASH OPTION IDENTIFIER Expression_Constant ENDLINE {
 		ASTString* name = (ASTString*)$3;
 		ASTExprConst* expr = (ASTExprConst*)$4;
-		$$ = new ASTSetOption(name->getValue(), expr, @$);
+		$$ = new ASTSetOption(name->value, expr, @$);
 		delete name;}
 	| HASH OPTION IDENTIFIER INHERIT ENDLINE {
 		ASTString* name = (ASTString*)$3;
 		$$ = new ASTSetOption(
-				name->getValue(), CompileOptionSetting::Inherit, @$);
+				name->value, CompileOptionSetting::Inherit, @$);
 		delete name;}
 	| HASH OPTION IDENTIFIER DEFAULT ENDLINE {
 		ASTString* name = (ASTString*)$3;
 		$$ = new ASTSetOption(
-				name->getValue(), CompileOptionSetting::Default, @$);
+				name->value, CompileOptionSetting::Default, @$);
 		delete name;}
 	;
 
@@ -253,7 +253,7 @@ Option :
 DataTypeDef : TYPEDEF DataType IDENTIFIER {
 	ASTDataType* type = (ASTDataType*)$2;
 	ASTString* name = (ASTString*)$3;
-	$$ = new ASTDataTypeDef(type, name->getValue(), @1);
+	$$ = new ASTDataTypeDef(type, name->value, @1);
 	delete name;}
 	;
 
@@ -289,7 +289,7 @@ DataType :
 	| WARPRING	{$$ = new ASTDataType(DataType::WARPRING, @$);}
 	| IDENTIFIER {
 			ASTString *name = (ASTString*)$1;
-			$$ = new ASTDataType(DataTypeUnresolved(name->getValue()), @$);
+			$$ = new ASTDataType(DataTypeUnresolved(name->value), @$);
 			delete name;}
 	| ZCONST ZFLOAT {$$ = new ASTDataType(new DataTypeConstFloat(), @$);}
 	;
@@ -297,7 +297,7 @@ DataType :
 ScriptTypeDef : SCRIPT TYPEDEF Script_Type IDENTIFIER {
 	ASTScriptType* oldType = static_cast<ASTScriptType*>($3);
 	ASTString* newName = static_cast<ASTString*>($4);
-	$$ = new ASTScriptTypeDef(oldType, newName->getValue(), @$);
+	$$ = new ASTScriptTypeDef(oldType, newName->value, @$);
 	delete newName;}
 	;
 
@@ -346,7 +346,7 @@ Data_Element_Array_List :
 	| Identifier {
 			ASTString* name = (ASTString*)$1;
 			ASTDataDecl* element = new ASTDataDecl(@$);
-			element->name = name->getValue();
+			element->name = name->value;
 			$$ = element;
 			delete name;}
 	;
@@ -385,7 +385,7 @@ Function :
 		ASTFuncDecl* func = (ASTFuncDecl*)$4;
 		ASTBlock* block = (ASTBlock*)$6;
 		func->returnType = returnType;
-		func->name = name->getValue();
+		func->name = name->value;
 		func->block = block;
 		func->location = @$;
 		$$ = func;
@@ -396,7 +396,7 @@ Function :
 		ASTBlock* block = (ASTBlock*)$5;
 		ASTFuncDecl* func = new ASTFuncDecl(@$);
 		func->returnType = returnType;
-		func->name = name->getValue();
+		func->name = name->value;
 		func->block = block;
 		$$ = func;
 		delete name;}
@@ -433,7 +433,7 @@ Script : Script_Type SCRIPT IDENTIFIER Script_Block {
 	ASTString* name = (ASTString*)$3;
 	ASTScript* script = (ASTScript*)$4;
 	script->type = type;
-	script->name = name->getValue();
+	script->name = name->value;
 	script->location = @$;
 	$$ = script;
 	delete name;}
@@ -445,7 +445,7 @@ Script_Type :
 	| ITEM {$$ = new ASTScriptType(ScriptType::item, @$);}
 	| IDENTIFIER {
 		ASTString* name = static_cast<ASTString*>($1);
-		$$ = new ASTScriptType(name->getValue(), @$);
+		$$ = new ASTScriptType(name->value, @$);
 		delete name;}
 	;
 
@@ -675,13 +675,13 @@ Identifier_List :
 	Identifier_List DOT Identifier {
 		ASTExprIdentifier* identifier = (ASTExprIdentifier*)$1;
 		ASTString* name = (ASTString*)$3;
-		identifier->components.push_back(name->getValue());
+		identifier->components.push_back(name->value);
 		identifier->location = @$;
 		$$ = identifier;
 		delete name;}
 	| Identifier {
 		ASTString* name = (ASTString*)$1;
-		$$ = new ASTExprIdentifier(name->getValue(), @$);
+		$$ = new ASTExprIdentifier(name->value, @$);
 		delete name;}
 	;
 
@@ -767,7 +767,7 @@ Expr_2 : Expr_1 {$$ = $1;}
 	| Expr_2 ARROW IDENTIFIER {
 			ASTExpr* left = (ASTExpr*)$1;
 			ASTString* right = (ASTString*)$3;
-			$$ = new ASTExprArrow(left, right->getValue(), @$);
+			$$ = new ASTExprArrow(left, right->value, @$);
 			delete right;}
 	;
 
@@ -899,7 +899,7 @@ Literal :
 	| SINGLECHAR {
 		ASTString* as = (ASTString*)$1;
 		char val[15];
-		sprintf(val, "%d", as->getValue().at(1));
+		sprintf(val, "%d", as->value.at(1));
 		ASTFloat* number = new ASTFloat(val, (ASTFloat::Type)0, @$);
 		$$ = new ASTNumberLiteral(number, @$);}
 	| Literal_String {$$ = $1;}
@@ -907,7 +907,7 @@ Literal :
 	| Literal_Array {$$ = $1;}
 	| OPTIONVALUE LPAREN IDENTIFIER RPAREN {
 		ASTString* name = (ASTString*)$3;
-		$$ = new ASTOptionValue(name->getValue(), @$);
+		$$ = new ASTOptionValue(name->value, @$);
 		delete name;}
 	;
 
@@ -915,7 +915,7 @@ Literal_String :
 	Literal_String QUOTEDSTRING {
 		ASTStringLiteral* str = (ASTStringLiteral*)$1;
 		ASTString* rawstr = (ASTString*)$2;
-		str->value += rawstr->getValue();
+		str->value += rawstr->value;
 		delete rawstr;
 		$$ = str;}
 	| QUOTEDSTRING {

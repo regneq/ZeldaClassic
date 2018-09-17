@@ -162,7 +162,7 @@ namespace ZScript
 	class AST
 	{
 	public:
-		AST(Location const& location = Location::NONE);
+		AST(Location const& location);
 		virtual ~AST() {}
 		// Calls subclass's copy constructor on self.
 		virtual AST* clone() const = 0;
@@ -196,11 +196,11 @@ namespace ZScript
 	class ASTFile : public AST
 	{
 	public:
-		ASTFile(Location const& location = Location::NONE);
-		virtual ASTFile* clone() const {return new ASTFile(*this);}
+		ASTFile(Location const& location);
+		ASTFile* clone() const /*override*/ {return new ASTFile(*this);}
     
-		virtual void execute(ASTVisitor& visitor, void* param = NULL);
-		virtual std::string asString() const;
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
+		std::string asString() const /*override*/;
 
 		// Add a declaration to the proper list based on its type.
 		void addDeclaration(ASTDecl* declaration);
@@ -218,19 +218,16 @@ namespace ZScript
 	class ASTFloat : public AST
 	{
 	public:
-		enum Type {TYPE_DECIMAL, TYPE_BINARY, TYPE_HEX};
+		enum Type {typeDecimal, typeBinary, typeHex};
 	
-		ASTFloat(char* value, Type type,
-		         Location const& location = Location::NONE);
-		ASTFloat(char const* value, Type type,
-		         Location const& location = Location::NONE);
+		ASTFloat(char* value, Type type, Location const& location);
+		ASTFloat(char const* value, Type type, Location const& location);
 		ASTFloat(std::string const& value, Type type,
-		         Location const& location = Location::NONE);
-		ASTFloat(long value, Type type,
-		         Location const& location = Location::NONE);
-		ASTFloat* clone() const {return new ASTFloat(*this);}
+		         Location const& location);
+		ASTFloat(long value, Type type, Location const& location);
+		ASTFloat* clone() const /*override*/ {return new ASTFloat(*this);}
 	
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
     	
 		std::pair<std::string,std::string> parseValue() const;
 
@@ -242,31 +239,28 @@ namespace ZScript
 	class ASTString : public AST
 	{
 	public:
-		ASTString(const char* str,
-		          Location const& location = Location::NONE);
-		ASTString(std::string const& str,
-		          Location const& location = Location::NONE);
-		ASTString* clone() const {return new ASTString(*this);}
+		ASTString(const char* str, Location const& location);
+		ASTString(std::string const& str, Location const& location);
+		ASTString* clone() const /*override*/ {return new ASTString(*this);}
 	
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		std::string getValue() const {return str;}
-	private:
-		std::string str;
+		std::string value;
 	};
 
 	class ASTSetOption : public AST
 	{
 	public:
 		ASTSetOption(std::string const& name, ASTExprConst* expr,
-		             Location const& location = Location::NONE);
-		ASTSetOption(std::string const& name,
-		             CompileOptionSetting setting,
-		             Location const& location = Location::NONE);
-		virtual ASTSetOption* clone() const {return new ASTSetOption(*this);}
+		             Location const& location);
+		ASTSetOption(std::string const& name, CompileOptionSetting setting,
+		             Location const& location);
+		virtual ASTSetOption* clone() const /*override*/ {
+			return new ASTSetOption(*this);}
 
-		virtual void execute(ASTVisitor& visitor, void* param = NULL);
-		virtual std::string asString() const;
+		virtual void execute(
+			ASTVisitor& visitor, void* param = NULL) /*override*/;
+		virtual std::string asString() const /*override*/;
 
 		CompileOptionSetting getSetting(
 				CompileErrorHandler* = NULL) const;
@@ -283,8 +277,8 @@ namespace ZScript
 	class ASTStmt : public AST
 	{
 	public:
-		ASTStmt(Location const& location = Location::NONE);
-		virtual ASTStmt* clone() const = 0;
+		ASTStmt(Location const& location);
+		ASTStmt* clone() const /*override*/ = 0;
 
 		bool isDisabled() const {return disabled_;}
 		void disable() {disabled_ = true;}
@@ -296,10 +290,10 @@ namespace ZScript
 	class ASTBlock : public ASTStmt
 	{
 	public:
-		ASTBlock(Location const& location = Location::NONE);
-		ASTBlock* clone() const {return new ASTBlock(*this);}
+		ASTBlock(Location const& location);
+		ASTBlock* clone() const /*override*/ {return new ASTBlock(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_vector<ASTSetOption> options;
 		owning_vector<ASTStmt> statements;
@@ -309,10 +303,10 @@ namespace ZScript
 	{
 	public:
 		ASTStmtIf(ASTExpr* condition, ASTStmt* thenStatement,
-		          Location const& location = Location::NONE);
-		ASTStmtIf* clone() const {return new ASTStmtIf(*this);}
+		          Location const& location);
+		ASTStmtIf* clone() const /*override*/ {return new ASTStmtIf(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_ptr<ASTExpr> condition;
 		owning_ptr<ASTStmt> thenStatement;
@@ -321,12 +315,12 @@ namespace ZScript
 	class ASTStmtIfElse : public ASTStmtIf
 	{
 	public:
-		ASTStmtIfElse(
-				ASTExpr* condition, ASTStmt* thenStatement, ASTStmt* elseStatement,
-				Location const& location = Location::NONE);
-		ASTStmtIfElse* clone() const {return new ASTStmtIfElse(*this);}
+		ASTStmtIfElse(ASTExpr* condition, ASTStmt* thenStatement,
+		              ASTStmt* elseStatement, Location const& location);
+		ASTStmtIfElse* clone() const /*override*/ {
+			return new ASTStmtIfElse(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_ptr<ASTStmt> elseStatement;
 	};
@@ -335,26 +329,27 @@ namespace ZScript
 	class ASTStmtSwitch : public ASTStmt
 	{
 	public:
-		ASTStmtSwitch(Location const& location = Location::NONE);
-		ASTStmtSwitch* clone() const {return new ASTStmtSwitch(*this);}
+		ASTStmtSwitch(Location const& location);
+		ASTStmtSwitch* clone() const /*override*/ {
+			return new ASTStmtSwitch(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		// The key expression used to switch.
 		owning_ptr<ASTExpr> key;
 		// A vector of case groupings.
 		owning_vector<ASTSwitchCases> cases;
-	private:
 	};
 
 	// A grouping of switch statement labels, and the code for the group.
 	class ASTSwitchCases : public AST
 	{
 	public:
-		ASTSwitchCases(Location const& location = Location::NONE);
-		ASTSwitchCases* clone() const {return new ASTSwitchCases(*this);}
+		ASTSwitchCases(Location const& location);
+		ASTSwitchCases* clone() const /*override*/ {
+			return new ASTSwitchCases(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		// The list of case labels.
 		owning_vector<ASTExprConst> cases;
@@ -368,14 +363,12 @@ namespace ZScript
 	class ASTStmtFor : public ASTStmt
 	{
 	public:
-		ASTStmtFor(ASTStmt* setup = NULL,
-		           ASTExpr* test = NULL,
-		           ASTStmt* increment = NULL,
-		           ASTStmt* body = NULL,
-		           Location const& location = Location::NONE);
-		ASTStmtFor* clone() const {return new ASTStmtFor(*this);}
+		ASTStmtFor(ASTStmt* setup, ASTExpr* test, ASTStmt* increment,
+		           ASTStmt* body, Location const& location);
+		ASTStmtFor* clone() const /*override*/ {
+			return new ASTStmtFor(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_ptr<ASTStmt> setup;
 		owning_ptr<ASTExpr> test;
@@ -386,12 +379,11 @@ namespace ZScript
 	class ASTStmtWhile : public ASTStmt
 	{
 	public:
-		ASTStmtWhile(ASTExpr* test = NULL,
-		             ASTStmt* body = NULL,
-		             Location const& location = Location::NONE);
-		ASTStmtWhile* clone() const {return new ASTStmtWhile(*this);}
+		ASTStmtWhile(ASTExpr* test, ASTStmt* body, Location const& location);
+		ASTStmtWhile* clone() const /*override*/ {
+			return new ASTStmtWhile(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_ptr<ASTExpr> test;
 		owning_ptr<ASTStmt> body;
@@ -400,12 +392,10 @@ namespace ZScript
 	class ASTStmtDo : public ASTStmt
 	{
 	public:
-		ASTStmtDo(ASTExpr* test = NULL,
-		          ASTStmt* body = NULL,
-		          Location const& location = Location::NONE);
-		ASTStmtDo* clone() const {return new ASTStmtDo(*this);}
+		ASTStmtDo(ASTExpr* test, ASTStmt* body, Location const& location);
+		ASTStmtDo* clone() const /*override*/ {return new ASTStmtDo(*this);}
 	
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_ptr<ASTExpr> test;
 		owning_ptr<ASTStmt> body;
@@ -414,20 +404,21 @@ namespace ZScript
 	class ASTStmtReturn : public ASTStmt
 	{
 	public:
-		ASTStmtReturn(Location const& location = Location::NONE);
-		ASTStmtReturn* clone() const {return new ASTStmtReturn(*this);}
+		ASTStmtReturn(Location const& location);
+		ASTStmtReturn* clone() const /*override*/ {
+			return new ASTStmtReturn(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 	};
 
 	class ASTStmtReturnVal : public ASTStmtReturn
 	{
 	public:
-		ASTStmtReturnVal(ASTExpr* value = NULL,
-		                 Location const& location = Location::NONE);
-		ASTStmtReturnVal* clone() const {return new ASTStmtReturnVal(*this);}
+		ASTStmtReturnVal(ASTExpr* value, Location const& location);
+		ASTStmtReturnVal* clone() const /*override*/ {
+			return new ASTStmtReturnVal(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		owning_ptr<ASTExpr> value;
 	};
@@ -435,28 +426,31 @@ namespace ZScript
 	class ASTStmtBreak : public ASTStmt
 	{
 	public:
-		ASTStmtBreak(Location const& location = Location::NONE);
-		ASTStmtBreak* clone() const {return new ASTStmtBreak(*this);}
+		ASTStmtBreak(Location const& location);
+		ASTStmtBreak* clone() const /*override*/ {
+			return new ASTStmtBreak(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 	};
 
 	class ASTStmtContinue : public ASTStmt
 	{
 	public:
-		ASTStmtContinue(Location const& location = Location::NONE);
-		ASTStmtContinue* clone() const {return new ASTStmtContinue(*this);}
+		ASTStmtContinue(Location const& location);
+		ASTStmtContinue* clone() const /*override*/ {
+			return new ASTStmtContinue(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 	};
 
 	class ASTStmtEmpty : public ASTStmt
 	{
 	public:
-		ASTStmtEmpty(Location const& location = Location::NONE);
-		ASTStmtEmpty* clone() const {return new ASTStmtEmpty(*this);}
+		ASTStmtEmpty(Location const& location);
+		ASTStmtEmpty* clone() const /*override*/ {
+			return new ASTStmtEmpty(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 	};
 
 	////////////////////////////////////////////////////////////////
@@ -480,7 +474,7 @@ namespace ZScript
 			TYPE_SCRIPTTYPE
 		};
 
-		ASTDecl(Location const& location = Location::NONE);
+		ASTDecl(Location const& location);
 		ASTDecl* clone() const /*override*/ = 0;
 
 		// Return the subclass id.
@@ -491,7 +485,7 @@ namespace ZScript
 	class ASTScript : public ASTDecl
 	{
 	public:
-		ASTScript(Location const& location = Location::NONE);
+		ASTScript(Location const& location);
 		ASTScript* clone() const /*override*/ {return new ASTScript(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
@@ -512,8 +506,7 @@ namespace ZScript
 	class ASTImportDecl : public ASTDecl
 	{
 	public:
-		ASTImportDecl(std::string const& filename,
-		              Location const& location = Location::NONE);
+		ASTImportDecl(std::string const& filename, Location const& location);
 		ASTImportDecl* clone() /*override*/ const {
 			return new ASTImportDecl(*this);}
     
@@ -534,7 +527,7 @@ namespace ZScript
 	class ASTFuncDecl : public ASTDecl
 	{
 	public:
-		ASTFuncDecl(Location const& location = Location::NONE);
+		ASTFuncDecl(Location const& location);
 		ASTFuncDecl* clone() const /*override*/ {
 			return new ASTFuncDecl(*this);}
     
@@ -553,7 +546,7 @@ namespace ZScript
 	class ASTDataDeclList : public ASTDecl
 	{
 	public:
-		ASTDataDeclList(Location const& location = Location::NONE);
+		ASTDataDeclList(Location const& location);
 		ASTDataDeclList(ASTDataDeclList const&);
 		ASTDataDeclList& operator=(ASTDataDeclList const& rhs);
 		ASTDataDeclList* clone() const /*override*/ {
@@ -579,7 +572,7 @@ namespace ZScript
 	class ASTDataDecl : public ASTDecl
 	{
 	public:
-		ASTDataDecl(Location const& location = Location::NONE);
+		ASTDataDecl(Location const& location);
 		ASTDataDecl(ASTDataDecl const&);
 		ASTDataDecl& operator=(ASTDataDecl const& rhs);
 		ASTDataDecl* clone() const /*override*/ {return new ASTDataDecl(*this);}
@@ -627,7 +620,7 @@ namespace ZScript
 	class ASTDataDeclExtraArray : public AST
 	{
 	public:
-		ASTDataDeclExtraArray(Location const& location = Location::NONE);
+		ASTDataDeclExtraArray(Location const& location);
 		ASTDataDeclExtraArray* clone() const /*override*/ {
 			return new ASTDataDeclExtraArray(*this);}
 
@@ -648,9 +641,8 @@ namespace ZScript
 	class ASTDataTypeDef : public ASTDecl
 	{
 	public:
-		ASTDataTypeDef(ASTDataType* type = NULL,
-		           std::string const& name = "",
-		           Location const& location = Location::NONE);
+		ASTDataTypeDef(ASTDataType* type, std::string const& name,
+		               Location const& location);
 		ASTDataTypeDef* clone() const /*override*/ {
 			return new ASTDataTypeDef(*this);}
 
@@ -665,10 +657,8 @@ namespace ZScript
 	class ASTScriptTypeDef : public ASTDecl
 	{
 	public:
-		ASTScriptTypeDef(
-			ASTScriptType* oldType,
-			std::string const& newName,
-			Location const& location = Location::NONE);
+		ASTScriptTypeDef(ASTScriptType* oldType, std::string const& newName,
+		                 Location const& location);
 		ASTScriptTypeDef* clone() const /*override*/ {
 			return new ASTScriptTypeDef(*this);}
 
@@ -687,16 +677,15 @@ namespace ZScript
 	class ASTExpr : public ASTStmt
 	{
 	public:
-		ASTExpr(Location const& location = Location::NONE);
-		virtual ASTExpr* clone() const = 0;
+		ASTExpr(Location const& location);
+		ASTExpr* clone() const /*override*/ = 0;
 
 		virtual bool isConstant() const = 0;
 
 		// Return this expression's value if it has already been resolved at
 		// compile time.
-		virtual optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const
+		virtual optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const
 		{return nullopt;}
 
 		// Returns the read or write type for this expression. Null for either
@@ -709,20 +698,18 @@ namespace ZScript
 	class ASTExprConst : public ASTExpr
 	{
 	public:
-		ASTExprConst(ASTExpr* content = NULL,
-		             Location const& location = Location::NONE);
-		ASTExprConst* clone() const {return new ASTExprConst(*this);}
+		ASTExprConst(ASTExpr* content, Location const& location);
+		ASTExprConst* clone() const /*override*/ {
+			return new ASTExprConst(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return true;}
+		bool isConstant() const /*override*/ {return true;}
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const {
+		optional<long> getCompileTimeValue(CompileErrorHandler* errorHandler)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/ {
 			return content ? content->getReadType() : NULL;}
-		DataType const* getWriteType() const {return NULL;}
 	
 		owning_ptr<ASTExpr> content;
 	};
@@ -730,21 +717,21 @@ namespace ZScript
 	class ASTExprAssign : public ASTExpr
 	{
 	public:
-		ASTExprAssign(ASTExpr* left = NULL,
-		              ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprAssign* clone() const {return new ASTExprAssign(*this);}
+		ASTExprAssign(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprAssign* clone() const /*override*/ {
+			return new ASTExprAssign(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return right && right->isConstant();}
+		bool isConstant() const /*override*/ {
+			return right && right->isConstant();}
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const {
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/ {
 			return right ? right->getReadType() : NULL;}
-		DataType const* getWriteType() const {
+		DataType const* getWriteType() const /*override*/ {
 			return right ? right->getWriteType() : NULL;}
 	
 		owning_ptr<ASTExpr> left;
@@ -754,22 +741,21 @@ namespace ZScript
 	class ASTExprIdentifier : public ASTExpr
 	{
 	public:
-		ASTExprIdentifier(std::string const& name = "",
-		                  Location const& location = Location::NONE);
-		ASTExprIdentifier* clone() const {return new ASTExprIdentifier(*this);}
+		ASTExprIdentifier(std::string const& name, Location const& location);
+		ASTExprIdentifier* clone() const /*override*/ {
+			return new ASTExprIdentifier(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
-		std::string asString() const;
-		bool isTypeIdentifier() const {return true;}
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
+		std::string asString() const /*override*/;
+		bool isTypeIdentifier() const /*override*/ {return true;}
 
-		bool isConstant() const {return constant_;}
+		bool isConstant() const /*override*/ {return constant_;}
 		void markConstant() {constant_ = true;}
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const;
-		DataType const* getWriteType() const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/;
+		DataType const* getWriteType() const /*override*/;
 	
 		// The identifier components separated by '.'.
 		std::vector<std::string> components;
@@ -784,19 +770,18 @@ namespace ZScript
 	class ASTExprArrow : public ASTExpr
 	{
 	public:
-		ASTExprArrow(ASTExpr* left = NULL,
-		             std::string const& right = "",
-		             Location const& location = Location::NONE);
-		ASTExprArrow* clone() const {return new ASTExprArrow(*this);}
+		ASTExprArrow(ASTExpr* left, std::string const& right,
+		             Location const& location);
+		ASTExprArrow* clone() const /*override*/ {
+			return new ASTExprArrow(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
-		std::string asString() const;
-		bool isTypeArrow() const {return true;}
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
+		std::string asString() const /*override*/;
+		bool isTypeArrow() const /*override*/ {return true;}
 
-		bool isConstant() const {return false;}
-
-		DataType const* getReadType() const;
-		DataType const* getWriteType() const;
+		bool isConstant() const /*override*/ {return false;}
+		DataType const* getReadType() const /*override*/;
+		DataType const* getWriteType() const /*override*/;
 	
 		owning_ptr<ASTExpr> left;
 		std::string right;
@@ -810,9 +795,7 @@ namespace ZScript
 	class ASTExprIndex : public ASTExpr
 	{
 	public:
-		ASTExprIndex(ASTExpr* array = NULL,
-		             ASTExpr* index = NULL,
-		             Location const& location = Location::NONE);
+		ASTExprIndex(ASTExpr* array, ASTExpr* index, Location const& location);
 		ASTExprIndex* clone() const /*override*/ {
 			return new ASTExprIndex(*this);}
 
@@ -820,7 +803,6 @@ namespace ZScript
 		bool isTypeIndex() const /*override*/ {return true;}
     
 		bool isConstant() const /*override*/;
-
 		DataType const* getReadType() const /*override*/;
 		DataType const* getWriteType() const /*override*/;
 	
@@ -831,15 +813,15 @@ namespace ZScript
 	class ASTExprCall : public ASTExpr
 	{
 	public:
-		ASTExprCall(Location const& location = Location::NONE);
-		ASTExprCall* clone() const {return new ASTExprCall(*this);}
+		ASTExprCall(Location const& location);
+		ASTExprCall* clone() const /*override*/ {
+			return new ASTExprCall(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return false;}
-
-		DataType const* getReadType() const;
-		DataType const* getWriteType() const;
+		bool isConstant() const /*override*/ {return false;}
+		DataType const* getReadType() const /*override*/;
+		DataType const* getWriteType() const /*override*/;
 	
 		owning_ptr<ASTExpr> left;
 		owning_vector<ASTExpr> parameters;
@@ -851,10 +833,10 @@ namespace ZScript
 	class ASTUnaryExpr : public ASTExpr
 	{
 	public:
-		ASTUnaryExpr(Location const& location = Location::NONE);
-		virtual ASTUnaryExpr* clone() const = 0;
+		ASTUnaryExpr(Location const& location);
+		ASTUnaryExpr* clone() const /*override*/ = 0;
 
-		virtual bool isConstant() const {return operand->isConstant();}
+		bool isConstant() const /*override*/ {return operand->isConstant();}
 
 		owning_ptr<ASTExpr> operand;
 	};
@@ -862,106 +844,107 @@ namespace ZScript
 	class ASTExprNegate : public ASTUnaryExpr
 	{
 	public:
-		ASTExprNegate(Location const& location = Location::NONE);
-		ASTExprNegate* clone() const {return new ASTExprNegate(*this);}
+		ASTExprNegate(Location const& location);
+		ASTExprNegate* clone() const /*override*/ {
+			return new ASTExprNegate(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {return NULL;}
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	};
 
 	class ASTExprNot : public ASTUnaryExpr
 	{
 	public:
-		ASTExprNot(Location const& location = Location::NONE);
-		ASTExprNot* clone() const {return new ASTExprNot(*this);}
+		ASTExprNot(Location const& location);
+		ASTExprNot* clone() const /*override*/ {
+			return new ASTExprNot(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const {return &DataType::BOOL;}
-		DataType const* getWriteType() const {return NULL;}
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::BOOL;}
 	};
 
 	class ASTExprBitNot : public ASTUnaryExpr
 	{
 	public:
-		ASTExprBitNot(Location const& location = Location::NONE);
-		ASTExprBitNot* clone() const {return new ASTExprBitNot(*this);}
+		ASTExprBitNot(Location const& location);
+		ASTExprBitNot* clone() const /*override*/ {
+			return new ASTExprBitNot(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {return NULL;}
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	};
 
 	class ASTExprIncrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprIncrement(Location const& location = Location::NONE);
-		ASTExprIncrement* clone() const {return new ASTExprIncrement(*this);}
+		ASTExprIncrement(Location const& location);
+		ASTExprIncrement* clone() const /*override*/ {
+			return new ASTExprIncrement(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return false;}
-
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {
+		bool isConstant() const /*override*/ {return false;}
+		DataType const* getReadType() const /*override*/ {return &DataType::FLOAT;}
+		DataType const* getWriteType() const /*override*/ {
 			return operand ? operand->getWriteType() : NULL;}
 	};
 
 	class ASTExprPreIncrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprPreIncrement(Location const& location = Location::NONE);
-		ASTExprPreIncrement* clone() const {return new ASTExprPreIncrement(*this);}
+		ASTExprPreIncrement(Location const& location);
+		ASTExprPreIncrement* clone() const /*override*/ {
+			return new ASTExprPreIncrement(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return false;}
-
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {
+		bool isConstant() const /*override*/ {return false;}
+		DataType const* getReadType() const /*override*/ {return &DataType::FLOAT;}
+		DataType const* getWriteType() const /*override*/ {
 			return operand ? operand->getWriteType() : NULL;}
 	};
 
 	class ASTExprDecrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprDecrement(Location const& location = Location::NONE);
-		ASTExprDecrement* clone() const {return new ASTExprDecrement(*this);}
+		ASTExprDecrement(Location const& location);
+		ASTExprDecrement* clone() const /*override*/ {
+			return new ASTExprDecrement(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return false;}
-
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {
+		bool isConstant() const /*override*/ {return false;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
+		DataType const* getWriteType() const /*override*/ {
 			return operand ? operand->getWriteType() : NULL;}
 	};
 
 	class ASTExprPreDecrement : public ASTUnaryExpr
 	{
 	public:
-		ASTExprPreDecrement(Location const& location = Location::NONE);
-		ASTExprPreDecrement* clone() const {
+		ASTExprPreDecrement(Location const& location);
+		ASTExprPreDecrement* clone() const /*override*/ {
 			return new ASTExprPreDecrement(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return false;}
-
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {
+		bool isConstant() const /*override*/ {return false;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
+		DataType const* getWriteType() const /*override*/ {
 			return operand ? operand->getWriteType() : NULL;}
 	};
 
@@ -969,360 +952,317 @@ namespace ZScript
 	class ASTBinaryExpr : public ASTExpr
 	{
 	public:
-		ASTBinaryExpr(ASTExpr* left = NULL,
-		              ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		virtual ASTBinaryExpr* clone() const = 0;
+		ASTBinaryExpr(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTBinaryExpr* clone() const /*override*/ = 0;
 
-		bool isConstant() const;
+		bool isConstant() const /*override*/;
 
 		owning_ptr<ASTExpr> left;
 		owning_ptr<ASTExpr> right;
-
-	protected:
-		ASTBinaryExpr& operator=(ASTBinaryExpr const& rhs);
 	};
 
 	// virtual
 	class ASTLogExpr : public ASTBinaryExpr
 	{
 	public:
-		ASTLogExpr(ASTExpr* left = NULL,
-		           ASTExpr* right = NULL,
-		           Location const& location = Location::NONE);
-		virtual ASTLogExpr* clone() const = 0;
+		ASTLogExpr(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTLogExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const {return &DataType::BOOL;}
-		DataType const* getWriteType() const {return NULL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::BOOL;}
 	};
 
 	class ASTExprAnd : public ASTLogExpr
 	{
 	public:
-		ASTExprAnd(ASTExpr* left = NULL,
-		           ASTExpr* right = NULL,
-		           Location const& location = Location::NONE);
-		ASTExprAnd* clone() const {return new ASTExprAnd(*this);}
+		ASTExprAnd(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprAnd* clone() const /*override*/ {
+			return new ASTExprAnd(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprOr : public ASTLogExpr
 	{
 	public:
-		ASTExprOr(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprOr* clone() const {return new ASTExprOr(*this);}
+		ASTExprOr(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprOr* clone() const /*override*/ {return new ASTExprOr(*this);}
     
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	// virtual
 	class ASTRelExpr : public ASTBinaryExpr
 	{
 	public:
-		ASTRelExpr(ASTExpr* left = NULL,
-		           ASTExpr* right = NULL,
-		           Location const& location = Location::NONE);
-		virtual ASTRelExpr* clone() const = 0;
+		ASTRelExpr(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTRelExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const {return &DataType::BOOL;}
-		DataType const* getWriteType() const {return NULL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::BOOL;}
 	};
 
 	class ASTExprGT : public ASTRelExpr
 	{
 	public:
-		ASTExprGT(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprGT* clone() const {return new ASTExprGT(*this);}
+		ASTExprGT(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprGT* clone() const /*override*/ {return new ASTExprGT(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprGE : public ASTRelExpr
 	{
 	public:
-		ASTExprGE(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprGE* clone() const {return new ASTExprGE(*this);}
+		ASTExprGE(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprGE* clone() const /*override*/ {return new ASTExprGE(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprLT : public ASTRelExpr
 	{
 	public:
-		ASTExprLT(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprLT* clone() const {return new ASTExprLT(*this);}
+		ASTExprLT(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprLT* clone() const /*override*/ {return new ASTExprLT(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprLE : public ASTRelExpr
 	{
 	public:
-		ASTExprLE(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprLE* clone() const {return new ASTExprLE(*this);}
+		ASTExprLE(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprLE* clone() const /*override*/ {return new ASTExprLE(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprEQ : public ASTRelExpr
 	{
 	public:
-		ASTExprEQ(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprEQ* clone() const {return new ASTExprEQ(*this);}
+		ASTExprEQ(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprEQ* clone() const /*override*/ {return new ASTExprEQ(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprNE : public ASTRelExpr
 	{
 	public:
-		ASTExprNE(ASTExpr* left = NULL,
-		          ASTExpr* right = NULL,
-		          Location const& location = Location::NONE);
-		ASTExprNE* clone() const {return new ASTExprNE(*this);}
+		ASTExprNE(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprNE* clone() const /*override*/ {return new ASTExprNE(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	// virtual
 	class ASTAddExpr : public ASTBinaryExpr
 	{
 	public:
-		ASTAddExpr(ASTExpr* left = NULL,
-		           ASTExpr* right = NULL,
-		           Location const& location = Location::NONE);
-		virtual ASTAddExpr* clone() const = 0;
+		ASTAddExpr(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTAddExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {return NULL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	};
 
 	class ASTExprPlus : public ASTAddExpr
 	{
 	public:
-		ASTExprPlus(ASTExpr* left = NULL,
-		            ASTExpr* right = NULL,
-		            Location const& location = Location::NONE);
-		ASTExprPlus* clone() const {return new ASTExprPlus(*this);}
+		ASTExprPlus(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTExprPlus* clone() const /*override*/ {
+			return new ASTExprPlus(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprMinus : public ASTAddExpr
 	{
 	public:
-		ASTExprMinus(ASTExpr* left = NULL,
-		             ASTExpr* right = NULL,
-		             Location const& location = Location::NONE);
-		ASTExprMinus* clone() const {return new ASTExprMinus(*this);}
+		ASTExprMinus(ASTExpr* left, ASTExpr* right,
+		             Location const& location);
+		ASTExprMinus* clone() const /*override*/ {
+			return new ASTExprMinus(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	// virtual
 	class ASTMultExpr : public ASTBinaryExpr
 	{
 	public:
-		ASTMultExpr(ASTExpr* left = NULL,
-		            ASTExpr* right = NULL,
-		            Location const& location = Location::NONE);
-		virtual ASTMultExpr* clone() const = 0;
+		ASTMultExpr(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTMultExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {return NULL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	};
 
 	class ASTExprTimes : public ASTMultExpr
 	{
 	public:
-		ASTExprTimes(ASTExpr* left = NULL,
-		             ASTExpr* right = NULL,
-		             Location const& location = Location::NONE);
-		ASTExprTimes* clone() const {return new ASTExprTimes(*this);}
+		ASTExprTimes(ASTExpr* left, ASTExpr* right,
+		             Location const& location);
+		ASTExprTimes* clone() const /*override*/ {
+			return new ASTExprTimes(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprDivide : public ASTMultExpr
 	{
 	public:
-		ASTExprDivide(ASTExpr* left = NULL,
-		              ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprDivide* clone() const {return new ASTExprDivide(*this);}
+		ASTExprDivide(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprDivide* clone() const /*override*/ {
+			return new ASTExprDivide(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprModulo : public ASTMultExpr
 	{
 	public:
-		ASTExprModulo(ASTExpr* left = NULL,
-		              ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprModulo* clone() const {return new ASTExprModulo(*this);}
+		ASTExprModulo(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprModulo* clone() const /*override*/ {
+			return new ASTExprModulo(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	// virtual
 	class ASTBitExpr : public ASTBinaryExpr
 	{
 	public:
-		ASTBitExpr(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		           Location const& location = Location::NONE);
-		virtual ASTBitExpr* clone() const = 0;
+		ASTBitExpr(ASTExpr* left, ASTExpr* right, Location const& location);
+		ASTBitExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {return NULL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	};
 
 	class ASTExprBitAnd : public ASTBitExpr
 	{
 	public:
-		ASTExprBitAnd(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprBitAnd* clone() const {return new ASTExprBitAnd(*this);}
+		ASTExprBitAnd(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprBitAnd* clone() const /*override*/ {
+			return new ASTExprBitAnd(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprBitOr : public ASTBitExpr
 	{
 	public:
-		ASTExprBitOr(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		             Location const& location = Location::NONE);
-		ASTExprBitOr* clone() const {return new ASTExprBitOr(*this);}
+		ASTExprBitOr(ASTExpr* left, ASTExpr* right,
+		             Location const& location);
+		ASTExprBitOr* clone() const /*override*/ {
+			return new ASTExprBitOr(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprBitXor : public ASTBitExpr
 	{
 	public:
-		ASTExprBitXor(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprBitXor* clone() const {return new ASTExprBitXor(*this);}
+		ASTExprBitXor(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprBitXor* clone() const /*override*/{
+			return new ASTExprBitXor(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	// virtual
 	class ASTShiftExpr : public ASTBinaryExpr
 	{
 	public:
-		ASTShiftExpr(
-				ASTExpr* left = NULL, ASTExpr* right = NULL,
-				Location const& location = Location::NONE);
-		virtual ASTShiftExpr* clone() const = 0;
+		ASTShiftExpr(ASTExpr* left, ASTExpr* right,
+		             Location const& location);
+		ASTShiftExpr* clone() const /*override*/ = 0;
 
-		DataType const* getReadType() const {return &DataType::FLOAT;}
-		DataType const* getWriteType() const {return NULL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	};
 
 	class ASTExprLShift : public ASTShiftExpr
 	{
 	public:
-		ASTExprLShift(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprLShift* clone() const {return new ASTExprLShift(*this);}
+		ASTExprLShift(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprLShift* clone() const /*override*/ {
+			return new ASTExprLShift(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	class ASTExprRShift : public ASTShiftExpr
 	{
 	public:
-		ASTExprRShift(ASTExpr* left = NULL, ASTExpr* right = NULL,
-		              Location const& location = Location::NONE);
-		ASTExprRShift* clone() const {return new ASTExprRShift(*this);}
+		ASTExprRShift(ASTExpr* left, ASTExpr* right,
+		              Location const& location);
+		ASTExprRShift* clone() const /*override*/ {
+			return new ASTExprRShift(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
 	};
 
 	// Literals
@@ -1331,10 +1271,8 @@ namespace ZScript
 	class ASTLiteral : public ASTExpr
 	{
 	public:
-		ASTLiteral(Location const& location = Location::NONE);
-		virtual ASTLiteral* clone() const = 0;
-
-		DataType const* getWriteType() const {return NULL;}
+		ASTLiteral(Location const& location);
+		ASTLiteral* clone() const /*override*/ = 0;
 
 		Literal* manager;
 	};
@@ -1342,19 +1280,17 @@ namespace ZScript
 	class ASTNumberLiteral : public ASTLiteral
 	{
 	public:
-		ASTNumberLiteral(
-				ASTFloat* value = NULL,
-				Location const& location = Location::NONE);
-		ASTNumberLiteral* clone() const {return new ASTNumberLiteral(*this);}
+		ASTNumberLiteral(ASTFloat* value, Location const& location);
+		ASTNumberLiteral* clone() const /*override*/ {
+			return new ASTNumberLiteral(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return true;}
-
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const;
-		DataType const* getReadType() const {return &DataType::FLOAT;}
+		bool isConstant() const /*override*/ {return true;}
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/;
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::FLOAT;}
 	
 		owning_ptr<ASTFloat> value;
 	};
@@ -1362,20 +1298,18 @@ namespace ZScript
 	class ASTBoolLiteral : public ASTLiteral
 	{
 	public:
-		ASTBoolLiteral(
-				bool value = false,
-				Location const& location = Location::NONE);
-		ASTBoolLiteral* clone() const {return new ASTBoolLiteral(*this);}
+		ASTBoolLiteral(bool value, Location const& location);
+		ASTBoolLiteral* clone() const /*override*/ {
+			return new ASTBoolLiteral(*this);}
 
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
-		bool isConstant() const {return true;}
-
-		optional<long> getCompileTimeValue(
-				CompileErrorHandler* errorHandler = NULL)
-				const {
+		bool isConstant() const /*override*/ {return true;}
+		optional<long> getCompileTimeValue(CompileErrorHandler*)
+			const /*override*/ {
 			return value ? 10000L : 0L;}
-		DataType const* getReadType() const {return &DataType::BOOL;}
+		DataType const* getReadType() const /*override*/ {
+			return &DataType::BOOL;}
 	
 		bool value;
 	};
@@ -1383,12 +1317,8 @@ namespace ZScript
 	class ASTStringLiteral : public ASTLiteral
 	{
 	public:
-		ASTStringLiteral(
-				char const* str = "",
-				Location const& location = Location::NONE);
-		ASTStringLiteral(
-				std::string const& str,
-				Location const& location = Location::NONE);
+		ASTStringLiteral(char const* str, Location const& location);
+		ASTStringLiteral(std::string const& str, Location const& location);
 		ASTStringLiteral(ASTString const& raw);
 		ASTStringLiteral(ASTStringLiteral const& base);
 		ASTStringLiteral& operator=(ASTStringLiteral const& rhs);
@@ -1413,17 +1343,17 @@ namespace ZScript
 	class ASTArrayLiteral : public ASTLiteral
 	{
 	public:
-		ASTArrayLiteral(Location const& location = Location::NONE);
+		ASTArrayLiteral(Location const& location);
 		ASTArrayLiteral(ASTArrayLiteral const& base);
 		ASTArrayLiteral& operator=(ASTArrayLiteral const& rhs);
 		ASTArrayLiteral* clone() const {return new ASTArrayLiteral(*this);}
 
-		void execute (ASTVisitor& visitor, void* param = NULL);
-		bool isArrayLiteral() const {return true;}
+		void execute (ASTVisitor& visitor, void* param = NULL) /*override*/;
+		bool isArrayLiteral() const /*override*/ {return true;}
 
-		bool isConstant() const {return true;}
-
-		DataTypeArray const* getReadType() const {return readType_;}
+		bool isConstant() const /*override*/ {return true;}
+		DataTypeArray const* getReadType() const /*override*/ {
+			return readType_;}
 		void setReadType(DataTypeArray const* type) {readType_ = type;}
 
 		// The data declaration that this literal may be part of. If NULL that
@@ -1446,16 +1376,16 @@ namespace ZScript
 	class ASTOptionValue : public ASTLiteral
 	{
 	public:
-		ASTOptionValue(std::string const& name = "",
-		               Location const& location = Location::NONE);
-		ASTOptionValue* clone() const {return new ASTOptionValue(*this);}
+		ASTOptionValue(std::string const& name, Location const& location);
+		ASTOptionValue* clone() const /*override*/ {
+			return new ASTOptionValue(*this);}
 
-		virtual void execute(ASTVisitor& visitor, void* param = NULL);
-		virtual std::string asString() const;
+		virtual void execute(ASTVisitor& visitor, void* param = NULL)
+			/*override*/;
+		virtual std::string asString() const /*override*/;
 
-		virtual bool isConstant() const {return true;}
-
-		virtual DataType const* getReadType() const {
+		virtual bool isConstant() const /*override*/ {return true;}
+		virtual DataType const* getReadType() const /*override*/ {
 			return &DataType::FLOAT;}
 
 		std::string name;
@@ -1470,7 +1400,8 @@ namespace ZScript
 	public:
 		ASTScriptType(ScriptType type, Location const& location);
 		ASTScriptType(std::string const& name, Location const& location);
-		ASTScriptType* clone() const {return new ASTScriptType(*this);}
+		ASTScriptType* clone() const /*override*/ {
+			return new ASTScriptType(*this);}
 
 		void execute(ASTVisitor& visitor, void* param = NULL);
 
@@ -1485,16 +1416,13 @@ namespace ZScript
 	{
 	public:
 		// Takes ownership of type.
-		ASTDataType(
-				DataType* type = NULL,
-				Location const& location = Location::NONE);
+		ASTDataType(DataType* type, Location const& location);
 		// Clones type.
-		ASTDataType(
-				DataType const& type,
-				Location const& location = Location::NONE);
-		ASTDataType* clone() const {return new ASTDataType(*this);}
+		ASTDataType(DataType const& type, Location const& location);
+		ASTDataType* clone() const /*override*/ {
+			return new ASTDataType(*this);}
 	
-		void execute(ASTVisitor& visitor, void* param = NULL);
+		void execute(ASTVisitor& visitor, void* param = NULL) /*override*/;
 
 		DataType const& resolve(Scope& scope);
 
