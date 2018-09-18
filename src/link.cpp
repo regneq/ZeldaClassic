@@ -3852,7 +3852,7 @@ bool LinkClass::animate(int)
     if(do_cheat_light)
     {
         naturaldark = !naturaldark;
-        lighting(false, false);
+        lighting(false, false,1);//Forcibly set permLit, overriding it's current setting
         do_cheat_light = false;
     }
     
@@ -11300,6 +11300,7 @@ bool LinkClass::dowarp(int type, int index)
     
     case wtEXIT: // entrance/exit
     {
+		lighting(false,false,4);//Reset permLit, and do nothing else; lighting was not otherwise called on a wtEXIT warp.
         ALLOFF();
         music_stop();
         kill_sfx();

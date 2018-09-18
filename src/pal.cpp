@@ -26,6 +26,8 @@ extern LinkClass Link;
 int CSET_SIZE = 16;                                         // this is only changed to 4 in the NES title screen
 int CSET_SHFT = 4;                                          // log2 of CSET_SIZE
 
+bool permLit = false;
+
 bool usingdrypal = false; //using dried up lake colors
 RGB olddrypal; //palette to restore when lake rehydrates
 
@@ -303,8 +305,27 @@ void fade(int level,bool blackall,bool fromblack)
 
 // false: change screen lighting to naturaldark
 // true: lighten room
-void lighting(bool existslight, bool setnaturaldark)
+void lighting(bool existslight, bool setnaturaldark, int specialstate)
 {
+	//special states: 0==default, 1==force, 2==reset permLit, 3==set permLit, 4==reset permLit and do NOTHING else
+	switch(specialstate){
+		case 1:
+			permLit=existslight;
+			break;
+		case 2:
+			permLit=false;
+			break;
+		case 3:
+			permLit=true;
+			break;
+		case 4:
+			permLit=false;
+			return;
+	}
+	if(permLit)
+	{
+		existslight=true;
+	}
     bool newstate = !existslight && (setnaturaldark ? ((TheMaps[currmap*MAPSCRS+currscr].flags&fDARK) != 0) : naturaldark);
     
     if(darkroom != newstate)
@@ -320,6 +341,7 @@ fade((Link.getSpecialCave()>0) ? (Link.getSpecialCave()>=GUYCAVE) ? 10 : 11 : DM
 // Only used during Insta-Warps
 void lightingInstant()
 {
+	permLit=false;
     bool newstate = ((TheMaps[currmap*MAPSCRS+currscr].flags&fDARK) != 0);
     
     if(darkroom != newstate)

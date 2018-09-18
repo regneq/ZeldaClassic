@@ -35,7 +35,7 @@ extern void interpolatedfade();
 
 extern void ringcolor(bool forceDefault);
 extern void fade(int level,bool blackall,bool fromblack);
-extern void lighting(bool existslight, bool setnaturaldark = false);
+extern void lighting(bool existslight, bool setnaturaldark = false, int specialstate = 2);
 extern void lightingInstant();
 extern void dryuplake();
 extern void rehydratelake(bool instant);
