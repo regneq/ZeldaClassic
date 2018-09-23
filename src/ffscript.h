@@ -36,11 +36,11 @@ enum {
 
 
 
-	//Allow or forbid drawing during specific game events. 
-	enum{
-		scdrDRAW_WHILE_SCROLLING, scdrDRAW_DURING_SCREEN_TRANSITION, scdrDRAW_DURING_WARP,
-		scdrDRAW_DURING_WIPES, scdrLAST
-	};
+//Allow or forbid drawing during specific game events. 
+enum{
+	scdrDRAW_WHILE_SCROLLING, scdrDRAW_DURING_SCREEN_TRANSITION, scdrDRAW_DURING_WARP,
+	scdrDRAW_DURING_WIPES, scdrLAST
+};
 
 enum
 {
@@ -60,7 +60,7 @@ enum
 
 enum
 {
-	 qQuestVersion, qMinQuestVersion, qvLAST
+	qQuestVersion, qMinQuestVersion, qvLAST
 };
 
 class FFScript
@@ -68,105 +68,105 @@ class FFScript
 	
     
 public:
-//FFScript();
-void init();
-int getQRBit(int rule);	
-void setRule(int rule, bool s);
-bool getRule(int rule_bit);
-void setFFRules();
-void setLinkTile(int t);
-int getLinkTile();
-void setLinkAction(int a);
-int getLinkAction();
+	//FFScript();
+	void init();
+	int getQRBit(int rule);	
+	void setRule(int rule, bool s);
+	bool getRule(int rule_bit);
+	void setFFRules();
+	void setLinkTile(int t);
+	int getLinkTile();
+	void setLinkAction(int a);
+	int getLinkAction();
 
-long getQuestHeaderInfo(int type);
+	long getQuestHeaderInfo(int type);
 
-/*
-long getQuestHeaderInfo(int type)
-{
-    return quest_format[type];
-}
-
-
-*/
-
-void do_adjustsfxvolume(const bool v);
-void do_adjustvolume(const bool v);
-//FFScript();
-//static void init();
-
-long quest_format[versiontypesLAST];
+	/*
+	  long getQuestHeaderInfo(int type)
+	  {
+	  return quest_format[type];
+	  }
 
 
-long coreflags;
-long script_UIDs[UID_TYPES];
-long usr_midi_volume, usr_digi_volume, usr_sfx_volume, usr_music_volume, usr_panstyle;
+	*/
+
+	void do_adjustsfxvolume(const bool v);
+	void do_adjustvolume(const bool v);
+	//FFScript();
+	//static void init();
+
+	long quest_format[versiontypesLAST];
+
+
+	long coreflags;
+	long script_UIDs[UID_TYPES];
+	long usr_midi_volume, usr_digi_volume, usr_sfx_volume, usr_music_volume, usr_panstyle;
 #define FFRULES_SIZE 512
-byte FF_rules[FFRULES_SIZE]; //For Migration of Quest Rules, and Scritp Engine Rules
-long FF_link_tile;	//Overrides for the tile used when blitting Limk to the bitmap; and a var to hold a script-set action/
-byte FF_link_action; //This way, we can make safe replicas of internal Link actions to be set by script. 
-bool kb_typing_mode; //script only, for disbaling key presses affecting Link, etc. 
-long FF_screenbounds[4]; //edges of the screen, left, right, top, bottom used for where to scroll. 
-long FF_screen_dimensions[4]; //height, width, displaywidth, displayheight
-long FF_subscreen_dimensions[4];
-long FF_eweapon_removal_bounds[4]; //left, right, top, bottom coordinates for automatic eweapon removal. 
-long FF_lweapon_removal_bounds[4]; //left, right, top, bottom coordinates for automatic lweapon removal. 
+	byte FF_rules[FFRULES_SIZE]; //For Migration of Quest Rules, and Scritp Engine Rules
+	long FF_link_tile;	//Overrides for the tile used when blitting Limk to the bitmap; and a var to hold a script-set action/
+	byte FF_link_action; //This way, we can make safe replicas of internal Link actions to be set by script. 
+	bool kb_typing_mode; //script only, for disbaling key presses affecting Link, etc. 
+	long FF_screenbounds[4]; //edges of the screen, left, right, top, bottom used for where to scroll. 
+	long FF_screen_dimensions[4]; //height, width, displaywidth, displayheight
+	long FF_subscreen_dimensions[4];
+	long FF_eweapon_removal_bounds[4]; //left, right, top, bottom coordinates for automatic eweapon removal. 
+	long FF_lweapon_removal_bounds[4]; //left, right, top, bottom coordinates for automatic lweapon removal. 
 
 #define FFSCRIPTCLASS_CLOCKS 10
-long FF_clocks[FFSCRIPTCLASS_CLOCKS]; //Will be used for Linkaction, anims, and so forth 
+	long FF_clocks[FFSCRIPTCLASS_CLOCKS]; //Will be used for Linkaction, anims, and so forth 
 
 #define SCRIPT_DRAWING_RULES 20
-byte ScriptDrawingRules[SCRIPT_DRAWING_RULES];
+	byte ScriptDrawingRules[SCRIPT_DRAWING_RULES];
 
 #define NUM_USER_MIDI_OVERRIDES 6
-long FF_UserMidis[NUM_USER_MIDI_OVERRIDES]; //MIDIs to use for Game Over, and similar to override system defaults. 
+	long FF_UserMidis[NUM_USER_MIDI_OVERRIDES]; //MIDIs to use for Game Over, and similar to override system defaults. 
  
-short passive_subscreen_offsets[2];
-byte active_subscreen_scrollspeed_adjustment;
+	short passive_subscreen_offsets[2];
+	byte active_subscreen_scrollspeed_adjustment;
 
-byte FF_gravity;
-word FF_terminalv;
-byte FF_msg_speed;
-byte FF_transition_type; // Can't edit, yet.
-byte FF_jump_link_layer_threshold; // Link is drawn above layer 3 if z > this.
-byte FF_link_swim_speed;
+	byte FF_gravity;
+	word FF_terminalv;
+	byte FF_msg_speed;
+	byte FF_transition_type; // Can't edit, yet.
+	byte FF_jump_link_layer_threshold; // Link is drawn above layer 3 if z > this.
+	byte FF_link_swim_speed;
 
-byte subscreen_scroll_speed;
+	byte subscreen_scroll_speed;
 
-void setSubscreenScrollSpeed(byte n);
-int getSubscreenScrollSpeed();
-void do_fx_zap(const bool v);
-void do_fx_wavy(const bool v);
-void do_greyscale(const bool v);
+	void setSubscreenScrollSpeed(byte n);
+	int getSubscreenScrollSpeed();
+	void do_fx_zap(const bool v);
+	void do_fx_wavy(const bool v);
+	void do_greyscale(const bool v);
 
-int GetScriptObjectUID(int type);
+	int GetScriptObjectUID(int type);
     
-byte item_messages_played[MAXITEMS]; //Each field is set when an item pickup message plays the first time per session
-				//so that they do not play every time an item is collected, unless one of the flags is set for it.
+	byte item_messages_played[MAXITEMS]; //Each field is set when an item pickup message plays the first time per session
+	//so that they do not play every time an item is collected, unless one of the flags is set for it.
 
-void SetFFEngineFlag(int flag, bool v);
-void SetItemMessagePlayed(int itm);
-bool GetItemMessagePlayed(int itm);
+	void SetFFEngineFlag(int flag, bool v);
+	void SetItemMessagePlayed(int itm);
+	bool GetItemMessagePlayed(int itm);
 	
-int do_getpixel();
-int GetDefaultWeaponSprite(int w);
+	int do_getpixel();
+	int GetDefaultWeaponSprite(int w);
 
-int GetQuestVersion();
-int GetQuestBuild();
-int GetQuestSectionVersion(int section);
+	int GetQuestVersion();
+	int GetQuestBuild();
+	int GetQuestSectionVersion(int section);
 
-int do_get_internal_uid_npc(int i);
-int do_get_internal_uid_item(int i);
-int do_get_internal_uid_lweapon(int i);
-int do_get_internal_uid_eweapon(int i);
+	int do_get_internal_uid_npc(int i);
+	int do_get_internal_uid_item(int i);
+	int do_get_internal_uid_lweapon(int i);
+	int do_get_internal_uid_eweapon(int i);
 
-void do_loadnpc_by_script_uid(const bool v);
-void do_loaditem_by_script_uid(const bool v);
-void do_loadlweapon_by_script_uid(const bool v);
-void do_loadeweapon_by_script_uid(const bool v);
-//int do_get_internal_uid
+	void do_loadnpc_by_script_uid(const bool v);
+	void do_loaditem_by_script_uid(const bool v);
+	void do_loadlweapon_by_script_uid(const bool v);
+	void do_loadeweapon_by_script_uid(const bool v);
+	//int do_get_internal_uid
 
-    //virtual ~FFScript();
+	//virtual ~FFScript();
     
 	
 	
@@ -197,55 +197,55 @@ void do_loadeweapon_by_script_uid(const bool v);
 		return vbound(val,0,ZS_FIX);
 	}
 	
-static void set_screenwarpReturnY(mapscr *m, int d, int value);
-static void set_screendoor(mapscr *m, int d, int value);
-static void set_screenenemy(mapscr *m, int index, int value);
-static void set_screenlayeropacity(mapscr *m, int d, int value);
-static void set_screensecretcombo(mapscr *m, int d, int value);
-static void set_screensecretcset(mapscr *m, int d, int value);
-static void set_screensecretflag(mapscr *m, int d, int value);
-static void set_screenlayermap(mapscr *m, int d, int value);
-static void set_screenlayerscreen(mapscr *m, int d, int value);
-static void set_screenpath(mapscr *m, int d, int value);
-static void set_screenwarpReturnX(mapscr *m, int d, int value);
-static void set_screenWidth(mapscr *m, int value);
-static void set_screenHeight(mapscr *m, int value);
-static void set_screenViewX(mapscr *m, int value);
-static void set_screenViewY(mapscr *m, int value);
-static void set_screenGuy(mapscr *m, int value);
-static void set_screenString(mapscr *m, int value);
-static void set_screenRoomtype(mapscr *m, int value);
-static void set_screenEntryX(mapscr *m, int value);
-static void set_screenEntryY(mapscr *m, int value);
-static void set_screenitem(mapscr *m, int value);
-static void set_screenundercombo(mapscr *m, int value);
-static void set_screenundercset(mapscr *m, int value);
-static void set_screenatchall(mapscr *m, int value);
-static long get_screenWidth(mapscr *m);
-static long get_screenHeight(mapscr *m);
-static void deallocateZScriptArray(const long ptrval);
-static int get_screen_d(long index1, long index2);
-static void set_screen_d(long index1, long index2, int val);
-static int whichlayer(long scr);
-static void clear_ffc_stack(const byte i);
-static void clear_global_stack();
-static void do_zapout();
-static void do_zapin();
-static void do_openscreen();
-static void do_wavyin();
-static void do_wavyout();
-static void do_triggersecret(const bool v);
-static void do_changeffcscript(const bool v);
+	static void set_screenwarpReturnY(mapscr *m, int d, int value);
+	static void set_screendoor(mapscr *m, int d, int value);
+	static void set_screenenemy(mapscr *m, int index, int value);
+	static void set_screenlayeropacity(mapscr *m, int d, int value);
+	static void set_screensecretcombo(mapscr *m, int d, int value);
+	static void set_screensecretcset(mapscr *m, int d, int value);
+	static void set_screensecretflag(mapscr *m, int d, int value);
+	static void set_screenlayermap(mapscr *m, int d, int value);
+	static void set_screenlayerscreen(mapscr *m, int d, int value);
+	static void set_screenpath(mapscr *m, int d, int value);
+	static void set_screenwarpReturnX(mapscr *m, int d, int value);
+	static void set_screenWidth(mapscr *m, int value);
+	static void set_screenHeight(mapscr *m, int value);
+	static void set_screenViewX(mapscr *m, int value);
+	static void set_screenViewY(mapscr *m, int value);
+	static void set_screenGuy(mapscr *m, int value);
+	static void set_screenString(mapscr *m, int value);
+	static void set_screenRoomtype(mapscr *m, int value);
+	static void set_screenEntryX(mapscr *m, int value);
+	static void set_screenEntryY(mapscr *m, int value);
+	static void set_screenitem(mapscr *m, int value);
+	static void set_screenundercombo(mapscr *m, int value);
+	static void set_screenundercset(mapscr *m, int value);
+	static void set_screenatchall(mapscr *m, int value);
+	static long get_screenWidth(mapscr *m);
+	static long get_screenHeight(mapscr *m);
+	static void deallocateZScriptArray(const long ptrval);
+	static int get_screen_d(long index1, long index2);
+	static void set_screen_d(long index1, long index2, int val);
+	static int whichlayer(long scr);
+	static void clear_ffc_stack(const byte i);
+	static void clear_global_stack();
+	static void do_zapout();
+	static void do_zapin();
+	static void do_openscreen();
+	static void do_wavyin();
+	static void do_wavyout();
+	static void do_triggersecret(const bool v);
+	static void do_changeffcscript(const bool v);
 
-static void setLinkDiagonal(bool v);
-static bool getLinkDiagonal();
-static bool getLinkBigHitbox();
-static void setLinkBigHitbox(bool v);
-
-
+	static void setLinkDiagonal(bool v);
+	static bool getLinkDiagonal();
+	static bool getLinkBigHitbox();
+	static void setLinkBigHitbox(bool v);
 
 
-//NPCData getters One Input, One Return
+
+
+	//NPCData getters One Input, One Return
 	static void getNPCData_flags(); //word
 	static void getNPCData_flags2();
 	static void getNPCData_width();
@@ -579,259 +579,259 @@ static void setLinkBigHitbox(bool v);
 
 #define INVALIDARRAY localRAM[0]  //localRAM[0] is never used
 
-enum __Error
-    {
-        _NoError, //OK!
-        _Overflow, //script array too small
-        _InvalidPointer, //passed NULL pointer or similar
-        _OutOfBounds, //library array out of bounds
-        _InvalidSpriteUID //bad npc, ffc, etc.
-    };
+	enum __Error
+	{
+		_NoError, //OK!
+		_Overflow, //script array too small
+		_InvalidPointer, //passed NULL pointer or similar
+		_OutOfBounds, //library array out of bounds
+		_InvalidSpriteUID //bad npc, ffc, etc.
+	};
     
     
-    static INLINE int checkUserArrayIndex(const long index, const dword size)
-    {
-        if(index < 0 || index >= long(size))
-        {
-          //  Z_scripterrlog("Invalid index (%ld) to local array of size %ld\n", index, size);
-            return _OutOfBounds;
-        }
+	static INLINE int checkUserArrayIndex(const long index, const dword size)
+	{
+		if(index < 0 || index >= long(size))
+		{
+			//  Z_scripterrlog("Invalid index (%ld) to local array of size %ld\n", index, size);
+			return _OutOfBounds;
+		}
         
-        return _NoError;
-    }
+		return _NoError;
+	}
 
     
     
-    //only if the player is messing with their pointers...
-    static ZScriptArray& InvalidError(const long ptr)
-    {
-        //Z_scripterrlog("Invalid pointer (%i) passed to array (don't change the values of your array pointers)\n", ptr);
-        return INVALIDARRAY;
-    }
+	//only if the player is messing with their pointers...
+	static ZScriptArray& InvalidError(const long ptr)
+	{
+		//Z_scripterrlog("Invalid pointer (%i) passed to array (don't change the values of your array pointers)\n", ptr);
+		return INVALIDARRAY;
+	}
     
-    //Returns a reference to the correct array based on pointer passed
-    static ZScriptArray& getArray(const long ptr)
-    {
-        if(ptr <= 0)
-            return InvalidError(ptr);
+	//Returns a reference to the correct array based on pointer passed
+	static ZScriptArray& getArray(const long ptr)
+	{
+		if(ptr <= 0)
+			return InvalidError(ptr);
             
-        if(ptr >= MAX_ZCARRAY_SIZE) //Then it's a global
-        {
-            dword gptr = ptr - MAX_ZCARRAY_SIZE;
+		if(ptr >= MAX_ZCARRAY_SIZE) //Then it's a global
+		{
+			dword gptr = ptr - MAX_ZCARRAY_SIZE;
             
-            if(gptr > game->globalRAM.size())
-                return InvalidError(ptr);
+			if(gptr > game->globalRAM.size())
+				return InvalidError(ptr);
                 
-            return game->globalRAM[gptr];
-        }
-        else
-        {
-            if(localRAM[ptr].Size() == 0)
-                return InvalidError(ptr);
+			return game->globalRAM[gptr];
+		}
+		else
+		{
+			if(localRAM[ptr].Size() == 0)
+				return InvalidError(ptr);
                 
-            return localRAM[ptr];
-        }
-    }
+			return localRAM[ptr];
+		}
+	}
     
-    static size_t getSize(const long ptr)
-    {
-        ZScriptArray& a = getArray(ptr);
+	static size_t getSize(const long ptr)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return size_t(-1);
+		if(a == INVALIDARRAY)
+			return size_t(-1);
             
-        return a.Size();
-    }
+		return a.Size();
+	}
     
-    //Can't you get the std::string and then check its length?
-    static int strlen(const long ptr)
-    {
-        ZScriptArray& a = getArray(ptr);
+	//Can't you get the std::string and then check its length?
+	static int strlen(const long ptr)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return -1;
+		if(a == INVALIDARRAY)
+			return -1;
             
-        word count;
+		word count;
         
-        for(count = 0; checkUserArrayIndex(count, a.Size()) == _NoError && a[count] != '\0'; count++) ;
+		for(count = 0; checkUserArrayIndex(count, a.Size()) == _NoError && a[count] != '\0'; count++) ;
         
-        return count;
-    }
+		return count;
+	}
     
-    //Returns values of a zscript array as an std::string.
-    static void getString(const long ptr, std::string &str, word num_chars = 256)
-    {
-        ZScriptArray& a = getArray(ptr);
+	//Returns values of a zscript array as an std::string.
+	static void getString(const long ptr, std::string &str, word num_chars = 256)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-        {
-            str.clear();
-            return;
-        }
+		if(a == INVALIDARRAY)
+		{
+			str.clear();
+			return;
+		}
         
-        str.clear();
+		str.clear();
         
-        for(word i = 0; checkUserArrayIndex(i, a.Size()) == _NoError && a[i] != '\0' && num_chars != 0; i++)
-        {
-            str += char(a[i] / 10000);
-            num_chars--;
-        }
-    }
+		for(word i = 0; checkUserArrayIndex(i, a.Size()) == _NoError && a[i] != '\0' && num_chars != 0; i++)
+		{
+			str += char(a[i] / 10000);
+			num_chars--;
+		}
+	}
     
-    //Like getString but for an array of longs instead of chars. *(arrayPtr is not checked for validity)
-    static void getValues(const long ptr, long* arrayPtr, word num_values)
-    {
-        ZScriptArray& a = getArray(ptr);
+	//Like getString but for an array of longs instead of chars. *(arrayPtr is not checked for validity)
+	static void getValues(const long ptr, long* arrayPtr, word num_values)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return;
+		if(a == INVALIDARRAY)
+			return;
             
-        for(word i = 0; checkUserArrayIndex(i, a.Size()) == _NoError && num_values != 0; i++)
-        {
-            arrayPtr[i] = (a[i] / 10000);
-            num_values--;
-        }
-    }
+		for(word i = 0; checkUserArrayIndex(i, a.Size()) == _NoError && num_values != 0; i++)
+		{
+			arrayPtr[i] = (a[i] / 10000);
+			num_values--;
+		}
+	}
     
-    //Get element from array
-    static INLINE long getElement(const long ptr, const long offset)
-    {
-        ZScriptArray& a = getArray(ptr);
+	//Get element from array
+	static INLINE long getElement(const long ptr, const long offset)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return -10000;
+		if(a == INVALIDARRAY)
+			return -10000;
             
-        if(checkUserArrayIndex(offset, a.Size()) == _NoError)
-            return a[offset];
-        else
-            return -10000;
-    }
+		if(checkUserArrayIndex(offset, a.Size()) == _NoError)
+			return a[offset];
+		else
+			return -10000;
+	}
     
-    //Set element in array
-    static INLINE void setElement(const long ptr, const long offset, const long value)
-    {
-        ZScriptArray& a = getArray(ptr);
+	//Set element in array
+	static INLINE void setElement(const long ptr, const long offset, const long value)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return;
+		if(a == INVALIDARRAY)
+			return;
             
-        if(checkUserArrayIndex(offset, a.Size()) == _NoError)
-            a[offset] = value;
-    }
+		if(checkUserArrayIndex(offset, a.Size()) == _NoError)
+			a[offset] = value;
+	}
     
-    //Puts values of a zscript array into a client <type> array. returns 0 on success. Overloaded
-    template <typename T>
-    static int getArray(const long ptr, T *refArray)
-    {
-        return getArray(ptr, getArray(ptr).Size(), 0, 0, 0, refArray);
-    }
+	//Puts values of a zscript array into a client <type> array. returns 0 on success. Overloaded
+	template <typename T>
+	static int getArray(const long ptr, T *refArray)
+	{
+		return getArray(ptr, getArray(ptr).Size(), 0, 0, 0, refArray);
+	}
     
-    template <typename T>
-    static int getArray(const long ptr, const word size, T *refArray)
-    {
-        return getArray(ptr, size, 0, 0, 0, refArray);
-    }
+	template <typename T>
+	static int getArray(const long ptr, const word size, T *refArray)
+	{
+		return getArray(ptr, size, 0, 0, 0, refArray);
+	}
     
-    template <typename T>
-    static int getArray(const long ptr, const word size, word userOffset, const word userStride, const word refArrayOffset, T *refArray)
-    {
-        ZScriptArray& a = getArray(ptr);
+	template <typename T>
+	static int getArray(const long ptr, const word size, word userOffset, const word userStride, const word refArrayOffset, T *refArray)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return _InvalidPointer;
+		if(a == INVALIDARRAY)
+			return _InvalidPointer;
             
-        word j = 0, k = userStride;
+		word j = 0, k = userStride;
         
-        for(word i = 0; j < size; i++)
-        {
-            if(i >= a.Size())
-                return _Overflow;
+		for(word i = 0; j < size; i++)
+		{
+			if(i >= a.Size())
+				return _Overflow;
                 
-            if(userOffset-- > 0)
-                continue;
+			if(userOffset-- > 0)
+				continue;
                 
-            if(k > 0)
-                k--;
-            else if (checkUserArrayIndex(i, a.Size()) == _NoError)
-            {
-                refArray[j + refArrayOffset] = T(a[i]);
-                k = userStride;
-                j++;
-            }
-        }
+			if(k > 0)
+				k--;
+			else if (checkUserArrayIndex(i, a.Size()) == _NoError)
+			{
+				refArray[j + refArrayOffset] = T(a[i]);
+				k = userStride;
+				j++;
+			}
+		}
         
-        return _NoError;
-    }
+		return _NoError;
+	}
     
     
-    static int setArray(const long ptr, const std::string s2)
-    {
-        ZScriptArray& a = getArray(ptr);
+	static int setArray(const long ptr, const std::string s2)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return _InvalidPointer;
+		if(a == INVALIDARRAY)
+			return _InvalidPointer;
             
-        word i;
+		word i;
         
-        for(i = 0; i < s2.size(); i++)
-        {
-            if(i >= a.Size())
-            {
-                a.Back() = '\0';
-                return _Overflow;
-            }
+		for(i = 0; i < s2.size(); i++)
+		{
+			if(i >= a.Size())
+			{
+				a.Back() = '\0';
+				return _Overflow;
+			}
             
-            if(checkUserArrayIndex(i, a.Size()) == _NoError)
-                a[i] = s2[i] * 10000;
-        }
+			if(checkUserArrayIndex(i, a.Size()) == _NoError)
+				a[i] = s2[i] * 10000;
+		}
         
-        if(checkUserArrayIndex(i, a.Size()) == _NoError)
-            a[i] = '\0';
+		if(checkUserArrayIndex(i, a.Size()) == _NoError)
+			a[i] = '\0';
             
-        return _NoError;
-    }
+		return _NoError;
+	}
     
     
-    //Puts values of a client <type> array into a zscript array. returns 0 on success. Overloaded
-    template <typename T>
-    static int setArray(const long ptr, const word size, T *refArray)
-    {
-        return setArray(ptr, size, 0, 0, 0, refArray);
-    }
+	//Puts values of a client <type> array into a zscript array. returns 0 on success. Overloaded
+	template <typename T>
+	static int setArray(const long ptr, const word size, T *refArray)
+	{
+		return setArray(ptr, size, 0, 0, 0, refArray);
+	}
     
-    template <typename T>
-    static int setArray(const long ptr, const word size, word userOffset, const word userStride, const word refArrayOffset, T *refArray)
-    {
-        ZScriptArray& a = getArray(ptr);
+	template <typename T>
+	static int setArray(const long ptr, const word size, word userOffset, const word userStride, const word refArrayOffset, T *refArray)
+	{
+		ZScriptArray& a = getArray(ptr);
         
-        if(a == INVALIDARRAY)
-            return _InvalidPointer;
+		if(a == INVALIDARRAY)
+			return _InvalidPointer;
             
-        word j = 0, k = userStride;
+		word j = 0, k = userStride;
         
-        for(word i = 0; j < size; i++)
-        {
-            if(i >= a.Size())
-                return _Overflow; //Resize?
+		for(word i = 0; j < size; i++)
+		{
+			if(i >= a.Size())
+				return _Overflow; //Resize?
                 
-            if(userOffset-- > 0)
-                continue;
+			if(userOffset-- > 0)
+				continue;
                 
-            if(k > 0)
-                k--;
-            else if(checkUserArrayIndex(i, a.Size()) == _NoError)
-            {
-                a[i] = long(refArray[j + refArrayOffset]) * 10000;
-                k = userStride;
-                j++;
-            }
-        }
+			if(k > 0)
+				k--;
+			else if(checkUserArrayIndex(i, a.Size()) == _NoError)
+			{
+				a[i] = long(refArray[j + refArrayOffset]) * 10000;
+				k = userStride;
+				j++;
+			}
+		}
         
-        return _NoError;
-    }
+		return _NoError;
+	}
     
-    private:
-    long sid;
+private:
+	long sid;
   
     
 };
@@ -903,19 +903,19 @@ void do_getscreennpc();
 
 struct script_command
 {
-    char name[64];
-    byte args;
-    byte arg1_type; //0=reg, 1=val;
-    byte arg2_type; //0=reg, 1=val;
-    bool more_stuff;
+	char name[64];
+	byte args;
+	byte arg1_type; //0=reg, 1=val;
+	byte arg2_type; //0=reg, 1=val;
+	bool more_stuff;
 };
 
 struct script_variable
 {
-    char name[64];
-    long id;
-    word maxcount;
-    byte multiple;
+	char name[64];
+	long id;
+	word maxcount;
+	byte multiple;
 };
 
 
@@ -2724,16 +2724,16 @@ enum ASM_DEFINE
 
 struct quad3Dstruct
 {
-    int index;
-    float pos[12], uv[8];
-    int size[2], color[4];
+	int index;
+	float pos[12], uv[8];
+	int size[2], color[4];
 };
 
 struct triangle3Dstruct
 {
-    int index;
-    float pos[9], uv[6];
-    int size[2], color[3];
+	int index;
+	float pos[9], uv[6];
+	int size[2], color[3];
 };
 
 #endif
