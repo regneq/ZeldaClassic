@@ -34,14 +34,6 @@ enum {
 	FFCORE_SCRIPTED_PANSTYLE 	= 0x0010
 };
 
-
-
-//Allow or forbid drawing during specific game events. 
-enum{
-	scdrDRAW_WHILE_SCROLLING, scdrDRAW_DURING_SCREEN_TRANSITION, scdrDRAW_DURING_WARP,
-	scdrDRAW_DURING_WIPES, scdrLAST
-};
-
 enum
 {
 	UID_TYPE_NPC, UID_TYPE_WEAPON, UID_TYPE_ITEM, UID_TYPES
@@ -55,7 +47,6 @@ enum
 	vComboAliases, vLinkSprites, vSubscreen, vItemDropsets, vFFScript, vSFX, vFavourites,
 	qMapCount,
 	versiontypesLAST
-	
 };
 
 enum
@@ -65,8 +56,6 @@ enum
 
 class FFScript
 {
-	
-    
 public:
 	//FFScript();
 	void init();
