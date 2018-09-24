@@ -8451,7 +8451,8 @@ int readffscript(PACKFILE *f, zquestheader *Header, bool keepdata)
                 delete [] globalscripts[GLOBAL_SCRIPT_CONTINUE];
                 
             globalscripts[GLOBAL_SCRIPT_CONTINUE] = new ffscript[1];
-            globalscripts[GLOBAL_SCRIPT_CONTINUE][0].command = 0xFFFF;
+            globalscripts[GLOBAL_SCRIPT_CONTINUE][0].command =
+	            zasm::cmd_terminator;
         }
         
         for(int i = 0; i < NUMSCRIPTLINK; i++)
@@ -8516,7 +8517,8 @@ int readffscript(PACKFILE *f, zquestheader *Header, bool keepdata)
                     globalmap[id].second = "";
                     
                     if(globalscripts[GLOBAL_SCRIPT_CONTINUE] != NULL)
-                        globalscripts[GLOBAL_SCRIPT_CONTINUE][0].command = 0xFFFF;
+                        globalscripts[GLOBAL_SCRIPT_CONTINUE][0].command =
+	                        zasm::cmd_terminator;
                 }
                 else
                 {
@@ -8554,9 +8556,8 @@ int readffscript(PACKFILE *f, zquestheader *Header, bool keepdata)
 }
 
 //Eh?
-bool is_string_command(int command)
+bool is_string_command(zasm::command)
 {
-    command = command;
     return false;
 }
 
@@ -8602,43 +8603,43 @@ void reset_scripts()
     for(int i=0; i<NUMSCRIPTFFC; i++)
     {
         ffscripts[i] = new ffscript[1];
-        ffscripts[i][0].command = 0xFFFF;
+        ffscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTITEM; i++)
     {
         itemscripts[i] = new ffscript[1];
-        itemscripts[i][0].command = 0xFFFF;
+        itemscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTGUYS; i++)
     {
         guyscripts[i] = new ffscript[1];
-        guyscripts[i][0].command = 0xFFFF;
+        guyscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTWEAPONS; i++)
     {
         wpnscripts[i] = new ffscript[1];
-        wpnscripts[i][0].command = 0xFFFF;
+        wpnscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTSCREEN; i++)
     {
         screenscripts[i] = new ffscript[1];
-        screenscripts[i][0].command = 0xFFFF;
+        screenscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTGLOBAL; i++)
     {
         globalscripts[i] = new ffscript[1];
-        globalscripts[i][0].command = 0xFFFF;
+        globalscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTLINK; i++)
     {
         linkscripts[i] = new ffscript[1];
-        linkscripts[i][0].command = 0xFFFF;
+        linkscripts[i][0].command = zasm::cmd_terminator;
     }
 }
 
@@ -8669,35 +8670,31 @@ int read_one_ffscript(PACKFILE *f, zquestheader *, bool keepdata, int , word s_v
     
     for(int j=0; j<num_commands; j++)
     {
-        if(!p_igetw(&(temp_script.command),f,true))
+	    word comword;
+        if(!p_igetw(&comword,f,true))
         {
             return qe_invalid;
         }
+        temp_script.command = zasm::command(comword);
         
-        if(temp_script.command == 0xFFFF)
+        if(temp_script.command == zasm::cmd_terminator)
         {
             if(keepdata)
-                (*script)[j].command = 0xFFFF;
+                (*script)[j].command = zasm::cmd_terminator;
                 
             break;
         }
         else
         {
-            if(is_string_command(temp_script.command))
-            {
-            }
-            else
-            {
-                if(!p_igetl(&(temp_script.arg1),f,keepdata))
-                {
-                    return qe_invalid;
-                }
+	        if(!p_igetl(&(temp_script.arg1),f,keepdata))
+	        {
+		        return qe_invalid;
+	        }
                 
-                if(!p_igetl(&(temp_script.arg2),f,keepdata))
-                {
-                    return qe_invalid;
-                }
-            }
+	        if(!p_igetl(&(temp_script.arg2),f,keepdata))
+	        {
+		        return qe_invalid;
+	        }
             
             if(keepdata)
             {

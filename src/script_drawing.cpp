@@ -14,6 +14,8 @@
 #include "ffscript.h"
 #include <stdio.h>
 
+using namespace zasm;
+
 #define DegtoFix(d)     ((d)*0.7111111111111)
 #define RadtoFix(d)     ((d)*40.743665431525)
 
@@ -3658,136 +3660,136 @@ void do_primitives(BITMAP *targetBitmap, int type, mapscr *, int xoff, int yoff)
         
         switch(sdci[0])
         {
-        case RECTR:
+        case cmd_RECT:
         {
             do_rectr(bmp, sdci, xoffset, yoffset);
         }
         break;
 	
         
-        case CIRCLER:
+        case cmd_CIRCLE:
         {
             do_circler(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case ARCR:
+        case cmd_ARC:
         {
             do_arcr(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case ELLIPSER:
+        case cmd_ELLIPSE:
         {
             do_ellipser(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case LINER:
+        case cmd_LINE:
         {
             do_liner(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case SPLINER:
+        case cmd_SPLINE:
         {
             do_spliner(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case PUTPIXELR:
+        case cmd_PUTPIXEL:
         {
             do_putpixelr(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case DRAWTILER:
+        case cmd_DRAWTILE:
         {
             do_drawtiler(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case DRAWCOMBOR:
+        case cmd_DRAWCOMBO:
         {
             do_drawcombor(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case FASTTILER:
+        case cmd_FASTTILE:
         {
             do_fasttiler(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case FASTCOMBOR:
+        case cmd_FASTCOMBO:
         {
             do_fastcombor(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case DRAWCHARR:
+        case cmd_DRAWCHAR:
         {
             do_drawcharr(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case DRAWINTR:
+        case cmd_DRAWINT:
         {
             do_drawintr(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case DRAWSTRINGR:
+        case cmd_DRAWSTRING:
         {
             do_drawstringr(bmp, i, sdci, xoffset, yoffset);
         }
         break;
         
-        case QUADR:
+        case cmd_QUAD:
         {
             do_drawquadr(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case QUAD3DR:
+        case cmd_QUAD3D:
         {
             do_drawquad3dr(bmp, i, sdci, xoffset, yoffset);
         }
         break;
         
-        case TRIANGLER:
+        case cmd_TRIANGLE:
         {
             do_drawtriangler(bmp, sdci, xoffset, yoffset);
         }
         break;
         
-        case TRIANGLE3DR:
+        case cmd_TRIANGLE3D:
         {
             do_drawtriangle3dr(bmp, i, sdci, xoffset, yoffset);
         }
         break;
 	/*
-	case POLYGONR:
+	case cmd_POLYGONR:
         {
             do_polygonr(bmp, i, sdci, xoffset, yoffset);
         }
         break;
 	*/
         
-        case BITMAPR:
+        case cmd_DRAWBITMAP:
         {
             do_drawbitmapr(bmp, sdci, xoffset, yoffset);
         }
         break;
 	
         
-        case DRAWLAYERR:
+        case cmd_DRAWLAYER:
         {
             do_drawlayerr(bmp, sdci, xoffset, yoffset, isTargetOffScreenBmp);
         }
         break;
         
-        case DRAWSCREENR:
+        case cmd_DRAWSCREEN:
         {
             do_drawscreenr(bmp, sdci, xoffset, yoffset, isTargetOffScreenBmp);
         }

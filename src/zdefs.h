@@ -94,6 +94,7 @@
 #include "zc_alleg.h"
 #include "gamedata.h"
 #include "zc_array.h"
+#include "zasm/command.h"
 
 #define ZELDA_VERSION       0x0255                         //version of the program
 #define ZC_VERSION 25400 //Version ID for ZScript Game->Version
@@ -2049,7 +2050,7 @@ struct mapscr
 
 struct ffscript
 {
-    word command;
+	zasm::command command;
     long arg1;
     long arg2;
     char *ptr;

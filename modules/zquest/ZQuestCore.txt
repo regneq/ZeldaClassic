@@ -21,6 +21,8 @@ src/zc_custom.cpp
 src/init.cpp
 src/alleg_compat.cpp
 
+src/string_utils.cpp
+
 ## End of ZQuest Core module
 )
 

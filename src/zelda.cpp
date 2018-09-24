@@ -91,6 +91,8 @@ CScriptDrawingCommands script_drawing_commands;
 
 using std::string;
 using std::pair;
+using namespace zasm;
+
 extern std::map<int, pair<string,string> > ffcmap;
 
 int zq_screen_w, zq_screen_h;
@@ -448,7 +450,7 @@ dword getNumGlobalArrays()
     {
         scommand = globalscripts[GLOBAL_SCRIPT_INIT][pc].command;
         
-        if(scommand == ALLOCATEGMEMV || scommand == ALLOCATEGMEMR)
+        if(scommand == cmd_ALLOCATEGMEMV || scommand == cmd_ALLOCATEGMEMR)
             ret++;
             
         pc++;
@@ -3653,43 +3655,43 @@ int main(int argc, char* argv[])
     for(int i=0; i<512; i++)
     {
         ffscripts[i] = new ffscript[1];
-        ffscripts[i][0].command = 0xFFFF;
+        ffscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<256; i++)
     {
         itemscripts[i] = new ffscript[1];
-        itemscripts[i][0].command = 0xFFFF;
+        itemscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<256; i++)
     {
         guyscripts[i] = new ffscript[1];
-        guyscripts[i][0].command = 0xFFFF;
+        guyscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<256; i++)
     {
         wpnscripts[i] = new ffscript[1];
-        wpnscripts[i][0].command = 0xFFFF;
+        wpnscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<256; i++)
     {
         screenscripts[i] = new ffscript[1];
-        screenscripts[i][0].command = 0xFFFF;
+        screenscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<NUMSCRIPTGLOBAL; i++)
     {
         globalscripts[i] = new ffscript[1];
-        globalscripts[i][0].command = 0xFFFF;
+        globalscripts[i][0].command = zasm::cmd_terminator;
     }
     
     for(int i=0; i<3; i++)
     {
         linkscripts[i] = new ffscript[1];
-        linkscripts[i][0].command = 0xFFFF;
+        linkscripts[i][0].command = zasm::cmd_terminator;
     }
     
     //script drawing bitmap allocation

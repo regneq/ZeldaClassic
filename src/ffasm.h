@@ -14,8 +14,7 @@
 //#define ffword(x,y,z)       (((x[(y)][(z)])<<8)+(x[(y)][(z)+1]))
 
 
-int set_argument(char *argbuf, ffscript **script, int com, int argument);
-int parse_script_section(char *combuf, char *arg1buf, char *arg2buf, ffscript **script, int com, int &retcode);
+int set_argument(char *argbuf, long& target);
 int parse_script(ffscript **script);
 int parse_script_file(ffscript **script, const char *path, bool report_success);
 long ffparse(char *string);

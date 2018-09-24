@@ -6,7 +6,6 @@ set(ZQUEST_MISC_SOURCES
 ################################
 src/items.cpp
 src/questReport.cpp
-src/ffasm.cpp
 src/zquest.cpp
 src/gui.cpp
 src/jwinfsel.cpp
@@ -15,6 +14,8 @@ src/tiles.cpp
 src/load_gif.cpp
 src/win32.cpp
 
+src/ffasm.cpp
+src/zasm/command.cpp
 
 ## End of ZQuest Misc module
 )

@@ -10579,7 +10579,7 @@ int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, ffscript **scri
     
     for(int j=0;; j++)
     {
-        if((*script)[j].command==0xFFFF)
+	    if((*script)[j].command == zasm::cmd_terminator)
         {
             num_commands = j+1;
             break;
@@ -10593,12 +10593,12 @@ int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, ffscript **scri
     
     for(int j=0; j<num_commands; j++)
     {
-        if(!p_iputw((*script)[j].command,f))
+        if(!p_iputw((*script)[j].command, f))
         {
             new_return(7);
         }
         
-        if((*script)[j].command==0xFFFF)
+        if((*script)[j].command == zasm::cmd_terminator)
         {
             break;
         }
