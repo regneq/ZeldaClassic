@@ -3997,7 +3997,7 @@ static void restoreInput()
 
 void syskeys()
 {
-    backupAndClearInput();
+    //backupAndClearInput();
     
     int oldtitle_version;
     
@@ -4285,7 +4285,7 @@ bottom:
         game_pal();
     }
     
-    restoreInput();
+    //restoreInput();
     
     //while(Playing && keypressed())
     //readkey();
