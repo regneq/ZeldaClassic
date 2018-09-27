@@ -93,8 +93,6 @@ using std::string;
 using std::pair;
 using namespace zasm;
 
-extern std::map<int, pair<string,string> > ffcmap;
-
 int zq_screen_w, zq_screen_h;
 int passive_subscreen_height=56;
 int original_playing_field_offset=56;
@@ -364,15 +362,6 @@ mapscr tmpscr[2];
 mapscr tmpscr2[6];
 mapscr tmpscr3[6];
 gamedata *game=NULL;
-ffscript *ffscripts[NUMSCRIPTFFC];
-ffscript *itemscripts[NUMSCRIPTITEM];
-ffscript *globalscripts[NUMSCRIPTGLOBAL];
-
-//If only...
-ffscript *guyscripts[NUMSCRIPTGUYS];
-ffscript *wpnscripts[NUMSCRIPTWEAPONS];
-ffscript *linkscripts[NUMSCRIPTLINK];
-ffscript *screenscripts[NUMSCRIPTSCREEN];
 
 extern refInfo globalScriptData;
 extern word g_doscript;
@@ -408,7 +397,7 @@ void initZScriptArrayRAM(bool firstplay)
     if(firstplay)
     {
         //leave to global script ~Init to allocate global memory first time round
-        game->globalRAM.resize(getNumGlobalArrays());
+	    game->globalRAM.resize(scripts.count_global_arrays());
     }
     else
     {
@@ -440,24 +429,6 @@ void initZScriptGlobalRAM()
     g_doscript = 1;
     globalScriptData.Clear();
     clear_global_stack();
-}
-
-dword getNumGlobalArrays()
-{
-    word scommand, pc = 0, ret = 0;
-    
-    do
-    {
-        scommand = globalscripts[GLOBAL_SCRIPT_INIT][pc].command;
-        
-        if(scommand == cmd_ALLOCATEGMEMV || scommand == cmd_ALLOCATEGMEMR)
-            ret++;
-            
-        pc++;
-    }
-    while(scommand != 0xFFFF);
-    
-    return ret;
 }
 
 //movingblock mblock2; //mblock[4]?
@@ -934,9 +905,6 @@ void Z_eventlog(const char *format,...)
 // Yay, more extern globals.
 extern byte curScriptType;
 extern word curScriptNum;
-extern std::map<int, std::pair<std::string, std::string> > ffcmap;
-extern std::map<int, std::pair<std::string, std::string> > globalmap;
-extern std::map<int, std::pair<std::string, std::string> > itemmap;
 
 void Z_scripterrlog(const char * const format,...)
 {
@@ -945,15 +913,15 @@ void Z_scripterrlog(const char * const format,...)
         switch(curScriptType)
         {
         case SCRIPT_GLOBAL:
-            al_trace("Global script %u (%s): ", curScriptNum+1, globalmap[curScriptNum].second.c_str());
+	        al_trace("Global script %u (%s): ", curScriptNum+1, scripts.global.name(curScriptNum).c_str());
             break;
             
         case SCRIPT_FFC:
-            al_trace("FFC script %u (%s): ", curScriptNum, ffcmap[curScriptNum-1].second.c_str());
+	        al_trace("FFC script %u (%s): ", curScriptNum, scripts.ffc.name(curScriptNum).c_str());
             break;
             
         case SCRIPT_ITEM:
-            al_trace("Item script %u (%s): ", curScriptNum, itemmap[curScriptNum-1].second.c_str());
+	        al_trace("Item script %u (%s): ", curScriptNum, scripts.item.name(curScriptNum).c_str());
             break;
         }
         
@@ -2041,7 +2009,7 @@ void show_ffscript_names()
     {
         if(tmpscr->ffscript[i])
         {
-            textout_shadowed_ex(framebuf,font, ffcmap[tmpscr->ffscript[i]-1].second.c_str(),2,ypos,WHITE,BLACK,-1);
+	        textout_shadowed_ex(framebuf,font, scripts.ffc.name(tmpscr->ffscript[i]).c_str(),2,ypos,WHITE,BLACK,-1);
             ypos+=12;
         }
     }
@@ -2619,7 +2587,7 @@ void game_loop()
     // Arbitrary Rule 637: neither 'freeze' nor 'freezeff' freeze the global script.
     if(!freezemsg && g_doscript)
     {
-        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
+        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_ACTIVE);
     }
     
     if(!freeze && !freezemsg)
@@ -2673,7 +2641,7 @@ void game_loop()
     
     if(global_wait)
     {
-        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
+        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_ACTIVE);
         global_wait=false;
     }
     
@@ -3651,48 +3619,8 @@ int main(int argc, char* argv[])
     {
         guy_string[i] = new char[64];
     }
-    
-    for(int i=0; i<512; i++)
-    {
-        ffscripts[i] = new ffscript[1];
-        ffscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        itemscripts[i] = new ffscript[1];
-        itemscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        guyscripts[i] = new ffscript[1];
-        guyscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        wpnscripts[i] = new ffscript[1];
-        wpnscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        screenscripts[i] = new ffscript[1];
-        screenscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTGLOBAL; i++)
-    {
-        globalscripts[i] = new ffscript[1];
-        globalscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<3; i++)
-    {
-        linkscripts[i] = new ffscript[1];
-        linkscripts[i][0].command = zasm::cmd_terminator;
-    }
+
+    scripts.clear(); // probably not necessary.
     
     //script drawing bitmap allocation
     zscriptDrawingRenderTarget = new ZScriptDrawingRenderTarget();
@@ -3993,7 +3921,7 @@ int main(int argc, char* argv[])
             initZScriptGlobalRAM();
 		
 	    //Run Global script OnExit
-            ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_END);
+            ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_EXIT);
             
             if(!skipcont&&!get_bit(quest_rules,qr_NOCONTINUE)) game_over(get_bit(quest_rules,qr_NOSAVE));
             
@@ -4036,7 +3964,7 @@ int main(int argc, char* argv[])
             
             initZScriptGlobalRAM();
 	    //Run global script OnExit
-            ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_END);
+            ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_EXIT);
 		
 		
             ending();
@@ -4205,41 +4133,8 @@ void quit_game()
     }
     
     al_trace("Script buffers... \n");
-    
-    for(int i=0; i<512; i++)
-    {
-        if(ffscripts[i]!=NULL) delete [] ffscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(itemscripts[i]!=NULL) delete [] itemscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(guyscripts[i]!=NULL) delete [] guyscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(wpnscripts[i]!=NULL) delete [] wpnscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(screenscripts[i]!=NULL) delete [] screenscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTGLOBAL; i++)
-    {
-        if(globalscripts[i]!=NULL) delete [] globalscripts[i];
-    }
-    
-    for(int i=0; i<3; i++)
-    {
-        if(linkscripts[i]!=NULL) delete [] linkscripts[i];
-    }
+
+    scripts.clear();
     
     delete zscriptDrawingRenderTarget;
     

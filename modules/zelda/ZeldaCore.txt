@@ -17,6 +17,7 @@ src/alleg_compat.cpp
 
 src/ffscript.cpp
 src/zasm/command.cpp
+src/zasm/script.cpp
 src/string_utils.cpp
 
 ## End of Zelda Core module

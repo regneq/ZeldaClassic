@@ -94,7 +94,7 @@
 #include "zc_alleg.h"
 #include "gamedata.h"
 #include "zc_array.h"
-#include "zasm/command.h"
+#include "zasm.h"
 
 #define ZELDA_VERSION       0x0255                         //version of the program
 #define ZC_VERSION 25400 //Version ID for ZScript Game->Version
@@ -2048,33 +2048,10 @@ struct mapscr
     
 };
 
-struct ffscript
-{
-	zasm::command command;
-    long arg1;
-    long arg2;
-    char *ptr;
-};
-
-
 // The version of the ZASM engine a script was compiled for
 // NOT the same as V_FFSCRIPT, which is the version of the packfile format
 // where the scripts are serialized
 #define ZASM_VERSION        2
-
-// Script types
-
-#define SCRIPT_NONE            -1
-#define SCRIPT_GLOBAL          0
-#define SCRIPT_FFC             1
-#define SCRIPT_SCREEN          2
-#define SCRIPT_LINK            3
-#define SCRIPT_ITEM            4
-#define SCRIPT_LWPN            5
-#define SCRIPT_NPC             6
-#define SCRIPT_SUBSCREEN       7
-#define SCRIPT_EWPN            8
-
 
 enum
 {
@@ -3318,13 +3295,13 @@ static INLINE bool is_between(T a, T b, T c, bool inclusive)
 
 #define NEWALLEGRO
 
-INLINE bool pfwrite(void *p,long n,PACKFILE *f)
+INLINE bool pfwrite(void const*p, long n, PACKFILE *f)
 {
     bool success=true;
     
     if(!fake_pack_writing)
     {
-        success=(pack_fwrite(p,n,f)==n);
+	    success=(pack_fwrite(const_cast<void*>(p),n,f)==n);
     }
     
     if(success)
@@ -3788,20 +3765,32 @@ int computeOldStyleBitfield(zinitdata *source, itemdata *items, int family);
 
 extern void flushItemCache();
 extern void removeFromItemCache(int itemid);
+
 #define NUMSCRIPTFFC		512
 #define NUMSCRIPTFFCOLD		256
 #define NUMSCRIPTITEM		256
-#define NUMSCRIPTGUYS		256
-#define NUMSCRIPTWEAPONS	256
+#define NUMSCRIPTGUY		256
+#define NUMSCRIPTWEAPON		256
+#define NUMSCRIPTSCREEN		256
 #define NUMSCRIPTGLOBAL		4
 #define NUMSCRIPTGLOBALOLD	3
 #define NUMSCRIPTLINK		3
-#define NUMSCRIPTSCREEN		256
 
 #define GLOBAL_SCRIPT_INIT 		0
-#define GLOBAL_SCRIPT_GAME		1
-#define GLOBAL_SCRIPT_END		2
+#define GLOBAL_SCRIPT_ACTIVE	1
+#define GLOBAL_SCRIPT_EXIT		2
 #define GLOBAL_SCRIPT_CONTINUE 	3
 
+// Script types
+#define SCRIPT_NONE            -1
+#define SCRIPT_GLOBAL          0
+#define SCRIPT_FFC             1
+#define SCRIPT_SCREEN          2
+#define SCRIPT_LINK            3
+#define SCRIPT_ITEM            4
+#define SCRIPT_LWPN            5
+#define SCRIPT_NPC             6
+#define SCRIPT_SUBSCREEN       7
+#define SCRIPT_EWPN            8
 
 #endif                                                      //_ZDEFS_H_

@@ -1,4 +1,4 @@
-#include "command.h"
+#include "../zasm.h"
 
 #include <cctype>
 #include <map>

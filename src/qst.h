@@ -41,12 +41,22 @@ extern FFScript ffengine;
 
 extern bool bad_version(int ver);
 
-enum
+enum qst_error_id
 {
     qe_OK, qe_notfound, qe_invalid, qe_version, qe_obsolete,
     qe_missing, qe_internal, qe_pwd, qe_match, qe_minver,
     qe_nomem, qe_debug, qe_cancel
 };
+
+// DEBUG_QST_ERR(X) asserts that X is 0 in debug mode, and returns X as-is
+// no matter what mode.
+#ifndef DEBUG_QST_ERR
+#	ifdef NDEBUG
+#		define DEBUG_QST_ERR(X) X
+#	else
+#		define DEBUG_QST_ERR(X) (assert(X == qe_OK), qe_OK)
+#	endif
+#endif
 
 enum
 {
@@ -146,8 +156,6 @@ int readcheatcodes(PACKFILE *f, zquestheader *Header, bool keepdata);
 int readinitdata(PACKFILE *f, zquestheader *Header, bool keepdata);
 int readsubscreens(PACKFILE *f, zquestheader *Header, bool keepdata);
 int read_one_subscreen(PACKFILE *f, zquestheader *Header, bool keepdata, int i, word s_version, word s_cversion);
-int readffscript(PACKFILE *f, zquestheader *Header, bool keepdata);
-int read_one_ffscript(PACKFILE *f, zquestheader *Header, bool keepdata, int i, word s_version, word s_cversion, ffscript **script);
 int readsfx(PACKFILE *f, zquestheader *Header, bool keepdata);
 int readitemdropsets(PACKFILE *f, word version, word build, bool keepdata);
 int readfavorites(PACKFILE *f, int, word, bool keepdata);
@@ -198,6 +206,9 @@ void reset_weaponname(int i);
 void init_guys(int guyversion);
 void init_item_drop_sets();
 void init_favorites();
+
+extern zasm::quest_scripts scripts;
+extern std::string quest_zscript_buffer;
 
 #endif                                                      // _ZC_QST_H_
 

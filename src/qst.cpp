@@ -49,6 +49,7 @@ extern FFScript FFCore;
 #define _AL_FREE(a) _al_free(a)
 #endif
 
+using std::vector;
 using std::string;
 using std::pair;
 
@@ -74,10 +75,9 @@ extern char                palnames[MAXLEVELS][17];
 extern int                 memrequested;
 extern char                *byte_conversion(int number, int format);
 extern char                *byte_conversion2(int number1, int number2, int format1, int format2);
-string				             zScript;
-std::map<int, pair<string,string> > ffcmap;
-std::map<int, pair<string,string> > globalmap;
-std::map<int, pair<string,string> > itemmap;
+
+zasm::quest_scripts scripts;
+string quest_zscript_buffer;
 
 bool combosread=false;
 bool mapsread=false;
@@ -109,6 +109,8 @@ enum { ssiBOMB, ssiSWORD, ssiSHIELD, ssiCANDLE, ssiLETTER, ssiPOTION, ssiLETTERP
      };
 
 static byte deprecated_rules[QUESTRULES_SIZE];
+
+
 
 
 void delete_combo_aliases()
@@ -8352,366 +8354,236 @@ int setupsubscreens()
     return 0;
 }
 
-extern ffscript *ffscripts[512];
-extern ffscript *itemscripts[256];
-extern ffscript *guyscripts[256];
-extern ffscript *wpnscripts[256];
-extern ffscript *globalscripts[NUMSCRIPTGLOBAL];
-extern ffscript *linkscripts[3];
-extern ffscript *screenscripts[256];
-
-int readffscript(PACKFILE *f, zquestheader *Header, bool keepdata)
+// Read instructions for a single script from packfile, filling out.
+// If out is null, discard data instead.
+qst_error_id read_script_instructions(
+	PACKFILE* file, word version, vector<zasm::instruction>* out)
 {
-    int dummy;
-    word s_version=0, s_cversion=0;
-    byte numscripts=0;
-    numscripts=numscripts; //to avoid unused variables warnings
-    int ret;
-    
-    //section version info
-    if(!p_igetw(&s_version,f,true))
-    {
-        return qe_invalid;
-    }
-    
-    FFCore.quest_format[vFFScript] = s_version;
-    
-    if(!p_igetw(&s_cversion,f,true))
-    {
-        return qe_invalid;
-    }
-    
-    //al_trace("Scripts version %d\n", s_version);
-    //section size
-    if(!p_igetl(&dummy,f,true))
-    {
-        return qe_invalid;
-    }
-    
-    //ZScriptVersion::setVersion(s_version); ~this ideally, but there's no ZC/ZQuest defines...
-    setZScriptVersion(s_version); //Lumped in zelda.cpp and in zquest.cpp as zquest can't link ZScriptVersion
-    
-    //finally...  section data
-    for(int i = 0; i < ((s_version < 2) ? NUMSCRIPTFFCOLD : NUMSCRIPTFFC); i++)
-    {
-        ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &ffscripts[i]);
-        
-        if(ret != 0) return qe_invalid;
-    }
-    
-    if(s_version > 1)
-    {
-        for(int i = 0; i < NUMSCRIPTITEM; i++)
-        {
-            ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &itemscripts[i]);
-            
-            if(ret != 0) return qe_invalid;
-        }
-        
-        for(int i = 0; i < NUMSCRIPTGUYS; i++)
-        {
-            ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &guyscripts[i]);
-            
-            if(ret != 0) return qe_invalid;
-        }
-        
-        for(int i = 0; i < NUMSCRIPTWEAPONS; i++)
-        {
-            ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &wpnscripts[i]);
-            
-            if(ret != 0) return qe_invalid;
-        }
-        
-        for(int i = 0; i < NUMSCRIPTSCREEN; i++)
-        {
-            ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &screenscripts[i]);
-            
-            if(ret != 0) return qe_invalid;
-        }
-        
-        if(s_version > 4)
-        {
-            for(int i = 0; i < NUMSCRIPTGLOBAL; i++)
-            {
-                ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &globalscripts[i]);
-                
-                if(ret != 0) return qe_invalid;
-            }
-        }
-        else
-        {
-            for(int i = 0; i < NUMSCRIPTGLOBALOLD; i++)
-            {
-                ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &globalscripts[i]);
-                
-                if(ret != 0) return qe_invalid;
-            }
-            
-            if(globalscripts[GLOBAL_SCRIPT_CONTINUE] != NULL)
-                delete [] globalscripts[GLOBAL_SCRIPT_CONTINUE];
-                
-            globalscripts[GLOBAL_SCRIPT_CONTINUE] = new ffscript[1];
-            globalscripts[GLOBAL_SCRIPT_CONTINUE][0].command =
-	            zasm::cmd_terminator;
-        }
-        
-        for(int i = 0; i < NUMSCRIPTLINK; i++)
-        {
-            ret = read_one_ffscript(f, Header, keepdata, i, s_version, s_cversion, &linkscripts[i]);
-            
-            if(ret != 0) return qe_invalid;
-        }
-    }
-    
-    if(s_version > 2)
-    {
-        long bufsize;
-        p_igetl(&bufsize, f, true);
-        char * buf = new char[bufsize+1];
-        pfread(buf, bufsize, f, true);
-        buf[bufsize]=0;
-        
-        if(keepdata)
-            zScript = string(buf);
-            
-        delete[] buf;
-        word numffcbindings;
-        p_igetw(&numffcbindings, f, true);
-        
-        for(int i=0; i<numffcbindings; i++)
-        {
-            word id;
-            p_igetw(&id, f, true);
-            p_igetl(&bufsize, f, true);
-            buf = new char[bufsize+1];
-            pfread(buf, bufsize, f, true);
-            buf[bufsize]=0;
-            
-            //fix for buggy older saved quests -DD
-            if(keepdata && id < NUMSCRIPTFFC-1)
-                ffcmap[id].second = buf;
-                
-            delete[] buf;
-        }
-        
-        word numglobalbindings;
-        p_igetw(&numglobalbindings, f, true);
-        
-        for(int i=0; i<numglobalbindings; i++)
-        {
-            word id;
-            p_igetw(&id, f, true);
-            p_igetl(&bufsize, f, true);
-            buf = new char[bufsize+1];
-            pfread(buf, bufsize, f, true);
-            buf[bufsize]=0;
-            
-			// id in principle should be valid, since slot assignment cannot assign a global script to a bogus slot.
-			// However, because of a corruption bug, some 2.50.x quests contain bogus entries in the global bindings table.
-			// Ignore these. -DD
-            if(keepdata && id >= 0 && id < NUMSCRIPTGLOBAL)
-            {
-                //Disable old '~Continue's, they'd wreak havoc. Bit messy, apologies ~Joe
-                if(strcmp(buf,"~Continue") == 0)
-                {
-                    globalmap[id].second = "";
-                    
-                    if(globalscripts[GLOBAL_SCRIPT_CONTINUE] != NULL)
-                        globalscripts[GLOBAL_SCRIPT_CONTINUE][0].command =
-	                        zasm::cmd_terminator;
-                }
-                else
-                {
-                    globalmap[id].second = buf;
-                }
-            }
-            
-            delete[] buf;
-        }
-        
-        if(s_version > 3)
-        {
-            word numitembindings;
-            p_igetw(&numitembindings, f, true);
-            
-            for(int i=0; i<numitembindings; i++)
-            {
-                word id;
-                p_igetw(&id, f, true);
-                p_igetl(&bufsize, f, true);
-                buf = new char[bufsize+1];
-                pfread(buf, bufsize, f, true);
-                buf[bufsize]=0;
-                
-                //fix this too
-                if(keepdata && id <NUMSCRIPTITEM-1)
-                    itemmap[id].second = buf;
-                    
-                delete[] buf;
-            }
-        }
-    }
-    
-    return 0;
+	// Read number of commands.
+	dword num_commands = 1000;
+	if (version >= 2)
+	{
+		if (!p_igetl(&num_commands, file, true))
+			return DEBUG_QST_ERR(qe_invalid);
+		// Since we know the count, allocate enough space ahead of time.
+		if (out) out->reserve(num_commands);
+	}
+
+	// Read each command.
+	for (int i = 0; i < num_commands; ++i)
+	{
+		// Grab command.
+		word command_id;
+		if (!p_igetw(&command_id, file, true))
+			return DEBUG_QST_ERR(qe_invalid);
+		zasm::command cmd = static_cast<zasm::command>(command_id);
+
+		// We're finished if it's the terminator.
+		if (cmd == zasm::cmd_terminator)
+		{
+			if (out) out->push_back(zasm::instruction());
+			break;
+		}
+
+		// Read the arguments as well.
+		dword arg1;
+		if (!p_igetl(&arg1, file, bool(out)))
+			return DEBUG_QST_ERR(qe_invalid);
+		dword arg2;
+		if (!p_igetl(&arg2, file, bool(out)))
+			return DEBUG_QST_ERR(qe_invalid);
+
+		// Append instruction.
+		if (out) out->push_back(zasm::instruction(cmd, arg1, arg2));
+	}
+
+	return qe_OK;
 }
 
-//Eh?
-bool is_string_command(zasm::command)
+// Read instructions for a script set of size count from a packfile.
+// If out is null, discard data instead.
+qst_error_id read_script_set_instructions(
+	PACKFILE* file, word version, size_t count,
+	vector<vector<zasm::instruction> >* out)
 {
-    return false;
+	if (out) out->resize(count);
+	for (size_t i = 0; i < count; ++i)
+		if (qst_error_id err = read_script_instructions(
+			    file, version, out ? &(*out)[i] : NULL))
+			return err;
+	return qe_OK;
 }
 
-void reset_scripts()
+// Read a string from the packfile into out.
+// If out is null, discard data instead.
+qst_error_id read_string(PACKFILE* file, string* out)
 {
-    //OK, who spaced this? ;)
-    for(int i=0; i<NUMSCRIPTFFC; i++)
-    {
-        if(ffscripts[i]!=NULL) delete [] ffscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTITEM; i++)
-    {
-        if(itemscripts[i]!=NULL) delete [] itemscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTGUYS; i++)
-    {
-        if(guyscripts[i]!=NULL) delete [] guyscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTWEAPONS; i++)
-    {
-        if(wpnscripts[i]!=NULL) delete [] wpnscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTSCREEN; i++)
-    {
-        if(screenscripts[i]!=NULL) delete [] screenscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTGLOBAL; i++)
-    {
-        if(globalscripts[i]!=NULL) delete [] globalscripts[i];
-    }
-    
-    for(int i=0; i<NUMSCRIPTLINK; i++)
-    {
-        if(linkscripts[i]!=NULL) delete [] linkscripts[i];
-    }
-    
-    
-    for(int i=0; i<NUMSCRIPTFFC; i++)
-    {
-        ffscripts[i] = new ffscript[1];
-        ffscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTITEM; i++)
-    {
-        itemscripts[i] = new ffscript[1];
-        itemscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTGUYS; i++)
-    {
-        guyscripts[i] = new ffscript[1];
-        guyscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTWEAPONS; i++)
-    {
-        wpnscripts[i] = new ffscript[1];
-        wpnscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTSCREEN; i++)
-    {
-        screenscripts[i] = new ffscript[1];
-        screenscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTGLOBAL; i++)
-    {
-        globalscripts[i] = new ffscript[1];
-        globalscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<NUMSCRIPTLINK; i++)
-    {
-        linkscripts[i] = new ffscript[1];
-        linkscripts[i][0].command = zasm::cmd_terminator;
-    }
+	dword char_count;
+	if (!p_igetl(&char_count, file, true))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	if (!out)
+		return pfread(NULL, char_count, file, false)
+			? qe_OK
+			: DEBUG_QST_ERR(qe_invalid);
+	
+	char* buffer = new char[char_count + 1];
+	if (!pfread(buffer, char_count, file, true))
+	{
+		delete[] buffer;
+		return DEBUG_QST_ERR(qe_invalid);
+	}
+
+	out->assign(buffer, char_count);
+	delete[] buffer;
+	return qe_OK;
 }
 
-int read_one_ffscript(PACKFILE *f, zquestheader *, bool keepdata, int , word s_version, word , ffscript **script)
+// Read mapping of script ids to names from a packfile.
+// If out is null, discard data instead.
+qst_error_id read_script_names(PACKFILE* file, map<size_t, string>* out,
+                            int id_offset = 0)
 {
+	// Read number of entries.
+	word count;
+	if (!p_igetw(&count, file, true))
+		return DEBUG_QST_ERR(qe_invalid);
 
-    //Please also update loadquest() when modifying this method -DD
-    ffscript temp_script;
-    temp_script.ptr=NULL;
-    long num_commands=1000;
+	for (int i = 0; i < count; ++i)
+	{
+		// Read id.
+		word id;
+		if (!p_igetw(&id, file, bool(out)))
+			return DEBUG_QST_ERR(qe_invalid);
+
+		// Read name.
+		string name;
+		if (qst_error_id err = read_string(file, out ? &name : NULL))
+			return err;
+
+		// Assign name to id.
+		if (out) (*out)[id + id_offset].swap(name);
+	}
+
+	return qe_OK;
+}
+
+qst_error_id read_scripts(PACKFILE* file, bool keepdata)
+{
+	// Read version.
+	word version;
+	if (!p_igetw(&version, file, true))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	// Write version globally.
+	// XXX Should this be written even without keepdata?
+	FFCore.quest_format[vFFScript] = version;
+	// ZScriptVersion::setVersion(version); ~this ideally, but there's no
+	// ZC/ZQuest defines...  Lumped in zelda.cpp and in zquest.cpp as zquest
+	// can't link ZScriptVersion
+	setZScriptVersion(version); 
+
+	// Skip compatible version
+	if (!p_igetw(NULL, file, false))
+		return DEBUG_QST_ERR(qe_invalid);
     
-    if(s_version>=2)
-    {
-        if(!p_igetl(&num_commands,f,true))
-        {
-            return qe_invalid;
-        }
-    }
+	// Skip section size.
+	if (!p_igetl(NULL, file, false))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	vector<vector<zasm::instruction> > ffc_scripts;
+	vector<vector<zasm::instruction> > item_scripts;
+	vector<vector<zasm::instruction> > global_scripts;
+	map<size_t, string> ffc_names;
+	map<size_t, string> global_names;
+	map<size_t, string> item_names;
+	
+	// Read ffc scripts.
+	if (qst_error_id err = read_script_set_instructions(
+		    file, version,
+		    version >= 3 ? NUMSCRIPTFFC
+		                 : NUMSCRIPTFFCOLD,
+		    keepdata ? &ffc_scripts : NULL))
+		return err;
     
-    if(keepdata)
-    {
-        //FIXME:
-        if((*script) != NULL) //Surely we want to do this regardless of keepdata?
-            delete [](*script);
-            
-        (*script) = new ffscript[num_commands]; //memory leak
-    }
+	if (version >= 2)
+	{
+		// Read item scripts.
+		if (qst_error_id err = read_script_set_instructions(
+			    file, version, NUMSCRIPTITEM,
+			    keepdata ? &item_scripts : NULL))
+			return err;
+
+		// Skip guy scripts.
+		if (qst_error_id err = read_script_set_instructions(
+			    file, version, NUMSCRIPTGUY, NULL))
+			return err;
+
+		// Skip weapon scripts.
+		if (qst_error_id err = read_script_set_instructions(
+			    file, version, NUMSCRIPTWEAPON, NULL))
+			return err;
+
+		// Skip screen scripts.
+		if (qst_error_id err = read_script_set_instructions(
+			    file, version, NUMSCRIPTSCREEN, NULL))
+			return err;
+
+		// Read global scripts.
+		if (qst_error_id err = read_script_set_instructions(
+			    file, version,
+			    version >= 5 ? NUMSCRIPTGLOBAL
+			                 : NUMSCRIPTGLOBALOLD,
+			    keepdata ? &global_scripts : NULL))
+			return err;
+
+		// Skip link scripts.
+		if (qst_error_id err = read_script_set_instructions(
+			    file, version, NUMSCRIPTLINK, NULL))
+			return err;
+	}
     
-    for(int j=0; j<num_commands; j++)
-    {
-	    word comword;
-        if(!p_igetw(&comword,f,true))
-        {
-            return qe_invalid;
-        }
-        temp_script.command = zasm::command(comword);
-        
-        if(temp_script.command == zasm::cmd_terminator)
-        {
-            if(keepdata)
-                (*script)[j].command = zasm::cmd_terminator;
-                
-            break;
-        }
-        else
-        {
-	        if(!p_igetl(&(temp_script.arg1),f,keepdata))
-	        {
-		        return qe_invalid;
-	        }
-                
-	        if(!p_igetl(&(temp_script.arg2),f,keepdata))
-	        {
-		        return qe_invalid;
-	        }
-            
-            if(keepdata)
-            {
-                (*script)[j].command = temp_script.command;
-                (*script)[j].arg1 = temp_script.arg1;
-                (*script)[j].arg2 = temp_script.arg2;
-                // I'll comment this out until the whole routine is finished using ptr
-                //if(is_string_command(temp_script.command))
-                //{
-                //( *script)[j].ptr=(char *)zc_malloc(256);
-                //memcpy((*script)[j].ptr, temp_script.ptr, 256);
-                //}
-            }
-        }
-    }
-    
-    return 0;
+	if (version >= 3)
+	{
+		// Read zscript buffer.
+		if (qst_error_id err = read_string(
+			    file, keepdata ? &quest_zscript_buffer : NULL))
+			return err;
+
+		// Read ffc names.
+		if (qst_error_id err = read_script_names(
+			    file, keepdata ? &ffc_names : NULL, 1))
+			return err;
+
+		// Read global names.
+		if (qst_error_id err = read_script_names(
+			    file, keepdata ? &global_names : NULL, 0))
+			return err;
+	}
+
+	// Read item names.
+	if (version >= 4)
+		if (qst_error_id err = read_script_names(
+			    file, keepdata ? &item_names : NULL, 1))
+			return err;
+
+	// Perform assignments.
+	if (keepdata)
+	{
+		// Because of a corruption bug, some 2.50.x quests contain bogus
+		// entries in the global bindings table. Hence, invalid indices and
+		// empty names are ignored by assign.
+
+		assign(scripts.ffc, ffc_scripts, ffc_names);
+		assign(scripts.global, global_scripts, global_names);
+		assign(scripts.item, item_scripts, item_names);
+
+		// Disable old '~Continue's, they'd wreak havoc. Bit messy,
+		// apologies ~Joe
+		scripts.global.erase("~Continue");
+	}
+		
+	return qe_OK;
 }
 
 extern SAMPLE customsfxdata[WAV_COUNT];
@@ -9034,7 +8906,7 @@ int readguys(PACKFILE *f, zquestheader *Header, bool keepdata)
             return qe_invalid;
         }
         
-	FFCore.quest_format[vGuys] = guyversion;
+        FFCore.quest_format[vGuys] = guyversion;
 	
         //al_trace("Guys version %d\n", guyversion);
         if(!p_igetw(&dummy2,f,true))
@@ -14907,30 +14779,8 @@ int loadquest(const char *filename, zquestheader *Header, miscQdata *Misc, zctun
     
     if(keepall&&!get_bit(skip_flags, skip_ffscript))
     {
-        zScript.clear();
-        globalmap.clear();
-        ffcmap.clear();
-        itemmap.clear();
-        
-        for(int i=0; i<NUMSCRIPTFFC-1; i++)
-        {
-            ffcmap[i] = pair<string,string>("","");
-        }
-        
-        globalmap[0] = pair<string,string>("Slot 1: ~Init", "~Init");
-        
-        for(int i=1; i<NUMSCRIPTGLOBAL; i++)
-        {
-            globalmap[i] = pair<string,string>("","");
-        }
-        
-        //globalmap[3] = pair<string,string>("Slot 4: ~Continue", "~Continue");
-        for(int i=0; i<NUMSCRIPTITEM-1; i++)
-        {
-            itemmap[i] = pair<string,string>("","");
-        }
-        
-        reset_scripts();
+	    scripts.clear();
+	    quest_zscript_buffer.clear();
     }
     
     zquestheader tempheader;
@@ -15320,7 +15170,7 @@ int loadquest(const char *filename, zquestheader *Header, miscQdata *Misc, zctun
                 }
                 
                 box_out("Reading FF Script Data...");
-                ret=readffscript(f, &tempheader, keepall&&!get_bit(skip_flags, skip_ffscript));
+                ret = read_scripts(f, keepall&&!get_bit(skip_flags, skip_ffscript));
                 checkstatus(ret);
                 box_out("okay.");
                 box_eol();

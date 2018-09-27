@@ -13015,7 +13015,7 @@ void LinkClass::run_scrolling_script(int scrolldir, int cx, int sx, int sy, bool
     }
     
     if(g_doscript)
-        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
+        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_ACTIVE);
         
     x = storex, y = storey;
 }
@@ -13204,7 +13204,7 @@ void LinkClass::scrollscr(int scrolldir, int destscr, int destdmap)
     
     if(global_wait)
     {
-        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
+        ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_ACTIVE);
         global_wait=false;
     }
     

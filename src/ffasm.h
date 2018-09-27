@@ -8,15 +8,14 @@
 #include <string>
 #include <list>
 #include "zelda.h"
+#include "zasm.h"
 
 //What are these for exactly?
 //#define fflong(x,y,z)       (((x[(y)][(z)])<<24)+((x[(y)][(z)+1])<<16)+((x[(y)][(z)+2])<<8)+(x[(y)][(z)+3]))
 //#define ffword(x,y,z)       (((x[(y)][(z)])<<8)+(x[(y)][(z)+1]))
 
-
-int set_argument(char *argbuf, long& target);
-int parse_script(ffscript **script);
-int parse_script_file(ffscript **script, const char *path, bool report_success);
+int parse_script(zasm::script& script);
+int parse_script_file(zasm::script& script, const char *path, bool report_success);
 long ffparse(char *string);
 
 #endif

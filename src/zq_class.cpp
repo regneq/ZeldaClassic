@@ -51,10 +51,9 @@ using std::pair;
 //const char zqsheader[30]="Zelda Classic String Table\n\x01";
 extern char msgbuf[MSGSIZE*3];
 
-extern string zScript;
-extern std::map<int, pair<string, string> > ffcmap;
-extern std::map<int, pair<string, string> > globalmap;
-extern std::map<int, pair<string, string> > itemmap;
+extern string quest_script_buffer;
+extern zasm::quest_scripts scripts;
+
 zmap Map;
 int prv_mode=0;
 short ffposx[32]= {-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,-1000,
@@ -10310,313 +10309,168 @@ int write_one_subscreen(PACKFILE *f, zquestheader *Header, int i)
     new_return(0);
 }
 
-extern ffscript *ffscripts[512];
-extern ffscript *itemscripts[256];
-extern ffscript *guyscripts[256];
-extern ffscript *wpnscripts[256];
-extern ffscript *globalscripts[NUMSCRIPTGLOBAL];
-extern ffscript *linkscripts[3];
-extern ffscript *screenscripts[256];
+qst_error_id write_script_instructions(
+	PACKFILE* file, zasm::script const& script)
+{
+	if (!script.is_valid()) return DEBUG_QST_ERR(qe_invalid);
 
-int writeffscript(PACKFILE *f, zquestheader *Header)
+	// Write script length.
+	size_t num_commands = script.size();
+	if (!p_iputl(num_commands, file))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	for (size_t index = 0; index < num_commands; ++index)
+	{
+		zasm::instruction const& inst = script[index];
+		// Write command/terminator.
+		if (!p_iputw(inst.command, file))
+			return DEBUG_QST_ERR(qe_invalid);
+
+		// Finish on the terminator
+		if (inst.command == zasm::cmd_terminator)
+			break;
+
+		// Write arguments.
+		if (!p_iputl(inst.arg1, file))
+			return DEBUG_QST_ERR(qe_invalid);
+		if (!p_iputl(inst.arg2, file))
+			return DEBUG_QST_ERR(qe_invalid);
+	}
+
+	return qe_OK;
+}
+
+qst_error_id write_script_set_instructions(
+	PACKFILE* file, zasm::script_set const& sset)
+{
+	for (size_t slot = 0; slot < sset.max_count; ++slot)
+		if (qst_error_id err = write_script_instructions(
+			    file, sset.script(slot)))
+			return err;
+	return qe_OK;
+}
+
+qst_error_id write_string(PACKFILE* file, string const& string)
+{
+	long size = string.size();
+	if (!p_iputl(size, file))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	void const* data = static_cast<void const*>(string.c_str());
+	if (!pfwrite(data, size, file))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	return qe_OK;
+}
+
+qst_error_id write_script_names(
+	PACKFILE* file, zasm::script_set const& sset, int id_offset = 0)
+{
+	// Write number of slot-name pairs.
+	if (!p_iputw(sset.size(), file))
+		return DEBUG_QST_ERR(qe_invalid);
+
+	size_t count = 0;
+	
+	// Write each slot and name.
+	for (zasm::script_set::const_iterator it = sset.begin();
+	     it != sset.end(); ++it)
+	{
+		if (it->name.empty()) continue; // Shouldn't ever happen.
+
+		// write slot
+		if (!p_iputw(it.index() - id_offset, file))
+			return DEBUG_QST_ERR(qe_invalid);
+
+		// write name
+		if (qst_error_id err = write_string(file, it->name))
+			return DEBUG_QST_ERR(qe_invalid);
+
+		++count;
+	}
+
+	if (count != sset.size()) return DEBUG_QST_ERR(qe_invalid);
+	
+	return qe_OK;
+}
+
+qst_error_id write_scripts(PACKFILE *file, zasm::quest_scripts& scripts)
 {
     dword section_id       = ID_FFSCRIPT;
     dword section_version  = V_FFSCRIPT;
     dword section_cversion = CV_FFSCRIPT;
     dword section_size     = 0;
-    byte numscripts        = 0;
-    numscripts = numscripts; //to avoid unused variables warnings
     
-    //section id
-    if(!p_mputl(section_id,f))
+    // write section id
+    if (!p_mputl(ID_FFSCRIPT, file))
+	    return DEBUG_QST_ERR(qe_invalid);
+    
+    // write version
+    if (!p_iputw(V_FFSCRIPT, file))
+	    return DEBUG_QST_ERR(qe_invalid);
+    
+    // write compatible version
+    if (!p_iputw(CV_FFSCRIPT, file))
+	    return DEBUG_QST_ERR(qe_invalid);
+
+    fake_pack_writing = true;
+    for (int writecycle = 0; writecycle < 2; ++writecycle)
     {
-        new_return(1);
+        // write section size
+        if (!p_iputl(section_size, file))
+	        return DEBUG_QST_ERR(qe_invalid);
+        
+        writesize = 0;
+
+        // Write all instructions.
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.ffc))
+	        return err;
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.item))
+	        return err;
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.guy))
+	        return err;
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.weapon))
+	        return err;
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.screen))
+	        return err;
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.global))
+	        return err;
+        if (qst_error_id err = write_script_set_instructions(
+	            file, scripts.link))
+	        return err;
+
+        // Write the zscript buffer.
+        if (qst_error_id err = write_string(file, quest_zscript_buffer))
+	        return err;
+
+        // Write the script names.
+        if (qst_error_id err = write_script_names(file, scripts.ffc, 1))
+	        return err;
+        if (qst_error_id err = write_script_names(file, scripts.global, 0))
+	        return err;
+        if (qst_error_id err = write_script_names(file, scripts.item, 1))
+	        return err;
+        
+        if (writecycle == 0) section_size = writesize;
+        fake_pack_writing = false;
     }
     
-    //section version info
-    if(!p_iputw(section_version,f))
-    {
-        new_return(2);
-    }
-    
-    if(!p_iputw(section_cversion,f))
-    {
-        new_return(3);
-    }
-    
-    for(int writecycle=0; writecycle<2; ++writecycle)
-    {
-        fake_pack_writing=(writecycle==0);
-        
-        //section size
-        if(!p_iputl(section_size,f))
-        {
-            new_return(4);
-        }
-        
-        writesize=0;
-        
-        for(int i=0; i<512; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &ffscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        for(int i=0; i<256; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &itemscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        for(int i=0; i<256; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &guyscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        for(int i=0; i<256; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &wpnscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        for(int i=0; i<256; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &screenscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        for(int i=0; i<NUMSCRIPTGLOBAL; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &globalscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        for(int i=0; i<3; i++)
-        {
-            int ret = write_one_ffscript(f, Header, i, &linkscripts[i]);
-            fake_pack_writing=(writecycle==0);
-            
-            if(ret!=0)
-            {
-                new_return(ret);
-            }
-        }
-        
-        if(!p_iputl((long)zScript.size(), f))
-        {
-            new_return(2001);
-        }
-        
-        if(!pfwrite((void *)zScript.c_str(), (long)zScript.size(), f))
-        {
-            new_return(2002);
-        }
-        
-        word numffcbindings=0;
-        
-        for(std::map<int, pair<string, string> >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
-        {
-            if(it->second.second != "")
-            {
-                numffcbindings++;
-            }
-        }
-        
-        if(!p_iputw(numffcbindings, f))
-        {
-            new_return(2003);
-        }
-        
-        for(std::map<int, pair<string, string> >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
-        {
-            if(it->second.second != "")
-            {
-                if(!p_iputw(it->first,f))
-                {
-                    new_return(2004);
-                }
-                
-                if(!p_iputl((long)it->second.second.size(), f))
-                {
-                    new_return(2005);
-                }
-                
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
-                {
-                    new_return(2006);
-                }
-            }
-        }
-        
-        word numglobalbindings=0;
-        
-        for(std::map<int, pair<string, string> >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
-        {
-            if(it->second.second != "")
-            {
-                numglobalbindings++;
-            }
-        }
-        
-        if(!p_iputw(numglobalbindings, f))
-        {
-            new_return(2007);
-        }
-        
-        for(std::map<int, pair<string, string> >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
-        {
-            if(it->second.second != "")
-            {
-                if(!p_iputw(it->first,f))
-                {
-                    new_return(2008);
-                }
-                
-                if(!p_iputl((long)it->second.second.size(), f))
-                {
-                    new_return(2009);
-                }
-                
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
-                {
-                    new_return(2010);
-                }
-            }
-        }
-        
-        word numitembindings=0;
-        
-        for(std::map<int, pair<string, string> >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
-        {
-            if(it->second.second != "")
-            {
-                numitembindings++;
-            }
-        }
-        
-        if(!p_iputw(numitembindings, f))
-        {
-            new_return(2011);
-        }
-        
-        for(std::map<int, pair<string, string> >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
-        {
-            if(it->second.second != "")
-            {
-                if(!p_iputw(it->first,f))
-                {
-                    new_return(2012);
-                }
-                
-                if(!p_iputl((long)it->second.second.size(), f))
-                {
-                    new_return(2013);
-                }
-                
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
-                {
-                    new_return(2014);
-                }
-            }
-        }
-        
-        if(writecycle==0)
-        {
-            section_size=writesize;
-        }
-    }
-    
-    if(writesize!=int(section_size) && save_warn)
+    if (writesize != static_cast<int>(section_size) && save_warn)
     {
         char ebuf[80];
         sprintf(ebuf, "%d != %d", writesize, int(section_size));
         jwin_alert("Error:  writeffscript()","writesize != section_size",ebuf,NULL,"O&K",NULL,'k',0,lfont);
     }
     
-    new_return(0);
+    new_return(qe_OK);
     //return 0;  //this is just here to stomp the compiler from whining.
     //the irony is that it causes an "unreachable code" warning.
-}
-
-int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, ffscript **script)
-{
-    //these are here to bypass compiler warnings about unused arguments
-    Header=Header;
-    i=i;
-    
-    int num_commands;
-    
-    for(int j=0;; j++)
-    {
-	    if((*script)[j].command == zasm::cmd_terminator)
-        {
-            num_commands = j+1;
-            break;
-        }
-    }
-    
-    if(!p_iputl(num_commands,f))
-    {
-        new_return(6);
-    }
-    
-    for(int j=0; j<num_commands; j++)
-    {
-        if(!p_iputw((*script)[j].command, f))
-        {
-            new_return(7);
-        }
-        
-        if((*script)[j].command == zasm::cmd_terminator)
-        {
-            break;
-        }
-        else
-        {
-            if(!p_iputl((*script)[j].arg1,f))
-            {
-                new_return(8);
-            }
-            
-            if(!p_iputl((*script)[j].arg2,f))
-            {
-                new_return(9);
-            }
-        }
-    }
-    
-    new_return(0);
 }
 
 extern SAMPLE customsfxdata[WAV_COUNT];
@@ -11485,8 +11339,9 @@ int save_unencoded_quest(const char *filename, bool compressed)
     
     box_out("Writing FF Script Data...");
     
-    if(writeffscript(f,&header)!=0)
+    if (write_scripts(f, scripts) != qe_OK)
     {
+	    fake_pack_writing = false;
         new_return(23);
     }
     

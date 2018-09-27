@@ -11,7 +11,7 @@
 
 #include "ffscript.h"
 #include "ffasm.h"
-#include "zasm/command.h"
+#include "zasm.h"
 
 #include "zc_malloc.h"
 //#include "ffasm.h"
@@ -19,6 +19,7 @@
 #include "zsys.h"
 
 #include <string>
+#include <vector>
 
 #ifdef ALLEGRO_MACOSX
 #define strnicmp strncasecmp
@@ -46,7 +47,7 @@ string const* parse_script_section(
 	char* command_buf,
 	char* arg1_buf,
 	char* arg2_buf,
-	ffscript& instruction);
+	zasm::instruction& instruction);
 
 script_variable variable_list[]=
 {
@@ -1105,15 +1106,15 @@ char labels[65536][80];
 int lines[65536];
 int numlines;
 
-int parse_script(ffscript **script)
+int parse_script(zasm::script& script)
 {
     if(!getname("Import Script (.txt)","txt",NULL,datapath,false))
         return D_CLOSE;
         
-    return parse_script_file(script,temppath, true);
+    return parse_script_file(script, temppath, true);
 }
 
-int parse_script_file(ffscript **script, const char *path, bool report_success)
+int parse_script_file(zasm::script& script, const char *path, bool report_success)
 {
     saved=false;
     FILE *fscript = fopen(path,"rb");
@@ -1125,6 +1126,7 @@ int parse_script_file(ffscript **script, const char *path, bool report_success)
     bool success=true;
     numlines = 0;
     int num_commands;
+    vector<zasm::instruction> instructions;
     
     for(int i=0;; i++)
     {
@@ -1206,16 +1208,14 @@ int parse_script_file(ffscript **script, const char *path, bool report_success)
     
     fseek(fscript, 0, SEEK_SET);
     stop = false;
-    
-    if((*script)!=NULL) delete [](*script);
-    
-    (*script) = new ffscript[num_commands];
+
+    instructions.reserve(num_commands);
     
     for(int i=0; i<num_commands; i++)
     {
         if(stop)
         {
-            (*script)[i].command = zasm::cmd_terminator;
+            instructions[i].command = zasm::cmd_terminator;
             break;
         }
         else
@@ -1323,7 +1323,7 @@ int parse_script_file(ffscript **script, const char *path, bool report_success)
             arg2buf[l] = '\0';
             
             if (string const* error = parse_script_section(
-	                combuf, arg1buf, arg2buf, (*script)[i]))
+	                combuf, arg1buf, arg2buf, instructions[i]))
             {
                 char buf[80],buf2[80],buf3[80],name[13];
                 extract_name(temppath,name,FILENAME8_3);
@@ -1333,7 +1333,7 @@ int parse_script_file(ffscript **script, const char *path, bool report_success)
                 jwin_alert("Error",buf,buf2,buf3,"O&K",NULL,'k',0,lfont);
                 stop=true;
                 success=false;
-                (*script)[0].command = zasm::cmd_terminator;
+                instructions.clear();
             }
         }
     }
@@ -1351,6 +1351,8 @@ int parse_script_file(ffscript **script, const char *path, bool report_success)
     delete [] arg1buf;
     delete [] arg2buf;
     fclose(fscript);
+
+    script.assign(instructions);
     return success?D_O_K:D_CLOSE;
 }
 
@@ -1434,7 +1436,7 @@ string const* parse_script_section(
 	char* command_buf,
 	char* arg1_buf,
 	char* arg2_buf,
-	ffscript& instruction)
+	zasm::instruction& instruction)
 {
     instruction.arg1 = 0;
     instruction.arg2 = 0;

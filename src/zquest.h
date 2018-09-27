@@ -506,10 +506,10 @@ extern weapon_struct biw[wMAX];
 
 typedef std::pair<std::string, int> script_struct;
 void build_biitems_list();
-extern script_struct biitems[NUMSCRIPTFFC]; //item script
+extern script_struct biitems[NUMSCRIPTITEM]; //item script
 extern int biitems_cnt;
 
-//extern script_struct biffs[NUMSCRIPTFFC];
+//extern script_struct biffs[zasm::quest_scripts::num_ffc];
 
 typedef struct command_struct
 {

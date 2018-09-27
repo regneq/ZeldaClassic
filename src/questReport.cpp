@@ -18,7 +18,7 @@
 #include "zquest.h"
 
 extern int bie_cnt;
-extern std::map<int, pair<std::string,std::string> > ffcmap;
+extern zasm::quest_scripts scripts;
 
 std::string quest_report_str;
 
@@ -2160,7 +2160,7 @@ void scriptLocationReport()
             if(!script_found)
             {
                 buf[0]=0;
-                sprintf(buf, "\n--- %s ---\n", ffcmap[i-1].second.c_str());
+                sprintf(buf, "\n--- %s ---\n", scripts.ffc.name(i).c_str());
                 quest_report_str+=buf;
             }
             

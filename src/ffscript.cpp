@@ -72,9 +72,7 @@ extern sprite_list particles;
 extern LinkClass Link;
 extern char *guy_string[];
 extern int skipcont;
-extern std::map<int, std::pair<string,string> > ffcmap;
-extern std::map<int, std::pair<string,string> > itemmap;
-extern std::map<int, std::pair<string,string> > globalmap;
+extern zasm::quest_scripts scripts;
 
 PALETTE tempgreypal; //Palettes go here. This is used for Greyscale() / Monochrome()
 
@@ -99,7 +97,7 @@ miscQdata *misc;
 long sarg1 = 0;
 long sarg2 = 0;
 refInfo *ri = NULL;
-ffscript *curscript = NULL;
+zasm::instruction const* curscript = NULL;
 
 static int numInstructions; // Used to detect hangs
 static bool scriptCanSave = true;
@@ -12940,41 +12938,26 @@ void do_getnpcname()
 
 void do_getffcscript()
 {
-    long arrayptr = get_register(sarg1) / 10000;
+    long arrayptr = get_register(sarg1) / 10000L;
     string name;
-    int num=-1;
     ArrayH::getString(arrayptr, name, 256); // What's the limit on name length?
     
-    for(int i=0; i<512; i++)
-    {
-        if(strcmp(name.c_str(), ffcmap[i].second.c_str())==0)
-        {
-            num=i+1;
-            break;
-        }
-    }
-    
-    set_register(sarg1, num * 10000);
+    long slot = -1;
+    zasm::script_set::const_iterator it = scripts.ffc.find(name);
+    if (it != scripts.ffc.end()) slot = it.index();
+    set_register(sarg1, slot * 10000L);
 }
-
 
 void do_getitemscript()
 {
-	 long arrayptr = get_register(sarg1) / 10000;
-    string name;
-    int num=-1;
-    ArrayH::getString(arrayptr, name, 256); // What's the limit on name length?
+	long arrayptr = get_register(sarg1) / 10000L;
+	string name;
+	ArrayH::getString(arrayptr, name, 256); // What's the limit on name length?
     
-    for(int i=0; i<512; i++)
-    {
-        if(strcmp(name.c_str(), itemmap[i].second.c_str())==0)
-        {
-            num=i+1;
-            break;
-        }
-    }
-    
-    set_register(sarg1, num * 10000);
+	long slot = -1;
+	zasm::script_set::const_iterator it = scripts.item.find(name);
+	if (it != scripts.item.end()) slot = it.index();
+	set_register(sarg1, slot * 10000L);
 }
 
 ///----------------------------------------------------------------------------------------------------//
@@ -13108,7 +13091,7 @@ int run_script(const byte type, const word script, const byte i)
 	{
 		ri = &(ffcScriptData[i]);
         
-		curscript = ffscripts[script];
+		curscript = scripts.ffc.script(script).data();
 		stack = &(ffc_stack[i]);
         
 		if(!tmpscr->initialized[i])
@@ -13127,7 +13110,7 @@ int run_script(const byte type, const word script, const byte i)
 		ri->Clear(); //Only runs for one frame so we just zero it out
 		//What would happen if we don't do this? -Z
         
-		curscript = itemscripts[script];
+		curscript = scripts.item.script(script).data();
 		stack = &item_stack;
 		memset(stack, 0, 256 * sizeof(long)); //zero here too //and don't do this? -Z
 		//If we can make item scripts capable of running for more than one frame, then we can
@@ -13151,7 +13134,7 @@ int run_script(const byte type, const word script, const byte i)
 	{
 		ri = &globalScriptData;
         
-		curscript = globalscripts[script];
+		curscript = scripts.global.script(script).data();
 		stack = &global_stack;
 		//
 	}

@@ -140,6 +140,9 @@ extern "C" FILE * __cdecl __iob_func(void) { return _iob; }
 #endif
 
 using std::vector;
+using std::map;
+using ZScript::ScriptType;
+using ZScript::Opcode;
 
 FFScript FFCore;
 
@@ -163,13 +166,13 @@ bool halt=false;
 bool show_sprites=true;
 bool show_hitboxes = false;
 
-// Used to find FFC script names
-extern std::map<int, pair<string,string> > ffcmap;
-std::vector<string> asffcscripts;
-extern std::map<int, pair<string,string> > globalmap;
-std::vector<string> asglobalscripts;
-extern std::map<int, pair<string, string> > itemmap;
-std::vector<string> asitemscripts;
+extern zasm::quest_scripts scripts;
+std::map<std::size_t, std::string> ffc_script_descs;
+std::map<std::size_t, std::string> global_script_descs;
+std::map<std::size_t, std::string> item_script_descs;
+std::vector<string> ffc_script_names;
+std::vector<string> global_script_names;
+std::vector<string> item_script_names;
 
 int CSET_SIZE = 16;
 int CSET_SHFT = 4;
@@ -292,18 +295,10 @@ bool is_large = true;
 byte BMM = 3; // Big Minimap
 BITMAP *hw_screen, *scrtmp;
 
-ffscript *ffscripts[NUMSCRIPTFFC];
-ffscript *itemscripts[NUMSCRIPTITEM];
-ffscript *guyscripts[NUMSCRIPTGUYS];
-ffscript *wpnscripts[NUMSCRIPTWEAPONS];
-ffscript *globalscripts[NUMSCRIPTGLOBAL];
-ffscript *linkscripts[NUMSCRIPTLINK];
-ffscript *screenscripts[NUMSCRIPTSCREEN];
-
 // Dummy - needed to compile, but unused
 refInfo ffcScriptData[32];
 
-extern std::string zScript;
+extern std::string quest_zscript_buffer;
 char zScriptBytes[512];
 SAMPLE customsfxdata[WAV_COUNT];
 unsigned char customsfxflag[WAV_COUNT>>3];
@@ -4715,7 +4710,7 @@ void refresh(int flags)
         for(int i=0; i< MAXFFCS; i++)
             if(Map.CurrScr()->ffscript[i] && Map.CurrScr()->ffdata[i])
             {
-                textout_shadowed_ex(menu1,is_large ? lfont_l : font, ffcmap[Map.CurrScr()->ffscript[i]-1].second.c_str(),2,ypos,vc(showxypos_ffc==i ? 14 : 15),vc(0),-1);
+	            textout_shadowed_ex(menu1,is_large ? lfont_l : font, scripts.ffc.name(Map.CurrScr()->ffscript[i]).c_str(),2,ypos,vc(showxypos_ffc==i ? 14 : 15),vc(0),-1);
                 ypos+=16;
             }
     }
@@ -7131,7 +7126,7 @@ void domouse()
                     sprintf(msg,"FFC: %d Combo: %d\nCSet: %d Type: %s\nScript: %s",
                             i+1, Map.CurrScr()->ffdata[i],Map.CurrScr()->ffcset[i],
                             combo_class_buf[combobuf[Map.CurrScr()->ffdata[i]].type].name,
-                            Map.CurrScr()->ffscript[i]<=0 ? "(None)" : ffcmap[Map.CurrScr()->ffscript[i]-1].second.c_str());
+                            Map.CurrScr()->ffscript[i]<=0 ? "(None)" : scripts.ffc.name(Map.CurrScr()->ffscript[i]).c_str());
                     update_tooltip(x, y, startxint, startyint, int(256*mapscreensize),int(176*mapscreensize), msg);
                     break;
                 }
@@ -18720,7 +18715,7 @@ char *clean_numeric_string(char *string)
 
 script_struct biffs[NUMSCRIPTFFC]; //ff script
 int biffs_cnt = -1;
-script_struct biitems[NUMSCRIPTFFC]; //item script
+script_struct biitems[NUMSCRIPTITEM]; //item script
 int biitems_cnt = -1;
 //static char ffscript_str_buf[32];
 
@@ -18729,41 +18724,44 @@ void build_biffs_list()
     biffs[0].first = "(None)";
     biffs[0].second = -1;
     biffs_cnt = 1;
-    
-    for(int i = 0; i < NUMSCRIPTFFC - 1; i++)
+
+    // Clear the list.
+    for (int i = biffs_cnt; i < NUMSCRIPTFFC; ++i)
     {
-        if(ffcmap[i].second.length()==0)
-            continue;
-            
-        std::stringstream ss;
-        ss << ffcmap[i].second << " (" << i+1 << ")"; // The word 'slot' preceding all of the numbers is a bit cluttersome. -L.
-        biffs[biffs_cnt].first = ss.str();
-        biffs[biffs_cnt].second = i;
-        biffs_cnt++;
+        biffs[i].first = "";
+        biffs[i].second = -1;
+    }
+
+    // Copy from scripts.
+    for (zasm::script_set::iterator it = scripts.ffc.begin();
+         it != scripts.ffc.end(); ++it)
+    {
+	    std::ostringstream oss;
+        // The word 'slot' preceding all of the numbers is a bit
+        // cluttersome. -L.
+	    oss << it->name << " (" << it.index() << ")";
+	    biffs[biffs_cnt].first = oss.str();
+	    biffs[biffs_cnt].second = it.index();
+        ++biffs_cnt;
     }
     
-    // Blank out the rest of the list
-    for(int i=biffs_cnt; i<NUMSCRIPTFFC; i++)
+    // Bubble sort! (doesn't account for gaps between scripts)
+    for (int i = 0; i < biffs_cnt - 1; i++)
     {
-        biffs[i].first="";
-        biffs[i].second=-1;
-    }
-    
-    //Bubble sort! (doesn't account for gaps between scripts)
-    for(int i = 0; i < biffs_cnt - 1; i++)
-    {
-        for(int j = i + 1; j < biffs_cnt; j++)
+        for (int j = i + 1; j < biffs_cnt; j++)
         {
-            if(stricmp(biffs[i].first.c_str(),biffs[j].first.c_str()) > 0 && strcmp(biffs[j].first.c_str(),""))
-                zc_swap(biffs[i],biffs[j]);
+            if (stricmp(biffs[i].first.c_str(),
+                        biffs[j].first.c_str()) > 0
+                && strcmp(biffs[j].first.c_str(), ""))
+	            zc_swap(biffs[i],biffs[j]);
         }
     }
-    
+
+    // recalculate biffs_cnt.
     biffs_cnt = 0;
-    
-    for(int i = 0; i < NUMSCRIPTFFC; i++)
-        if(biffs[i].first.length() > 0)
-            biffs_cnt = i+1;
+    for (int i = 0; i < NUMSCRIPTFFC; i++)
+        if (biffs[i].first.length() > 0)
+            biffs_cnt = i + 1;
 }
 
 void build_biitems_list()
@@ -18772,33 +18770,44 @@ void build_biitems_list()
     biitems[0].second = -1;
     biitems_cnt = 1;
     
-    for(int i = 0; i < NUMSCRIPTITEM - 1; i++, biitems_cnt++)
+    // Clear the list.
+    for (int i = biitems_cnt; i < NUMSCRIPTITEM; ++i)
     {
-        std::stringstream ss;
-        
-        if(itemmap[i].second != "")
-            ss << itemmap[i].second << " (" << i+1 << ")";
-            
-        biitems[biitems_cnt].first = ss.str();
-        biitems[biitems_cnt].second = i;
+        biitems[i].first = "";
+        biitems[i].second = -1;
+    }
+
+    // Copy from scripts.
+    for (zasm::script_set::iterator it = scripts.item.begin();
+         it != scripts.item.end(); ++it)
+    {
+	    std::ostringstream oss;
+	    oss << it->name << " (" << it.index() << ")";
+	    biitems[biitems_cnt].first = oss.str();
+	    biitems[biitems_cnt].second = it.index();
+        ++biitems_cnt;
     }
     
-    for(int i = 0; i < biitems_cnt - 1; i++)
+    // Bubble sort! (doesn't account for gaps between scripts)
+    for (int i = 0; i < biitems_cnt - 1; i++)
     {
-        for(int j = i + 1; j < biitems_cnt; j++)
+        for (int j = i + 1; j < biitems_cnt; j++)
         {
-            if(stricmp(biitems[i].first.c_str(), biitems[j].first.c_str()) > 0 && strcmp(biitems[j].first.c_str(),""))
-                zc_swap(biitems[i], biitems[j]);
+            if (stricmp(biitems[i].first.c_str(),
+                        biitems[j].first.c_str()) > 0
+                && strcmp(biitems[j].first.c_str(), ""))
+	            zc_swap(biitems[i], biitems[j]);
         }
     }
     
+    // recalculate biitems_cnt.
     biitems_cnt = 0;
-    
-    for(int i = 0; i < NUMSCRIPTITEM; i++)
-        if(biitems[i].first.length() > 0)
-            biitems_cnt = i+1;
+    for (int i = 0; i < NUMSCRIPTITEM; i++)
+        if (biitems[i].first.length() > 0)
+            biitems_cnt = i + 1;
 }
 
+// For script dropdown box on edit ffc menu.
 const char *ffscriptlist(int index, int *list_size)
 {
     if(index < 0)
@@ -18812,104 +18821,116 @@ const char *ffscriptlist(int index, int *list_size)
 
 static char itemscript_str_buf[32];
 
+// UNUSED
+/*
 char *itemscriptlist(int index, int *list_size)
 {
-    if(index>=0)
+    if (index >= 0)
     {
-        bound(index,0,255);
-        sprintf(itemscript_str_buf,"%d: %s",index, ffcmap[index-1].second.c_str());
+	    bound(index, 0, NUMSCRIPTITEM - 1);
+        sprintf(itemscript_str_buf, "%d: %s", index,
+                scripts.ffc.name(index).c_str());
         return itemscript_str_buf;
     }
     
-    *list_size=256;
+    *list_size = NUMSCRIPTITEM;
     return NULL;
 }
+*/
 
 static char ffscript_str_buf2[32];
 
+// Slot listing in the assign ffc asm script dialog
 const char *ffscriptlist2(int index, int *list_size)
 {
-    if(index>=0)
+    if (index >= 0)
     {
         char buf[20];
-        bound(index,0,510);
-        
-        if(ffcmap[index].second=="")
+	    int slot = index + 1;
+        bound(slot, 1, NUMSCRIPTFFC - 1);
+
+        string const& name = scripts.ffc.name(slot);
+        if (name.empty())
             strcpy(buf, "<none>");
         else
         {
-            strncpy(buf, ffcmap[index].second.c_str(), 19);
-            buf[19]='\0';
+	        strncpy(buf, name.c_str(), 19);
+            buf[19] = '\0';
         }
         
-        sprintf(ffscript_str_buf2,"%d: %s",index+1, buf);
+        sprintf(ffscript_str_buf2, "%d: %s", slot, buf);
         return ffscript_str_buf2;
     }
     
-    *list_size=511;
+    *list_size = NUMSCRIPTFFC - 1;
     return NULL;
 }
 
 static char itemscript_str_buf2[32];
 
+// Slot listing in the assign item asm script dialog
 const char *itemscriptlist2(int index, int *list_size)
 {
-    if(index>=0)
+    if (index >= 0)
     {
         char buf[20];
-        bound(index,0,254);
-        
-        if(itemmap[index].second=="")
+        int slot = index + 1;
+        bound(slot, 1, NUMSCRIPTITEM - 1);
+
+        string const& name = scripts.item.name(slot);
+        if (name.empty())
             strcpy(buf, "<none>");
         else
         {
-            strncpy(buf, itemmap[index].second.c_str(), 19);
-            buf[19]='\0';
+            strncpy(buf, name.c_str(), 19);
+            buf[19] = '\0';
         }
         
-        sprintf(itemscript_str_buf2,"%d: %s",index+1, buf);
+        sprintf(itemscript_str_buf2, "%d: %s", slot, buf);
         return itemscript_str_buf2;
     }
     
-    *list_size=255;
+    *list_size = NUMSCRIPTITEM - 1;
     return NULL;
 }
 
 static char gscript_str_buf2[32];
 
+// Slot listing in the assign global asm script dialog
 const char *gscriptlist2(int index, int *list_size)
 {
-    if(index >= 0)
+    if (index >= 0)
     {
-        bound(index,0,3);
+	    bound(index, 0, NUMSCRIPTGLOBAL - 1);
         
         char buf[20];
-        
-        if(globalmap[index].second == "")
+
+        string const& name = scripts.global.name(index);
+        if (name.empty())
             strcpy(buf, "<none>");
         else
         {
-            strncpy(buf, globalmap[index].second.c_str(), 19);
-            buf[19]='\0';
+            strncpy(buf, name.c_str(), 19);
+            buf[19] = '\0';
         }
         
-        if(index==0)
+        if (index == GLOBAL_SCRIPT_INIT)
             sprintf(gscript_str_buf2,"Initialization: %s", buf);
             
-        if(index==1)
+        if (index == GLOBAL_SCRIPT_ACTIVE)
             sprintf(gscript_str_buf2,"Active: %s", buf);
             
-        if(index==2)
+        if (index == GLOBAL_SCRIPT_EXIT)
             sprintf(gscript_str_buf2,"onExit: %s", buf);
             
-        if(index==3)
+        if (index == GLOBAL_SCRIPT_CONTINUE)
             sprintf(gscript_str_buf2,"onContinue: %s", buf);
             
         return gscript_str_buf2;
     }
     
-    if(list_size != NULL)
-        *list_size=4;
+    if (list_size != NULL)
+	    *list_size = NUMSCRIPTGLOBAL;
         
     return NULL;
 }
@@ -18943,68 +18964,68 @@ static TABPANEL assignscript_tabs[] =
 
 const char *assignffclist(int index, int *list_size)
 {
-    if(index<0)
+    if (index < 0)
     {
-        *list_size = (int)ffcmap.size();
+	    *list_size = NUMSCRIPTFFC - 1;
         return NULL;
     }
     
-    return ffcmap[index].first.c_str();
+    return ffc_script_descs[index + 1].c_str();
 }
 
 const char *assigngloballist(int index, int *list_size)
 {
-    if(index<0)
+    if (index < 0)
     {
-        *list_size = (int)globalmap.size();
+	    *list_size = NUMSCRIPTGLOBAL;
         return NULL;
     }
     
-    return globalmap[index].first.c_str();
+    return global_script_descs[index].c_str();
 }
 
 const char *assignitemlist(int index, int *list_size)
 {
-    if(index<0)
+    if (index < 0)
     {
-        *list_size = (int)itemmap.size();
+	    *list_size = NUMSCRIPTITEM - 1;
         return NULL;
     }
     
-    return itemmap[index].first.c_str();
+    return item_script_descs[index + 1].c_str();
 }
 
 const char *assignffcscriptlist(int index, int *list_size)
 {
-    if(index<0)
+    if (index < 0)
     {
-        *list_size = (int)asffcscripts.size();
+	    *list_size = static_cast<int>(ffc_script_names.size());
         return NULL;
     }
     
-    return asffcscripts[index].c_str();
+    return ffc_script_names[index].c_str();
 }
 
 const char *assignglobalscriptlist(int index, int *list_size)
 {
-    if(index<0)
+    if (index < 0)
     {
-        *list_size = (int)asglobalscripts.size();
+	    *list_size = static_cast<int>(global_script_names.size());
         return NULL;
     }
     
-    return asglobalscripts[index].c_str();
+    return global_script_names[index].c_str();
 }
 
 const char *assignitemscriptlist(int index, int *list_size)
 {
-    if(index<0)
+    if (index < 0)
     {
-        *list_size = (int)asitemscripts.size();
+	    *list_size = static_cast<int>(item_script_names.size());
         return NULL;
     }
     
-    return asitemscripts[index].c_str();
+    return item_script_names[index].c_str();
 }
 
 static ListData assignffc_list(assignffclist, &font);
@@ -19056,8 +19077,8 @@ static DIALOG edit_zscript_dlg[] =
 
 void doEditZScript(int bg,int fg)
 {
-    string old = zScript;
-    EditboxModel *em = new EditboxModel(zScript, new EditboxScriptView(&edit_zscript_dlg[2],(is_large?sfont3:sfont2),fg,bg,BasicEditboxView::HSTYLE_EOTEXT), false, (char *)"zscript.txt");
+    string old = quest_zscript_buffer;
+    EditboxModel *em = new EditboxModel(quest_zscript_buffer, new EditboxScriptView(&edit_zscript_dlg[2],(is_large?sfont3:sfont2),fg,bg,BasicEditboxView::HSTYLE_EOTEXT), false, (char *)"zscript.txt");
     edit_zscript_dlg[0].dp2= lfont;
     edit_zscript_dlg[2].dp = em;
     edit_zscript_dlg[2].bg = bg;
@@ -19065,7 +19086,7 @@ void doEditZScript(int bg,int fg)
     zc_popup_dialog(edit_zscript_dlg,2);
     
     if(jwin_alert("ZScript Buffer","Save changes to buffer?",NULL,NULL,"Yes","No",'y','n',lfont)==2)
-        zScript = old;
+        quest_zscript_buffer = old;
     else
         saved=false;
         
@@ -19124,7 +19145,8 @@ int onCompileScript()
         
     for(;;) //while(true)
     {
-        sprintf(zScriptBytes, "%d Bytes in Buffer", (int)(zScript.size()));
+        sprintf(zScriptBytes, "%d Bytes in Buffer",
+                static_cast<int>(quest_zscript_buffer.size()));
         int ret = zc_popup_dialog(compile_dlg,5);
         
         switch(ret)
@@ -19142,12 +19164,12 @@ int onCompileScript()
         case 3:
         {
             //Load from File
-            if(zScript.size() > 0)
+            if (!quest_zscript_buffer.empty())
             {
                 if(jwin_alert("Confirm Overwrite","Loading will erase the current buffer.","Proceed anyway?",NULL,"Yes","No",'y','n',lfont)==2)
                     break;
                     
-                zScript.clear();
+                quest_zscript_buffer.clear();
             }
             
             if(!getname("Load ZScript (.z, .zh, .zs, .zlib, etc.)", (char *)"z,zh,zs,zlib,zasm,zscript,squid" ,NULL,datapath,false))
@@ -19165,7 +19187,7 @@ int onCompileScript()
             
             while(!feof(zscript))
             {
-                zScript += c;
+                quest_zscript_buffer += c;
                 c = fgetc(zscript);
             }
             
@@ -19194,9 +19216,11 @@ int onCompileScript()
                 break;
             }
             
-            int written = (int)fwrite(zScript.c_str(), sizeof(char), zScript.size(), zscript);
+            int written = (int)fwrite(
+	            quest_zscript_buffer.c_str(), sizeof(char),
+	            quest_zscript_buffer.size(), zscript);
             
-            if(written != (int)zScript.size())
+            if (written != static_cast<int>(quest_zscript_buffer.size()))
                 jwin_alert("Error","IO error while writing script to file!",NULL,NULL,"O&K",NULL,'k',0,lfont);
                 
             fclose(zscript);
@@ -19213,7 +19237,8 @@ int onCompileScript()
                 return D_O_K;
             }
             
-            fwrite(zScript.c_str(), sizeof(char), zScript.size(), tempfile);
+            fwrite(quest_zscript_buffer.c_str(), sizeof(char),
+                   quest_zscript_buffer.size(), tempfile);
             fclose(tempfile);
             box_start(1, "Compile Progress", lfont, sfont,true);
             gotoless_not_equal = (0 != get_bit(quest_rules, qr_GOTOLESSNOTEQUAL)); // Used by BuildVisitors.cpp
@@ -19228,31 +19253,32 @@ int onCompileScript()
                 break;
             }
             
-            std::map<string, ZScript::ScriptType> stypes =
+            map<string, ScriptType> stypes =
 	            result->scriptTypes;
-            std::map<string, vector<ZScript::Opcode *> > scripts = result->theScripts;
+            map<string, vector<ZScript::Opcode *> > script_code =
+	            result->theScripts;
             delete result;
-            asffcscripts.clear();
-            asffcscripts.push_back("<none>");
-            asglobalscripts.clear();
-            asglobalscripts.push_back("<none>");
-            asitemscripts.clear();
-            asitemscripts.push_back("<none>");
+            ffc_script_names.clear();
+            ffc_script_names.push_back("<none>");
+            global_script_names.clear();
+            global_script_names.push_back("<none>");
+            item_script_names.clear();
+            item_script_names.push_back("<none>");
             
-            for (std::map<string, ZScript::ScriptType>::iterator it =
+            for (std::map<string, ScriptType>::iterator it =
 	                 stypes.begin(); it != stypes.end(); ++it)
             {
 	            string const& name = it->first;
-	            ZScript::ScriptType type = it->second;
-	            if (type == ZScript::ScriptType::ffc)
-                    asffcscripts.push_back(name);
-	            else if (type == ZScript::ScriptType::item)
-                    asitemscripts.push_back(name);
-	            else if (type == ZScript::ScriptType::global
+	            ScriptType type = it->second;
+	            if (type == ScriptType::ffc)
+                    ffc_script_names.push_back(name);
+	            else if (type == ScriptType::item)
+                    item_script_names.push_back(name);
+	            else if (type == ScriptType::global
 	                     // Don't allow assigning the allocate memory
 	                     // script, bad things could happen
 	                     && name != "~Init")
-		            asglobalscripts.push_back(name);
+		            global_script_names.push_back(name);
             }
             
             assignscript_dlg[0].dp2 = lfont;
@@ -19268,49 +19294,71 @@ int onCompileScript()
             for(;;) //while(true)
             {
                 char temp[100];
-                
-                for(int i = 0; i < NUMSCRIPTFFC-1; i++)
+
+                // ffc scripts start at slot 1.
+                for (int slot = 1; slot < NUMSCRIPTFFC; ++slot)
                 {
-                    if(ffcmap[i].second == "")
-                        sprintf(temp, "Slot %d: <none>", i+1);
-                    else if(scripts.find(ffcmap[i].second) != scripts.end())
-                        sprintf(temp, "Slot %d: %s", i+1, ffcmap[i].second.c_str());
-                    else // Previously loaded script not found
-                        sprintf(temp, "Slot %d: **%s**", i+1, ffcmap[i].second.c_str());
-                    ffcmap[i].first = temp;
+	                string const& name = scripts.ffc.name(slot);
+	                if (name.empty())
+                        sprintf(temp, "Slot %d: <none>", slot);
+	                else
+	                {
+		                map<string, ScriptType>::iterator it =
+			                stypes.find(name);
+		                if (it != stypes.end() && it->second == ScriptType::ffc)
+			                sprintf(temp, "Slot %d: %s", slot, name.c_str());
+		                else // Previously loaded script not found
+			                sprintf(temp, "Slot %d: **%s**", slot, name.c_str());
+	                }
+                    ffc_script_descs[slot] = temp;
                 }
-                
-                for(int i = 0; i < NUMSCRIPTGLOBAL; i++)
+
+                // global scripts start at slot 0.
+                for (int slot = 0; slot < NUMSCRIPTGLOBAL; ++slot)
                 {
                     char buffer[64];
                     const char* format;
                     const char* asterisks;
-                    switch(i)
+                    switch (slot)
                     {
                         case 0: format="Initialization: %s%s%s"; break;
                         case 1: format="Active: %s%s%s"; break;
                         case 2: format="onExit: %s%s%s"; break;
                         case 3: format="onContinue: %s%s%s"; break;
                     }
-                    if(globalmap[i].second == "")
-                        asterisks="";
-                    else if(scripts.find(globalmap[i].second) != scripts.end())
-                        asterisks="";
-                    else // Unloaded
-                        asterisks="**";
-                    snprintf(buffer, 50, format, asterisks, globalmap[i].second.c_str(), asterisks);
-                    globalmap[i].first=buffer;
+
+                    string const& name = scripts.global.name(slot);
+                    if (name.empty())
+                        asterisks = "";
+                    else
+                    {
+	                    map<string, ScriptType>::iterator it =
+		                    stypes.find(name);
+	                    if (it != stypes.end() && it->second == ScriptType::global)
+		                    asterisks = "";
+	                    else // Unloaded
+		                    asterisks = "**";
+                    }
+                    snprintf(buffer, 50, format, asterisks, name.c_str(), asterisks);
+                    global_script_descs[slot] = buffer;
                 }
-                
-                for(int i = 0; i < NUMSCRIPTITEM-1; i++)
+
+                // item scripts start at slot 1
+                for (int slot = 1; slot < NUMSCRIPTITEM; ++slot)
                 {
-                    if(itemmap[i].second == "")
-                        sprintf(temp, "Slot %d: <none>", i+1);
-                    else if(scripts.find(itemmap[i].second) != scripts.end())
-                        sprintf(temp, "Slot %d: %s", i+1, itemmap[i].second.c_str());
-                    else // Previously loaded script not found
-                        sprintf(temp, "Slot %d: **%s**", i+1, itemmap[i].second.c_str());
-                    itemmap[i].first = temp;
+	                string const& name = scripts.item.name(slot);
+	                if (name.empty())
+                        sprintf(temp, "Slot %d: <none>", slot);
+                    else
+                    {
+	                    map<string, ScriptType>::iterator it =
+		                    stypes.find(name);
+	                    if (it != stypes.end() && it->second == ScriptType::item)
+		                    sprintf(temp, "Slot %d: %s", slot, name.c_str());
+	                    else // Previously loaded script not found
+		                    sprintf(temp, "Slot %d: **%s**", slot, name.c_str());
+                    }
+	                item_script_descs[slot] = temp;
                 }
                 
                 if(is_large)
@@ -19330,131 +19378,146 @@ int onCompileScript()
                 
                     //OK
                     bool output = (assignscript_dlg[13].flags == D_SELECTED);
-                    
-                    for(std::map<int, pair<string,string> >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
+
+                    for (zasm::script_set::iterator it = scripts.ffc.begin();
+                         it != scripts.ffc.end(); ++it)
                     {
-                        if(it->second.second != "")
-                        {
-                            tempfile = fopen("tmp","w");
+	                    if (it->name.empty())
+	                    {
+		                    it->script.clear(); // probably not necessary.
+		                    continue;
+	                    }
+
+	                    map<string, ScriptType>::iterator it2 =
+		                    stypes.find(it->name);
+	                    if (it2 == stypes.end() || it2->second != ScriptType::ffc)
+	                    {
+		                    it->script.clear(); // probably not necessary.
+		                    continue;
+	                    }
+	                    
+	                    tempfile = fopen("tmp", "w");
+	                    if (!tempfile)
+	                    {
+		                    jwin_alert("Error","Unable to create a temporary file in current directory!",NULL,NULL,"O&K",NULL,'k',0,lfont);
+		                    return D_O_K;
+	                    }
                             
-                            if(!tempfile)
-                            {
-                                jwin_alert("Error","Unable to create a temporary file in current directory!",NULL,NULL,"O&K",NULL,'k',0,lfont);
-                                return D_O_K;
-                            }
-                            
-                            if(output)
-                            {
-                                al_trace("\n");
-                                al_trace("%s",it->second.second.c_str());
-                                al_trace("\n");
-                            }
-                            
-                            for(vector<ZScript::Opcode *>::iterator line = scripts[it->second.second].begin(); line != scripts[it->second.second].end(); line++)
-                            {
-                                string theline = (*line)->printLine();
-                                fwrite(theline.c_str(), sizeof(char), theline.size(),tempfile);
+	                    if (output)
+	                    {
+		                    al_trace("\n");
+		                    al_trace("%s", it->name.c_str());
+		                    al_trace("\n");
+	                    }
+	                    
+	                    for (vector<ZScript::Opcode*>::iterator line = script_code[it->name].begin();
+	                         line != script_code[it->name].end(); ++line)
+	                    {
+		                    string theline = (*line)->printLine();
+		                    fwrite(theline.c_str(), sizeof(char), theline.size(), tempfile);
                                 
-                                if(output)
-                                {
-                                    al_trace("%s",theline.c_str());
-                                }
-                            }
+		                    if (output)
+		                    {
+			                    al_trace("%s",theline.c_str());
+		                    }
+	                    }
                             
-                            fclose(tempfile);
-                            parse_script_file(&ffscripts[it->first+1],"tmp",false);
-                        }
-                        else if(ffscripts[it->first+1])
-                        {
-                            delete[] ffscripts[it->first+1];
-                            ffscripts[it->first+1] = new ffscript[1];
-                            ffscripts[it->first+1][0].command =
-	                            zasm::cmd_terminator;
-                        }
+	                    fclose(tempfile);
+	                    parse_script_file(it->script, "tmp", false);
                     }
                     
-                    for(std::map<int, pair<string,string> >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
+                    for (zasm::script_set::iterator it = scripts.global.begin();
+                         it != scripts.global.end(); ++it)
                     {
-                        if(it->second.second != "")
-                        {
-                            tempfile = fopen("tmp","w");
+	                    if (it->name.empty())
+	                    {
+		                    it->script.clear(); // probably not necessary.
+		                    continue;
+	                    }
+
+	                    map<string, ScriptType>::iterator it2 =
+		                    stypes.find(it->name);
+	                    if (it2 == stypes.end() || it2->second != ScriptType::global)
+	                    {
+		                    it->script.clear(); // probably not necessary.
+		                    continue;
+	                    }
+	                    
+	                    tempfile = fopen("tmp", "w");
+	                    if (!tempfile)
+	                    {
+		                    jwin_alert("Error","Unable to create a temporary file in current directory!",NULL,NULL,"O&K",NULL,'k',0,lfont);
+		                    return D_O_K;
+	                    }
                             
-                            if(!tempfile)
-                            {
-                                jwin_alert("Error","Unable to create a temporary file in current directory!",NULL,NULL,"O&K",NULL,'k',0,lfont);
-                                return D_O_K;
-                            }
-                            
-                            if(output)
-                            {
-                                al_trace("\n");
-                                al_trace("%s",it->second.second.c_str());
-                                al_trace("\n");
-                            }
-                            
-                            for(vector<ZScript::Opcode *>::iterator line = scripts[it->second.second].begin(); line != scripts[it->second.second].end(); line++)
-                            {
-                                string theline = (*line)->printLine();
-                                fwrite(theline.c_str(), sizeof(char), theline.size(),tempfile);
+	                    if (output)
+	                    {
+		                    al_trace("\n");
+		                    al_trace("%s", it->name.c_str());
+		                    al_trace("\n");
+	                    }
+	                    
+	                    for (vector<ZScript::Opcode*>::iterator line = script_code[it->name].begin();
+	                         line != script_code[it->name].end(); ++line)
+	                    {
+		                    string theline = (*line)->printLine();
+		                    fwrite(theline.c_str(), sizeof(char), theline.size(), tempfile);
                                 
-                                if(output)
-                                {
-                                    al_trace("%s",theline.c_str());
-                                }
-                            }
+		                    if (output)
+		                    {
+			                    al_trace("%s",theline.c_str());
+		                    }
+	                    }
                             
-                            fclose(tempfile);
-                            parse_script_file(&globalscripts[it->first],"tmp",false);
-                        }
-                        else if(globalscripts[it->first])
-                        {
-                            delete[] globalscripts[it->first];
-                            globalscripts[it->first] = new ffscript[1];
-                            globalscripts[it->first][0].command =
-	                            zasm::cmd_terminator;
-                        }
+	                    fclose(tempfile);
+	                    parse_script_file(it->script, "tmp", false);
                     }
                     
-                    for(std::map<int, pair<string,string> >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
+                    for (zasm::script_set::iterator it = scripts.item.begin();
+                         it != scripts.item.end(); ++it)
                     {
-                        if(it->second.second != "")
-                        {
-                            tempfile = fopen("tmp","w");
+	                    if (it->name.empty())
+	                    {
+		                    it->script.clear(); // probably not necessary.
+		                    continue;
+	                    }
+
+	                    map<string, ScriptType>::iterator it2 =
+		                    stypes.find(it->name);
+	                    if (it2 == stypes.end() || it2->second != ScriptType::item)
+	                    {
+		                    it->script.clear(); // probably not necessary.
+		                    continue;
+	                    }
+	                    
+	                    tempfile = fopen("tmp", "w");
+	                    if (!tempfile)
+	                    {
+		                    jwin_alert("Error","Unable to create a temporary file in current directory!",NULL,NULL,"O&K",NULL,'k',0,lfont);
+		                    return D_O_K;
+	                    }
                             
-                            if(!tempfile)
-                            {
-                                jwin_alert("Error","Unable to create a temporary file in current directory!",NULL,NULL,"O&K",NULL,'k',0,lfont);
-                                return D_O_K;
-                            }
-                            
-                            if(output)
-                            {
-                                al_trace("\n");
-                                al_trace("%s",it->second.second.c_str());
-                                al_trace("\n");
-                            }
-                            
-                            for(vector<ZScript::Opcode *>::iterator line = scripts[it->second.second].begin(); line != scripts[it->second.second].end(); line++)
-                            {
-                                string theline = (*line)->printLine();
-                                fwrite(theline.c_str(), sizeof(char), theline.size(),tempfile);
+	                    if (output)
+	                    {
+		                    al_trace("\n");
+		                    al_trace("%s", it->name.c_str());
+		                    al_trace("\n");
+	                    }
+	                    
+	                    for (vector<ZScript::Opcode*>::iterator line = script_code[it->name].begin();
+	                         line != script_code[it->name].end(); ++line)
+	                    {
+		                    string theline = (*line)->printLine();
+		                    fwrite(theline.c_str(), sizeof(char), theline.size(), tempfile);
                                 
-                                if(output)
-                                {
-                                    al_trace("%s",theline.c_str());
-                                }
-                            }
+		                    if (output)
+		                    {
+			                    al_trace("%s",theline.c_str());
+		                    }
+	                    }
                             
-                            fclose(tempfile);
-                            parse_script_file(&itemscripts[it->first+1],"tmp",false);
-                        }
-                        else if(itemscripts[it->first+1])
-                        {
-                            delete[] itemscripts[it->first+1];
-                            itemscripts[it->first+1] = new ffscript[1];
-                            itemscripts[it->first+1][0].command =
-	                            zasm::cmd_terminator;
-                        }
+	                    fclose(tempfile);
+	                    parse_script_file(it->script, "tmp", false);
                     }
                     
                     unlink("tmp");
@@ -19462,9 +19525,9 @@ int onCompileScript()
                     build_biffs_list();
                     build_biitems_list();
                     
-                    for(map<string, vector<ZScript::Opcode *> >::iterator it = scripts.begin(); it != scripts.end(); it++)
+                    for (map<string, vector<Opcode *> >::iterator it = script_code.begin(); it != script_code.end(); it++)
                     {
-                        for(vector<ZScript::Opcode *>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
+                        for (vector<Opcode*>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
                         {
                             delete *it2;
                         }
@@ -19479,17 +19542,13 @@ int onCompileScript()
                     int lind = assignscript_dlg[4].d1;
                     int rind = assignscript_dlg[5].d1;
                     
-                    if(lind < 0 || rind < 0)
-                        break;
-                        
-                    if(asffcscripts[rind] == "<none>")
-                    {
-                        ffcmap[lind].second = "";
-                    }
+                    if (lind < 0 || rind < 0) break;
+
+                    string const& name = ffc_script_names[rind];
+                    if (name == "<none>")
+	                    scripts.ffc.erase(lind + 1);
                     else
-                    {
-                        ffcmap[lind].second = asffcscripts[rind];
-                    }
+	                    scripts.ffc.assign(lind + 1, name);
                     
                     break;
                 }
@@ -19500,23 +19559,19 @@ int onCompileScript()
                     int lind = assignscript_dlg[7].d1;
                     int rind = assignscript_dlg[8].d1;
                     
-                    if(lind < 0 || rind < 0)
-                        break;
+                    if (lind < 0 || rind < 0) break;
                         
-                    if(lind == 0)
+                    if (lind == 0)
                     {
                         jwin_alert("Error","ZScript reserves this slot.",NULL,NULL,"O&K",NULL,'k',0,lfont);
                         break;
                     }
-                    
-                    if(asglobalscripts[rind] == "<none>")
-                    {
-                        globalmap[lind].second = "";
-                    }
+
+                    string const& name = global_script_names[rind];
+                    if (name == "<none>")
+	                    scripts.global.erase(lind);
                     else
-                    {
-                        globalmap[lind].second = asglobalscripts[rind];
-                    }
+	                    scripts.global.assign(lind, name);
                     
                     break;
                 }
@@ -19527,17 +19582,13 @@ int onCompileScript()
                     int lind = assignscript_dlg[10].d1;
                     int rind = assignscript_dlg[11].d1;
                     
-                    if(lind < 0 || rind < 0)
-                        break;
-                        
-                    if(asitemscripts[rind] == "<none>")
-                    {
-                        itemmap[lind].second = "";
-                    }
+                    if (lind < 0 || rind < 0) break;
+
+                    string const& name = item_script_names[rind];
+                    if (name == "<none>")
+	                    scripts.item.erase(lind + 1);
                     else
-                    {
-                        itemmap[lind].second = asitemscripts[rind];
-                    }
+	                    scripts.item.assign(lind + 1, name);
                     
                     break;
                 }
@@ -19564,15 +19615,15 @@ int onImportFFScript()
         
     int ret=zc_popup_dialog(ffscript_sel_dlg,0);
     
-    if(ret==3)
+    if (ret == 3)
     {
-        if(parse_script(&ffscripts[ffscript_sel_dlg[5].d1+1])==D_O_K)
+	    zasm::script script;
+	    if (parse_script(script) == D_O_K)
         {
-            if(strlen((char *)ffscript_sel_dlg[2].dp)>0)
-                ffcmap[ffscript_sel_dlg[5].d1].second=(char *)ffscript_sel_dlg[2].dp;
-            else
-                ffcmap[ffscript_sel_dlg[5].d1].second="ASM script";
-                
+	        int slot = ffscript_sel_dlg[5].d1 + 1;
+	        string name = static_cast<char*>(ffscript_sel_dlg[2].dp);
+	        if (name.empty()) name = "ASM script";
+	        scripts.ffc.assign(slot, name, script);
             build_biffs_list();
         }
     }
@@ -19593,15 +19644,16 @@ int onImportItemScript()
         
     int ret=zc_popup_dialog(itemscript_sel_dlg,0);
     
-    if(ret==3)
+    if (ret == 3)
     {
-        if(parse_script(&itemscripts[itemscript_sel_dlg[5].d1+1])==D_O_K)
+	    zasm::script script;
+        if (parse_script(script) == D_O_K)
         {
-            if(strlen((char *)itemscript_sel_dlg[2].dp)>0)
-                itemmap[itemscript_sel_dlg[5].d1].second=(char *)itemscript_sel_dlg[2].dp;
-            else
-                itemmap[itemscript_sel_dlg[5].d1].second="ASM script";
-                
+	        int slot = itemscript_sel_dlg[5].d1 + 1;
+	        string name = static_cast<char*>(itemscript_sel_dlg[2].dp);
+	        if (name.empty()) name = "ASM script";
+	        scripts.item.assign(slot, name, script);
+	        // XXX I don't think this is actually used anywhere.
             build_biitems_list();
         }
     }
@@ -19622,14 +19674,15 @@ int onImportGScript()
         
     int ret=zc_popup_dialog(gscript_sel_dlg,0);
     
-    if(ret==3)
+    if (ret == 3)
     {
-        if(parse_script(&globalscripts[gscript_sel_dlg[5].d1])==D_O_K)
+	    zasm::script script;
+        if (parse_script(script) == D_O_K)
         {
-            if(strlen((char *)gscript_sel_dlg[2].dp)>0)
-                globalmap[gscript_sel_dlg[5].d1].second=(char *)gscript_sel_dlg[2].dp;
-            else
-                globalmap[gscript_sel_dlg[5].d1].second="ASM script";
+	        int slot = gscript_sel_dlg[5].d1;
+	        string name = static_cast<char*>(gscript_sel_dlg[2].dp);
+	        if (name.empty()) name = "ASM script";
+	        scripts.global.assign(slot, name, script);
         }
     }
     
@@ -19700,15 +19753,14 @@ int onEditFFCombo(int ffcombo)
     ffcombo_dlg[75].dp = dastring[9];
     
     build_biffs_list();
+
     int index = 0;
-    
-    for(int j = 0; j < biffs_cnt; j++)
-    {
-        if(biffs[j].second == Map.CurrScr()->ffscript[ffcombo] - 1)
+    for (int j = 0; j < biffs_cnt; ++j)
+	    if (biffs[j].second == Map.CurrScr()->ffscript[ffcombo])
         {
             index = j;
+            break;
         }
-    }
     
     ffcombo_dlg[55].d1 = index;
     
@@ -19759,7 +19811,7 @@ int onEditFFCombo(int ffcombo)
         Map.CurrScr()->ffxdelta2[ffcombo] = vbound(ffparse(xystring[4]),-1280000, 1280000);
         Map.CurrScr()->ffydelta2[ffcombo] = vbound(ffparse(xystring[5]),-1280000, 1280000);
         Map.CurrScr()->ffdelay[ffcombo] = atoi(xystring[6])<10000?zc_max(0,atoi(xystring[6])):9999;
-        Map.CurrScr()->ffscript[ffcombo] = biffs[ffcombo_dlg[55].d1].second + 1;
+        Map.CurrScr()->ffscript[ffcombo] = biffs[ffcombo_dlg[55].d1].second;
         
         int cw = atoi(wstring[0])<65?zc_max(1,atoi(wstring[0])):64;
         int ch = atoi(wstring[1])<65?zc_max(1,atoi(wstring[1])):64;
@@ -22684,50 +22736,10 @@ int main(int argc,char **argv)
         guy_string[i] = new char[64];
         memset(guy_string[i], 0, 64);
     }
+
+    scripts.clear(); // probably not necessary.
+    quest_zscript_buffer.clear();
     
-    for(int i=0; i<512; i++)
-    {
-        ffscripts[i] = new ffscript[1];
-        ffscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        itemscripts[i] = new ffscript[1];
-        itemscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        guyscripts[i] = new ffscript[1];
-        guyscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        wpnscripts[i] = new ffscript[1];
-        wpnscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        screenscripts[i] = new ffscript[1];
-        screenscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<3; i++)
-    {
-        globalscripts[i] = new ffscript[1];
-        globalscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    for(int i=0; i<3; i++)
-    {
-        linkscripts[i] = new ffscript[1];
-        linkscripts[i][0].command = zasm::cmd_terminator;
-    }
-    
-    zScript = std::string();
     strcpy(zScriptBytes, "0 Bytes in Buffer");
     
     load_mice();
@@ -23177,41 +23189,8 @@ void quit_game()
     }
     
     al_trace("Cleaning script buffer. \n");
-    
-    for(int i=0; i<512; i++)
-    {
-        if(ffscripts[i]!=NULL) delete [] ffscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(itemscripts[i]!=NULL) delete [] itemscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(guyscripts[i]!=NULL) delete [] guyscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(wpnscripts[i]!=NULL) delete [] wpnscripts[i];
-    }
-    
-    for(int i=0; i<256; i++)
-    {
-        if(screenscripts[i]!=NULL) delete [] screenscripts[i];
-    }
-    
-    for(int i=0; i<3; i++)
-    {
-        if(globalscripts[i]!=NULL) delete [] globalscripts[i];
-    }
-    
-    for(int i=0; i<3; i++)
-    {
-        if(linkscripts[i]!=NULL) delete [] linkscripts[i];
-    }
+
+    scripts.clear();
     
     al_trace("Cleaning qst buffers. \n");
     del_qst_buffers();

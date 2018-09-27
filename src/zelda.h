@@ -371,14 +371,6 @@ extern mapscr tmpscr[2];
 extern mapscr tmpscr2[6];
 extern mapscr tmpscr3[6];
 extern char   sig_str[44];
-extern ffscript *ffscripts[512];
-extern ffscript *itemscripts[256];
-extern ffscript *globalscripts[NUMSCRIPTGLOBAL];
-
-extern ffscript *guyscripts[256];
-extern ffscript *wpnscripts[256];
-extern ffscript *linkscripts[3];
-extern ffscript *screenscripts[256];
 extern SAMPLE customsfxdata[WAV_COUNT];
 extern int sfxdat;
 
@@ -386,8 +378,6 @@ extern int sfxdat;
 typedef ZCArray<long> ZScriptArray;
 extern ZScriptArray localRAM[MAX_ZCARRAY_SIZE];
 extern byte arrayOwner[MAX_ZCARRAY_SIZE];
-
-dword getNumGlobalArrays();
 
 extern int  resx,resy,scrx,scry;
 extern bool sbig;                                           // big screen
