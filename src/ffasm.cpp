@@ -1106,12 +1106,21 @@ char labels[65536][80];
 int lines[65536];
 int numlines;
 
+//The Dialogue that loads an ASM Script filename.
 int parse_script(zasm::script& script)
 {
-    if(!getname("Import Script (.txt)","txt",NULL,datapath,false))
+	
+    if(!getname("Import Script (.txt, .asm, .zasm)","txt,asm,zasm",NULL,datapath,false))
         return D_CLOSE;
         
-    return parse_script_file(script, temppath, true);
+    FILE *zscript = fopen(temppath,"r");
+            
+            if(zscript == NULL)
+            {
+                jwin_alert("Error","Cannot open specified file!",NULL,NULL,"O&K",NULL,'k',0,lfont);
+                return -1;
+            }
+	else return parse_script_file(script,temppath, true);
 }
 
 int parse_script_file(zasm::script& script, const char *path, bool report_success)

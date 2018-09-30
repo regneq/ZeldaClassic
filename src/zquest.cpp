@@ -438,7 +438,7 @@ END_OF_FUNCTION(myvsync_callback)
 
 // quest data
 zquestheader header;
-byte                quest_rules[QUESTRULES_SIZE];
+byte                quest_rules[QUESTRULES_NEW_SIZE];
 byte                extra_rules[EXTRARULES_SIZE];
 byte                midi_flags[MIDIFLAGS_SIZE];
 byte                music_flags[MUSICFLAGS_SIZE];
@@ -790,7 +790,7 @@ static MENU data_menu[] =
     { (char *)"&Guy\tG",                    onGuy,                     NULL,                     0,            NULL   },
     { (char *)"&Message String\tS",         onString,                  NULL,                     0,            NULL   },
     { (char *)"&Room Type\tR",              onRType,                   NULL,                     0,            NULL   },
-    { (char *)"Catch &All\tA",              onCatchall,                NULL,                     D_DISABLED,   NULL   },
+    { (char *)"Catch &All\tA",              onCatchall,                NULL,                     0,   	       NULL   }, //Allow setting a generic catch-a;;. or clearing it mamnually.
     { (char *)"",                           NULL,                      NULL,                     0,            NULL   },
     { (char *)"&Item\tI",                   onItem,                    NULL,                     0,            NULL   },
     { (char *)"&Enemies\tE",                onEnemies,                 NULL,                     0,            NULL   },
@@ -19689,6 +19689,7 @@ int onImportGScript()
     return D_O_K;
 }
 
+//FFC Editor FFC_Editor
 int onEditFFCombo(int ffcombo)
 {
     char xystring[8][10];

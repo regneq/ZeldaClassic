@@ -104,6 +104,7 @@
 #define IS_BETA             -1                         //is this a beta? (1: beta, -1: alpha)
 #define VERSION_BETA        1
 #define DATE_STR            "23rd September, 2018"
+#define ZELDA_ABOUT_STR 	    "Zelda Classic 'Necromancer'"
 #define COPYRIGHT_YEAR      "2018"                          //shown on title screen and in ending
 
 #define MIN_VERSION         0x0184
@@ -171,7 +172,7 @@ enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_2
 
 //Version number of the different section types
 #define V_HEADER           3
-#define V_RULES           14
+#define V_RULES           15
 #define V_STRINGS          6
 #define V_MISC             10
 #define V_TILES            2 //2 is a long, max 214500 tiles (ZScript upper limit)
@@ -180,12 +181,12 @@ enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_2
 #define V_MAPS            19
 #define V_DMAPS            11
 #define V_DOORS            1
-#define V_ITEMS           39
+#define V_ITEMS           40
 #define V_WEAPONS          7
 #define V_COLORS           3 //Misc Colours
 #define V_ICONS            10 //Game Icons
 #define V_GRAPHICSPACK     1
-#define V_INITDATA        18
+#define V_INITDATA        19
 #define V_GUYS            36
 #define V_MIDIS            4
 #define V_CHEATS           1
@@ -756,6 +757,7 @@ enum
 //	otherwise hardcoded sounds, and use these instead of hardcoded SFX if they are set somehow. 
 
 #define QUESTRULES_SIZE 20
+#define QUESTRULES_NEW_SIZE 100
 #define EXTRARULES_SIZE 1
 
 // "quest rules" flags (bit numbers in bit string)
@@ -827,6 +829,7 @@ enum
     qr_MELEEMAGICCOST,
     qr_OLDMIRRORCOMBOS,
     qr_BROKENBOOKCOST,
+    qr_OLDSIDEVIEWSPIKES,
 
     qr_MAX
 };
@@ -837,7 +840,7 @@ enum extraRules
     er_BITMAPOFFSET, er_SHORTDGNWALK,
 	er_MAGICCOSTSWORD, //BEAMS Only
 	er_BROKENCHARINTDRAWING, //pre-2.53 fix to DrawInteger() and DrarCharacter() -Z
-	er_SETENEMYWEAPONSPRITESONWPNCHANGE,
+	er_SETENEMYWEAPONSPRITESONWPNCHANGE, //er_OLDSIDEVIEWSPIKES,
 	er_MAX
 };
 
@@ -3226,6 +3229,8 @@ struct zinitdata
     byte transition_type; // Can't edit, yet.
     byte jump_link_layer_threshold; // Link is drawn above layer 3 if z > this.
     byte link_swim_speed;
+    
+    word nBombs, nSbombs, nBombmax, nSBombmax, nArrows, nArrowmax;
 };
 
 struct zcmap
