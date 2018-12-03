@@ -54,6 +54,7 @@ extern FFScript FFCore; //the core script engine.
 extern ZModule zcm; //modules
 extern zcmodule moduledata;
 extern char runningItemScripts[256];
+extern long(*stack)[MAX_SCRIPT_REGISTERS];
 #include "init.h"
 #include <assert.h>
 #include "zc_array.h"
@@ -4517,6 +4518,7 @@ int main(int argc, char* argv[])
 		{
 			pan_style = (long)FFCore.usr_panstyle;
 		}
+		stack = NULL;
         }
         break;
         
