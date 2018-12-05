@@ -3322,7 +3322,6 @@ ItemclassSymbols::ItemclassSymbols()
 
 void ItemclassSymbols::generateCode()
 {
-    /*
     //void GetName(itemclass, int)
     {
 	Function* function = getFunction("GetName");
@@ -3338,59 +3337,9 @@ void ItemclassSymbols::generateCode()
         code.push_back(new OReturn());
         function->giveCode(code);
     }
-	*/
     
-    //bool isValid(npc)
-    //bool RunScript(itemdata)
-	/*
-    {
-	Function* function = getFunction("RunScript");
-        int label = function->getLabel();
-        vector<Opcode *> code;
-        //pop off the pointer
-        Opcode *first = new OPopRegister(new VarArgument(EXP1));
-        first->setLabel(label);
-        code.push_back(first);
-        //Check validity
-        code.push_back(new ORunItemScript(new VarArgument(EXP1)));
-        code.push_back(new OReturn());
-        function->giveCode(code);
-    }
-    */
-    /*
-    //void RunScript(itemdata)
-    {
-	Function* function = getFunction("RunScript");
-        int label = function->getLabel();
-        vector<Opcode *> code;
-        //pop pointer, and ignore it
-        Opcode *first = new OPopRegister(new VarArgument(EXP1));
-        first->setLabel(label);
-        code.push_back(first);
-        code.push_back(new OPopRegister(new VarArgument(NUL)));
-	code.push_back(new ORunItemScript());
-	//code.push_back(new ORunItemScript(new VarArgument(EXP1)));
-        code.push_back(new OReturn());
-        function->giveCode(code);
-    }
     
-     //void RunScript(itemdata)
-    {
-	Function* function = getFunction("RunScript");
-        int label = function->getLabel();
-        vector<Opcode *> code;
-        Opcode *first = new ORunItemScript();
-        first->setLabel(label);
-        code.push_back(first);
-        //pop pointer, and ignore it
-        code.push_back(new OPopRegister(new VarArgument(NUL)));
-        code.push_back(new OReturn());
-        
-        function->giveCode(code);
-    }
-    */
-    
-    //void Explode(npc, int)
+    //void RunScript(npc)
     {
 	Function* function = getFunction("RunScript");
         int label = function->getLabel();
