@@ -4093,7 +4093,7 @@ mirrors:
 			w_index = i;
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 		}
-		/*
+		
 		if ( !isLinkMelee() ) 
 		{
 			if ( dead != -1 && dead != 1 )
@@ -4116,7 +4116,7 @@ mirrors:
 				ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 			}
 		}
-		*/
+		
 		//else if ( canrunscript > 0 ) 
 		//{
 		//	al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);

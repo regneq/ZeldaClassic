@@ -19257,7 +19257,7 @@ void FFScript::clearRunningItemScripts()
 bool FFScript::newScriptEngine()
 {
 	itemScriptEngine();
-	lweaponScriptEngine();
+	//lweaponScriptEngine();
 	advanceframe(true);
 	return false;
 }
