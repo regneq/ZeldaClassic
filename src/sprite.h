@@ -99,7 +99,7 @@ public:
     word script;
     long initD[8];
     long initA[2];
-    
+    word weaponscript;
     
     sprite();
     sprite(sprite const & other);

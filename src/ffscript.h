@@ -6,6 +6,11 @@
 #include <list>
 #include "zelda.h" //This is probably the source of the duplication of BMP_MOUSE. -Z
 
+extern long(*ffstack)[MAX_SCRIPT_REGISTERS];
+extern ffscript *curscript;
+extern byte curScriptType;
+extern word curScriptNum;
+
 #define ZS_BYTE 255
 #define ZS_CHAR 255
 #define ZS_WORD 65535
@@ -161,6 +166,7 @@ long getQuestHeaderInfo(int type);
 void clearRunningItemScripts();
 bool itemScriptEngine();
 bool newScriptEngine();
+bool lweaponScriptEngine();
 
 /*
 long getQuestHeaderInfo(int type)

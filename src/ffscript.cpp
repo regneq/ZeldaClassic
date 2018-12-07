@@ -157,7 +157,7 @@ refInfo itemactiveScriptData[256];
 #define GLOBAL_STACK_LINK 3
 #define GLOBAL_STACK_MAX 4
 
-long(*stack)[MAX_SCRIPT_REGISTERS] = NULL;
+long(*ffstack)[MAX_SCRIPT_REGISTERS] = NULL;
 long ffc_stack[32][MAX_SCRIPT_REGISTERS];
 long global_stack[GLOBAL_STACK_MAX][MAX_SCRIPT_REGISTERS];
 long item_stack[256][MAX_SCRIPT_REGISTERS];
@@ -211,7 +211,7 @@ public:
             return;
         }
         
-        (*stack)[stackoffset] = value;
+        (*ffstack)[stackoffset] = value;
     }
     
     static long read_stack(const int stackoffset)
@@ -222,7 +222,7 @@ public:
             return -10000;
         }
         
-        return (*stack)[stackoffset];
+        return (*ffstack)[stackoffset];
     }
     
     static INLINE long get_arg(long arg, bool v)
@@ -14804,7 +14804,7 @@ int run_script(const byte type, const word script, const long i)
 		ri = &(ffcScriptData[i]);
 		
 		curscript = ffscripts[script];
-		stack = &(ffc_stack[i]);
+		ffstack = &(ffc_stack[i]);
 		
 		if(!tmpscr->initialized[i])
 		{
@@ -14820,7 +14820,7 @@ int run_script(const byte type, const word script, const long i)
 	    {
 			ri = &(npcScriptData[i]);
 			curscript = guyscripts[script];
-			stack = &(guys.spr(i)->stack);
+			ffstack = &(guys.spr(i)->stack);
 			ri->guyref = guys.spr(i)->getUID();
 		    
 			for ( int q = 0; q < 8; q++ ) 
@@ -14855,8 +14855,10 @@ int run_script(const byte type, const word script, const long i)
 	    case SCRIPT_LWPN:
 	    {
 			ri = &(lweaponScriptData[i]);
+		        curscript = lwpnscripts[script];
 			weapon *w = (weapon*)Lwpns.spr(i);
-			curscript = lwpnscripts[script];
+		        ri->lwpn = Lwpns.spr(i)->getUID();
+			
 			
 			//Z_scripterrlog("FFScript is trying to run lweapon script: %d\n", curscript);
 			//for ( int q = 0; q < 256; q++ )
@@ -14866,13 +14868,13 @@ int run_script(const byte type, const word script, const long i)
 				
 			//}
 			
-			stack = &(Lwpns.spr(i)->stack);
+			ffstack = &(Lwpns.spr(i)->stack);
 			//stack = &(w->stack);
 			//for ( int q = 0; q < 256; q++ )
 			//{
 			//	al_trace("Current LWeapon Stack Instruction is: %d\n", stack[q]);
 			//}
-			ri->lwpn = Lwpns.spr(i)->getUID();
+			
 		    
 			for ( int q = 0; q < 8; q++ ) 
 			{
@@ -14917,7 +14919,7 @@ int run_script(const byte type, const word script, const long i)
 	    {
 			ri = &(eweaponScriptData[i]);
 			curscript = ewpnscripts[script];
-			stack = &(Ewpns.spr(EwpnH::getEWeaponIndex(ri->ewpn))->stack);
+			ffstack = &(Ewpns.spr(EwpnH::getEWeaponIndex(ri->ewpn))->stack);
 			ri->ewpn = i; //'this' pointer
 	    }
 	    break;
@@ -14929,7 +14931,7 @@ int run_script(const byte type, const word script, const long i)
 		    //What would happen if we don't do this? -Z
 		
 		curscript = itemscripts[script];
-		stack = &(item_stack[i]);
+		ffstack = &(item_stack[i]);
 		    
 		//Should we want to allow item scripts to continue running, we'd need a way to mark them as running
 		//in the first place, and a way to re-run them every frame. -Z (26th November, 2018)
@@ -14967,7 +14969,7 @@ int run_script(const byte type, const word script, const long i)
 		    //should this become ri = &(globalScriptData[global_slot]);
 		
 		curscript = globalscripts[script];
-		stack = &global_stack[GLOBAL_STACK_MAIN];
+		ffstack = &global_stack[GLOBAL_STACK_MAIN];
 		    //
 	    }
 	    break;
@@ -14978,7 +14980,7 @@ int run_script(const byte type, const word script, const long i)
 		    //should this become ri = &(globalScriptData[link_slot]);
 		
 		curscript = linkscripts[script];
-		stack = &global_stack[GLOBAL_STACK_LINK];
+		ffstack = &global_stack[GLOBAL_STACK_LINK];
 		    //
 	    }
 	    break;
@@ -14989,7 +14991,7 @@ int run_script(const byte type, const word script, const long i)
 		
 		curscript = screenscripts[script];
 		    //should this become ri = &(globalScriptData[screen_slot]);
-		stack = &global_stack[GLOBAL_STACK_SCREEN];
+		ffstack = &global_stack[GLOBAL_STACK_SCREEN];
 		    //
 	    }
 	    break;
@@ -15000,7 +15002,7 @@ int run_script(const byte type, const word script, const long i)
 		    //should this become ri = &(globalScriptData[dmap_slot]);
 		
 		curscript = dmapscripts[script];
-		stack = &global_stack[GLOBAL_STACK_DMAP];
+		ffstack = &global_stack[GLOBAL_STACK_DMAP];
 		    //
 	    }
 	    break;
@@ -16532,10 +16534,10 @@ int run_script(const byte type, const word script, const long i)
 			//{
 			//	set_register(sarg1, script_id*10000);
 				curscript = 0;
-				long(*pvsstack)[MAX_SCRIPT_REGISTERS] = stack;
-				stack = &(item_stack[ri->idata]);
-				memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
-				stack = pvsstack;
+				long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+				ffstack = &(item_stack[ri->idata]);
+				memset(ffstack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+				ffstack = pvsstack;
 				ZScriptVersion::RunScript(SCRIPT_ITEM, itemsbuf[ri->idata].script, (ri->idata) & 0xFFF);
 				if ( mode ) 
 				{
@@ -16973,21 +16975,21 @@ int run_script(const byte type, const word script, const long i)
 		    //ri = &(itemScriptData[i]);
 		    //ri->Clear();
 		    curscript = 0;
-		    long(*pvsstack)[MAX_SCRIPT_REGISTERS] = stack;
-		    stack = &(item_stack[i]);
-		    memset(stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
-		    stack = pvsstack;
+		    long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+		    ffstack = &(item_stack[i]);
+		    memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+		    ffstack = pvsstack;
 		    //stack = NULL;
 		    break; //item scripts aren't gonna go again anyway
 		}
 		case SCRIPT_NPC:
 		{
 		
-			
-			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = stack;
-			stack = &(guys.spr(i)->stack); 
-			memset(stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
-			stack = pvsstack;
+			curscript = 0;
+			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+			ffstack = &(guys.spr(i)->stack); 
+			memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+			ffstack = pvsstack;
 			guys.spr(i)->script = 0;
 			//ri->guyref = guys.spr(i)->getUID();
 			break;
@@ -16996,12 +16998,12 @@ int run_script(const byte type, const word script, const long i)
 		{
 		
 			weapon *w = (weapon*)Lwpns.spr(i);
-			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = stack;
+			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 			//stack = &(Lwpns.spr(i)->stack);
 			//stack = &(w->stack);
-			stack = &(Lwpns.spr(i)->stack);
-			memset(stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
-			stack = pvsstack;
+			ffstack = &(Lwpns.spr(i)->stack);
+			memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+			ffstack = pvsstack;
 			//Lwpns.spr(i)->weaponscript = 0;
 			w->weaponscript = 0;
 			break;
@@ -19255,7 +19257,25 @@ void FFScript::clearRunningItemScripts()
 bool FFScript::newScriptEngine()
 {
 	itemScriptEngine();
+	lweaponScriptEngine();
 	advanceframe(true);
+	return false;
+}
+
+
+
+bool FFScript::lweaponScriptEngine()
+{
+	for ( int q = 0; q < Lwpns.Count(); q++ )
+	{
+		weapon *w = (weapon*)Lwpns.spr(q);
+		word wscript = w->weaponscript;
+		Z_scripterrlog("lweaponScriptEngine() found weapon script (%d) for weapon (%d)\n",wscript, q);
+		if ( wscript == 0 ) continue;
+		ZScriptVersion::RunScript(SCRIPT_LWPN, wscript, q);
+		    
+	}
+	
 	return false;
 }
 

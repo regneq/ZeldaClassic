@@ -149,6 +149,8 @@ sprite::sprite(sprite const & other):
 //pc(other.pc),
 scriptflag(other.scriptflag),
 doscript(other.doscript),
+weaponscript(other.weaponscript),
+
 //itemclass(other.itemclass),
 //guyclass(other.guyclass),
 //lwpnclass(other.lwpnclass),
@@ -219,6 +221,7 @@ sprite::sprite(fix X,fix Y,int T,int CS,int F,int Clk,int Yofs):
     for(int i=0; i<32; i++) miscellaneous[i] = 0;
     
     scriptcoldet = 1;
+    weaponscript = 0;
     
     //scriptData.Clear();
     //ewpnclass=0;

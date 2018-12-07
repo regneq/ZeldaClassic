@@ -37,6 +37,10 @@ extern int directWpn;
 extern FFScript FFCore;
 extern ZModule zcm;
 extern enemy Enemy;
+extern long(*ffstack)[MAX_SCRIPT_REGISTERS];
+extern ffscript *curscript;
+extern byte curScriptType;
+extern word curScriptNum;
 
 /**************************************/
 /***********  Weapon Class  ***********/
@@ -4075,9 +4079,11 @@ mirrors:
     {
         --dead;
     }
+    Z_scripterrlog("LWeapon 'dead' condition is: %d\n",dead);
     
     if ( weaponscript > 0 ) 
     {
+	
 	if ( isLinkWeapon() )
 	{
 		int w_index = -1; //Give the script the correct index! -Z
@@ -4087,11 +4093,30 @@ mirrors:
 			w_index = i;
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 		}
+		/*
 		if ( !isLinkMelee() ) 
 		{
-			al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
-			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
+			if ( dead != -1 && dead != 1 )
+			{
+				
+				Z_scripterrlog("Closing down weapon script: %d\n",weaponscript);
+				//stack = &(Lwpns.spr(i)->stack);
+				//long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+				//ffstack = &(stack);
+				memset(ffstack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+				//ffstack = NULL;
+				curscript = 0;
+				weaponscript = 0;
+				
+				
+			}
+			else
+			{
+				al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+				ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
+			}
 		}
+		*/
 		//else if ( canrunscript > 0 ) 
 		//{
 		//	al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
