@@ -4079,7 +4079,7 @@ mirrors:
     {
         --dead;
     }
-    Z_scripterrlog("LWeapon 'dead' condition is: %d\n",dead);
+    //Z_scripterrlog("LWeapon 'dead' condition is: %d\n",dead);
     
     if ( weaponscript > 0 ) 
     {
@@ -4093,13 +4093,13 @@ mirrors:
 			w_index = i;
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 		}
-		
+		/*
 		if ( !isLinkMelee() ) 
 		{
 			if ( dead != -1 && dead != 1 )
 			{
 				
-				Z_scripterrlog("Closing down weapon script: %d\n",weaponscript);
+				//Z_scripterrlog("Closing down weapon script: %d\n",weaponscript);
 				//stack = &(Lwpns.spr(i)->stack);
 				//long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 				//ffstack = &(stack);
@@ -4112,10 +4112,10 @@ mirrors:
 			}
 			else
 			{
-				al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+				//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 				ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 			}
-		}
+		}*/
 		
 		//else if ( canrunscript > 0 ) 
 		//{

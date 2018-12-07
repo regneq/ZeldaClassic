@@ -166,7 +166,7 @@ long getQuestHeaderInfo(int type);
 void clearRunningItemScripts();
 bool itemScriptEngine();
 bool newScriptEngine();
-bool lweaponScriptEngine();
+void lweaponScriptEngine();
 
 /*
 long getQuestHeaderInfo(int type)

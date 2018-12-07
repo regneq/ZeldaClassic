@@ -19257,26 +19257,50 @@ void FFScript::clearRunningItemScripts()
 bool FFScript::newScriptEngine()
 {
 	itemScriptEngine();
-	//lweaponScriptEngine();
+	lweaponScriptEngine();
 	advanceframe(true);
 	return false;
 }
 
 
 
-bool FFScript::lweaponScriptEngine()
+void FFScript::lweaponScriptEngine()
 {
-	for ( int q = 0; q < Lwpns.Count(); q++ )
+	for ( byte q = 0; q < Lwpns.Count(); q++ )
 	{
 		weapon *w = (weapon*)Lwpns.spr(q);
-		word wscript = w->weaponscript;
-		Z_scripterrlog("lweaponScriptEngine() found weapon script (%d) for weapon (%d)\n",wscript, q);
-		if ( wscript == 0 ) continue;
-		ZScriptVersion::RunScript(SCRIPT_LWPN, wscript, q);
+		//word wscript = w->weaponscript;
+		Z_scripterrlog("lweaponScriptEngine() found weapon script (%d) for weapon (%d)\n",w->weaponscript, q);
+		//Z_scripterrlog("lweaponScriptEngine() found the SPRITE weapon script (%d) for weapon (%d)\n",Lwpns.spr(q)->weaponscript, q);
+		//if ( w->weaponscript == 0 ) continue;
+		//if ( Lwpns.spr(q)->weaponscript == 0 ) continue;
+		if ( w->weaponscript == 0 ) continue;
+		if ( w->dead != -1 && w->dead != 1 )
+		{
+			Z_scripterrlog("lweaponScriptEngine() decided that the weapon status (%d) wasn't able to run the script\n",w->dead);
+			//Z_scripterrlog("Closing down weapon script: %d\n",weaponscript);
+			//stack = &(Lwpns.spr(i)->stack);
+			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+			ffstack = &(Lwpns.spr(q)->stack);
+			memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+			ffstack = pvsstack;//NULL;
+			curscript = 0;
+			//w->weaponscript = 0;
+			
+		}
+		else
+		{
+			if ( w->id != wSword )
+				//ZScriptVersion::RunScript(SCRIPT_LWPN, w->weaponscript, q);
+				//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, q);
+				ZScriptVersion::RunScript(SCRIPT_LWPN, w->weaponscript, q);
+			
+			
+		}
 		    
 	}
 	
-	return false;
+	//return false;
 }
 
 bool FFScript::itemScriptEngine()
