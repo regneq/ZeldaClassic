@@ -88,7 +88,7 @@ sprite::sprite()
     for(int i=0; i<32; i++) miscellaneous[i] = 0;
     
     scriptcoldet = 1;
-    
+    weaponscript = 0;
     //itemref = 0;
     //guyref = 0;
     //lwpnref = 0;
@@ -104,6 +104,14 @@ sprite::sprite()
     for ( int q = 0; q < 2; q++ )
     {
 	    initA[q] = 0;
+    }
+    for ( int q = 0; q < 2; q++ )
+    {
+	    weap_inita[q] = 0;
+    }
+    for ( int q = 0; q < 8; q++ )
+    {
+	    weap_initd[q] = 0;
     }
 }
 
@@ -188,9 +196,18 @@ script(other.script)
       initD[i]=other.initD[i];
 	   // al_trace("Sprite.cpp: Assigning other.initD[%d] is: %d\n",i, other.initD[i]);
     }
+    for (int i=0; i<8; ++i)
+    {
+      weap_initd[i]=other.weap_initd[i];
+	   // al_trace("Sprite.cpp: Assigning other.initD[%d] is: %d\n",i, other.initD[i]);
+    }
     for (int i=0; i<2; ++i)
     {
       initA[i]=other.initA[i];
+    }
+    for (int i=0; i<2; ++i)
+    {
+      weap_inita[i]=other.weap_inita[i];
     }
 }
 
@@ -240,8 +257,11 @@ sprite::sprite(fix X,fix Y,int T,int CS,int F,int Clk,int Yofs):
     misc=0;
     c_clk=0;
     shadowtile=0;
+   
     for ( int q = 0; q < 8; q++ ) initD[q] = 0;
+    for ( int q = 0; q < 8; q++ ) weap_initd[q] = 0;
     for ( int q = 0; q < 2; q++ ) initA[q] = 0;
+    for ( int q = 0; q < 2; q++ ) weap_inita[q] = 0;
 }
 
 sprite::~sprite()

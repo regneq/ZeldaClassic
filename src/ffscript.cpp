@@ -3108,7 +3108,7 @@ case NPCBEHAVIOUR: {
 		int a = vbound((ri->d[0] / 10000),0,7);
 		if(0!=(s=checkLWpn(ri->lwpn,"InitD[]")))
 		{
-			ret=(((weapon*)(s))->initiald[a]);
+			ret=(((weapon*)(s))->weap_initd[a]);
 		}
 		break;
 	}
@@ -7981,7 +7981,7 @@ void set_register(const long arg, const long value)
 		int a = vbound((ri->d[0] / 10000),0,7);
 		if(0!=(s=checkLWpn(ri->lwpn,"InitD[]")))
 		{
-			(((weapon*)(s))->initiald[a])=value;
+			(((weapon*)(s))->weap_initd[a])=value;
 		}
 		break;
 	}
@@ -14856,7 +14856,7 @@ int run_script(const byte type, const word script, const long i)
 	    {
 			ri = &(lweaponScriptData[i]);
 		        curscript = lwpnscripts[script];
-			weapon *w = (weapon*)Lwpns.spr(i);
+			//weapon *w = (weapon*)Lwpns.spr(i);
 		        ri->lwpn = Lwpns.spr(i)->getUID();
 			
 			
@@ -14880,7 +14880,8 @@ int run_script(const byte type, const word script, const long i)
 			{
 				
 				//al_trace("Reading InitD[%d] from a weapon script as: %d\n", q, (int)w->initiald[q]);
-				ri->d[q] = w->initiald[q];
+				ri->d[q] = Lwpns.spr(i)->weap_initd[q];
+				//w->weap_initd[q];
 				//guys.spr(i)->initD[q] = e->initD[q];
 				
 				//al_trace("InitD[%d] for this npc is: %d\n", q, e->initD[q]);
@@ -16997,15 +16998,15 @@ int run_script(const byte type, const word script, const long i)
 		case SCRIPT_LWPN:
 		{
 		
-			weapon *w = (weapon*)Lwpns.spr(i);
+			//weapon *w = (weapon*)Lwpns.spr(i);
 			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 			//stack = &(Lwpns.spr(i)->stack);
 			//stack = &(w->stack);
 			ffstack = &(Lwpns.spr(i)->stack);
 			memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
 			ffstack = pvsstack;
-			//Lwpns.spr(i)->weaponscript = 0;
-			w->weaponscript = 0;
+			Lwpns.spr(i)->weaponscript = 0;
+			//w->weaponscript = 0;
 			break;
 		}
         }
@@ -19270,11 +19271,12 @@ void FFScript::lweaponScriptEngine()
 	{
 		weapon *w = (weapon*)Lwpns.spr(q);
 		//word wscript = w->weaponscript;
-		Z_scripterrlog("lweaponScriptEngine() found weapon script (%d) for weapon (%d)\n",w->weaponscript, q);
-		//Z_scripterrlog("lweaponScriptEngine() found the SPRITE weapon script (%d) for weapon (%d)\n",Lwpns.spr(q)->weaponscript, q);
+		//Z_scripterrlog("lweaponScriptEngine() found weapon script (%d) for weapon (%d)\n",w->weaponscript, q);
+		Z_scripterrlog("lweaponScriptEngine() found the SPRITE weapon script (%d) for weapon (%d)\n",Lwpns.spr(q)->weaponscript, q);
 		//if ( w->weaponscript == 0 ) continue;
 		//if ( Lwpns.spr(q)->weaponscript == 0 ) continue;
-		if ( w->weaponscript == 0 ) continue;
+		//if ( w->weaponscript == 0 ) continue;
+		if ( Lwpns.spr(q)->weaponscript <= 0 ) continue;
 		if ( w->dead != -1 && w->dead != 1 )
 		{
 			Z_scripterrlog("lweaponScriptEngine() decided that the weapon status (%d) wasn't able to run the script\n",w->dead);
@@ -19290,10 +19292,10 @@ void FFScript::lweaponScriptEngine()
 		}
 		else
 		{
-			if ( w->id != wSword )
+			if ( w->id != wSword && w->id != wWand )
 				//ZScriptVersion::RunScript(SCRIPT_LWPN, w->weaponscript, q);
 				//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, q);
-				ZScriptVersion::RunScript(SCRIPT_LWPN, w->weaponscript, q);
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, q);
 			
 			
 		}

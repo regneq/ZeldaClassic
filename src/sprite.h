@@ -100,7 +100,8 @@ public:
     long initD[8];
     long initA[2];
     word weaponscript;
-    
+    long weap_initd[8];
+    long weap_inita[2];
     sprite();
     sprite(sprite const & other);
     sprite(fix X,fix Y,int T,int CS,int F,int Clk,int Yofs);

@@ -66,9 +66,9 @@ public:
     int weap_pattern[ITEM_MOVEMENT_PATTERNS]; //formation, arg1, arg2 -Z
     int weaprange; //default range -Z
     int weapduration; //default duration, 0 = infinite. 
-    word weaponscript; //Running script. -Z
-    long initiald[8];
-    byte initiala[2];
+    //word weaponscript; //Running script. -Z
+    //long weap_initd[8];
+    //byte weap_inita[2];
     long clocks[WEAPON_CLOCKS];
     long tilemod;
     byte drawlayer;
@@ -99,7 +99,7 @@ public:
     byte isLWeapon;
     byte canrunscript;
     
-    long stack[MAX_SCRIPT_REGISTERS];
+    //long stack[MAX_SCRIPT_REGISTERS];
     
     weapon(weapon const & other);
     //weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentid, int prntid, bool isDummy=false);

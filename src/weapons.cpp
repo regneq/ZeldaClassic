@@ -239,7 +239,7 @@ weapon::weapon(weapon const & other):
     usedefence(other.usedefence),	//byte		The defence type to evaluate in do_enemy_hit()
     weaprange(other.weaprange),		//int		The range or distance of the weapon before removing it. 
     weapduration(other.weapduration),	//int		The number of frames that must elapse before removing it
-    weaponscript(other.weaponscript),	//word		The weapon action script. 
+    //weaponscript(other.weaponscript),	//word		The weapon action script. 
     tilemod(other.tilemod),		//long		The LTM to use when the weapon is active. 
     drawlayer(other.drawlayer),		//byte		The layer onto which we draw the weapon.
     family_class(other.family_class),	//byte		Item Class
@@ -253,24 +253,35 @@ weapon::weapon(weapon const & other):
     magiccosttimer(other.magiccosttimer),
     ScriptGenerated(other.ScriptGenerated),
     isLWeapon(other.isLWeapon),
-    canrunscript(other.canrunscript)
+    canrunscript(other.canrunscript),
+    scriptrange(other.scriptrange),
+    blastsfx(other.scriptrange)
     
 	
 	//End Weapon editor non-arrays. 
 
-{
-	if ( parentitem > -1 ) 
-	{
+
+	//if ( parentitem > -1 ) 
+	//{
 		
-		weaponscript = itemsbuf[parentitem].weaponscript; //Set the weapon script based on the item editor data.
-		for ( int q = 0; q < INITIAL_D; q++ ) 
-		{
-			initiald[q] = itemsbuf[parentitem].weap_initiald[q];
+	//	weaponscript = itemsbuf[parentitem].weaponscript; //Set the weapon script based on the item editor data.
+	//	for ( int q = 0; q < INITIAL_D; q++ ) 
+	//	{
+	//		weap_initd[q] = itemsbuf[parentitem].weap_initiald[q];
 			
-		}
+	//	}
 		
-	}
-	
+	//}
+	//else
+	//{
+	//	weaponscript = 0;
+	//	for ( int q = 0; q < INITIAL_D; q++ ) 
+	//	{
+	//		weap_initd[q] = 0;
+			
+	//	}
+	//}
+{	
     for(int i=0; i<10; ++i)
     {
         dummy_int[i]=other.dummy_int[i];
@@ -280,7 +291,7 @@ weapon::weapon(weapon const & other):
     }
     
     //memset(stack,0,sizeof(stack));
-    memset(stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+    //memset(stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
     
     //Weapon Editor Arrays
     for ( int q = 0; q < ITEM_MOVEMENT_PATTERNS; q++ ) 
@@ -291,10 +302,10 @@ weapon::weapon(weapon const & other):
     {
 	clocks[q] = other.clocks[q];		//long	An array of misc clocks. 
     }
-    for ( int q = 0; q < INITIAL_A; q++ )
-    {
-	initiala[q] = other.initiala[q];		//byte	InitA[]
-    }
+    //for ( int q = 0; q < INITIAL_A; q++ )
+    //{
+//	weap_inita[q] = other.weap_inita[q];		//byte	InitA[]
+  //  }
     //for ( int q = 0; q < INITIAL_D; q++ ) 
     //{
 //	initiald[q] = other.initiald[q];		//long	InitD[]
@@ -426,7 +437,7 @@ weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem
     {
 	weaponscript = itemsbuf[Parentitem].weaponscript;
     }
-    else weaponscript = 0;
+    //else weaponscript = 0;
     tilemod = 0;
     drawlayer = 0;
     family_class = family_level = 0;
@@ -442,15 +453,15 @@ weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem
     {
 	    if ( Parentitem > -1 )
 	    {
-		    initiald[q] = itemsbuf[Parentitem].weap_initiald[q];
+		    weap_initd[q] = itemsbuf[Parentitem].weap_initiald[q];
 	    }
-	    else
-	    {
-		    initiald[q] = 0;
-	    }
+	    //else
+	    //{
+	//	    weap_initd[q] = 0;
+	    //}
     }
     for ( int q = 0; q < FFSCRIPT_MISC; q++ ) wpn_misc_d[q] = 0;
-    for ( int q = 0; q < 2; q++ ) initiala[q] = 0;
+    //for ( int q = 0; q < 2; q++ ) weap_inita[q] = 0;
     for ( int q = 0; q < WEAPON_CLOCKS; q++ ) clocks[q] = 0;
     isLit = false;
 	script_UID = FFCore.GetScriptObjectUID(UID_TYPE_WEAPON); 
