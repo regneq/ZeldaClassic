@@ -16985,7 +16985,6 @@ int run_script(const byte type, const word script, const long i)
 		}
 		case SCRIPT_NPC:
 		{
-		
 			curscript = 0;
 			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 			ffstack = &(guys.spr(i)->stack); 
@@ -16997,7 +16996,8 @@ int run_script(const byte type, const word script, const long i)
 		}
 		case SCRIPT_LWPN:
 		{
-		
+			Z_scripterrlog("Clearing an lweapon script (%d) stack from ffscript.cpp",ri->lwpn);
+			curscript = 0;
 			//weapon *w = (weapon*)Lwpns.spr(i);
 			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 			//stack = &(Lwpns.spr(i)->stack);
@@ -19258,7 +19258,7 @@ void FFScript::clearRunningItemScripts()
 bool FFScript::newScriptEngine()
 {
 	itemScriptEngine();
-	lweaponScriptEngine();
+	//lweaponScriptEngine();
 	advanceframe(true);
 	return false;
 }
