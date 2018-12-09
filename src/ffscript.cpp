@@ -163,7 +163,7 @@ long global_stack[GLOBAL_STACK_MAX][MAX_SCRIPT_REGISTERS];
 long item_stack[256][MAX_SCRIPT_REGISTERS];
 long ffmisc[32][16];
 refInfo ffcScriptData[32];
-
+#
 void clear_ffc_stack(const byte i)
 {
     memset(ffc_stack[i], 0, MAX_SCRIPT_REGISTERS * sizeof(long));
@@ -16999,12 +16999,12 @@ int run_script(const byte type, const word script, const long i)
 			Z_scripterrlog("Clearing an lweapon script (%d) stack from ffscript.cpp",ri->lwpn);
 			curscript = 0;
 			//weapon *w = (weapon*)Lwpns.spr(i);
-			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+			//long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 			//stack = &(Lwpns.spr(i)->stack);
 			//stack = &(w->stack);
-			ffstack = &(Lwpns.spr(i)->stack);
-			memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
-			ffstack = pvsstack;
+			//ffstack = &(Lwpns.spr(i)->stack);
+			//memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+			//ffstack = pvsstack;
 			Lwpns.spr(i)->weaponscript = 0;
 			//w->weaponscript = 0;
 			break;

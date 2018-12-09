@@ -292,7 +292,7 @@ weapon::weapon(weapon const & other):
     }
     
     //memset(stack,0,sizeof(stack));
-    //memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+    //memset(stack, 0xFFFF, sizeof(stack));
     
     //Weapon Editor Arrays
     for ( int q = 0; q < ITEM_MOVEMENT_PATTERNS; q++ ) 
@@ -472,7 +472,7 @@ weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem
 	isLWeapon = isLW;
 	canrunscript = 0;
     //memset(stack,0,sizeof(stack));
-    memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+    memset(stack, 0xFFFF, sizeof(stack));
     
     int defaultw, itemid = parentitem;
     
@@ -2433,7 +2433,7 @@ bool weapon::animate(int index)
 		//else
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -2441,7 +2441,7 @@ bool weapon::animate(int index)
 		{
 			curscript = 0;
 			if ( ffstack == &(stack) ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -2713,7 +2713,7 @@ bool weapon::animate(int index)
 		*/
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -2721,7 +2721,7 @@ bool weapon::animate(int index)
 		{
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -2878,7 +2878,7 @@ bool weapon::animate(int index)
 		*/
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -2886,7 +2886,7 @@ bool weapon::animate(int index)
 		{
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -3067,7 +3067,7 @@ bool weapon::animate(int index)
 			*/
 			if ( dead == -1 )
 			{
-				ri->lwpn = getUID();
+				//ri->lwpn = getUID();
 				//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 				ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 			}
@@ -3075,7 +3075,7 @@ bool weapon::animate(int index)
 			{
 				curscript = 0;
 				if ( ffstack == &(stack)  ) ffstack = NULL;
-				memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+				memset(stack, 0xFFFF, sizeof(stack));
 				weaponscript = 0;
 			}
 		}
@@ -3216,7 +3216,7 @@ bool weapon::animate(int index)
 		*/
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -3224,7 +3224,7 @@ bool weapon::animate(int index)
 		{
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -3423,7 +3423,7 @@ bool weapon::animate(int index)
 		*/
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -3431,7 +3431,7 @@ bool weapon::animate(int index)
 		{
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -4048,7 +4048,7 @@ mirrors:
 		}*/
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -4056,7 +4056,7 @@ mirrors:
 		{
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -4156,7 +4156,7 @@ mirrors:
 		*/
 		if ( dead == -1 )
 		{
-			ri->lwpn = getUID();
+			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
@@ -4164,7 +4164,7 @@ mirrors:
 		{
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
-			memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -4416,7 +4416,7 @@ mirrors:
 			else*/
 			if ( dead == -1 )
 			{
-				ri->lwpn = getUID();
+				//ri->lwpn = getUID();
 				//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 				ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 			}
@@ -4424,7 +4424,7 @@ mirrors:
 			{
 				curscript = 0;
 				if ( ffstack == &(stack)  ) ffstack = NULL;
-				memset(stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+				memset(stack, 0xFFFF, sizeof(stack));
 				weaponscript = 0;
 			}
 		}
