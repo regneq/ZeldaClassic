@@ -2163,12 +2163,12 @@ bool weapon::blocked()
     return blocked(8, 8);
 }
 
-void weapon::runscripts(int index)
+void weapon::runscripts(int i)
 {
-        for(word i = 0; i < Lwpns.Count(); i++)
-        {
-            if(Lwpns.spr(i)->getUID() == getUID())
-            {
+        //for(word i = 0; i < Lwpns.Count(); i++)
+        //{
+            //if(Lwpns.spr(i)->getUID() == getUID())
+            //{
 		switch(id)
 		{
 			// Link's weapons
@@ -2342,8 +2342,8 @@ void weapon::runscripts(int index)
 		    
 		    
 		}
-	    }
-	}
+	    //}
+	//}
 }
     
 
@@ -4481,7 +4481,7 @@ mirrors:
 	}
         
     }*/
-    
+    runscripts(index);
     return dead==0;
 }
 
