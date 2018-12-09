@@ -14856,7 +14856,7 @@ int run_script(const byte type, const word script, const long i)
 	    {
 			ri = &(lweaponScriptData[i]);
 		        curscript = lwpnscripts[script];
-			//weapon *w = (weapon*)Lwpns.spr(i);
+			weapon *w = (weapon*)Lwpns.spr(i);
 		        ri->lwpn = Lwpns.spr(i)->getUID();
 			
 			
@@ -14868,8 +14868,8 @@ int run_script(const byte type, const word script, const long i)
 				
 			//}
 			
-			ffstack = &(Lwpns.spr(i)->stack);
-			//stack = &(w->stack);
+			//ffstack = &(Lwpns.spr(i)->stack);
+			ffstack = w->wpnstack;
 			//for ( int q = 0; q < 256; q++ )
 			//{
 			//	al_trace("Current LWeapon Stack Instruction is: %d\n", stack[q]);
@@ -16998,6 +16998,7 @@ int run_script(const byte type, const word script, const long i)
 		{
 			Z_scripterrlog("Clearing an lweapon script (%d) stack from ffscript.cpp",ri->lwpn);
 			curscript = 0;
+			//memset(Lwpns.spr(i)->stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
 			//weapon *w = (weapon*)Lwpns.spr(i);
 			//long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
 			//stack = &(Lwpns.spr(i)->stack);

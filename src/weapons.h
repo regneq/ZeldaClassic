@@ -100,6 +100,7 @@ public:
     byte canrunscript;
     
     //long stack[MAX_SCRIPT_REGISTERS];
+    long(*wpnstack)[MAX_SCRIPT_REGISTERS];
     
     weapon(weapon const & other);
     //weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentid, int prntid, bool isDummy=false);
