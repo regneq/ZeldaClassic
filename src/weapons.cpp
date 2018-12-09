@@ -3184,12 +3184,10 @@ bool weapon::animate(int index)
             dead=23;
         }
         
-        if(parentitem>-1 && clk>=itemsbuf[parentitem].misc1)
-        {
-            dead=1;
-        }
+        Z_scripterrlog("Bait weapon script ID is: (%d)\n", weaponscript);
         if ( weaponscript > 0 ) 
 	{
+		Z_scripterrlog("in weaponscript check, Bait dead status is: %d\n", dead);
 		int w_index = -1; //Give the script the correct index! -Z
 		for(word i = 0; i < Lwpns.Count(); i++)
 		{
@@ -3216,18 +3214,32 @@ bool weapon::animate(int index)
 		*/
 		if ( dead == -1 )
 		{
+			Z_scripterrlog("Bait dead status is: %d\n", dead);
 			//ri->lwpn = getUID();
 			//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 			ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);
 		}
 		else
 		{
+			Z_scripterrlog("Bait dead status is: %d\n\n", dead);
 			curscript = 0;
 			if ( ffstack == &(stack)  ) ffstack = NULL;
 			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
+		
+		
+		
 	}
+	if(parentitem>-1 && clk>=itemsbuf[parentitem].misc1)
+        {
+		Z_scripterrlog("Bait dead status is: %d\n", dead);
+            dead=1;
+		curscript = 0;
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
+			weaponscript = 0;
+        }
         break;
         
     case wBrang:

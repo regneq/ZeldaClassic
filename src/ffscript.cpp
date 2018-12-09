@@ -14856,9 +14856,9 @@ int run_script(const byte type, const word script, const long i)
 	    {
 			ri = &(lweaponScriptData[i]);
 		        curscript = lwpnscripts[script];
-			weapon *w = (weapon*)Lwpns.spr(i);
-		        ri->lwpn = Lwpns.spr(i)->getUID();
-			
+			//weapon *w = (weapon*)Lwpns.spr(i);
+		        
+			ffstack = &(Lwpns.spr(i)->stack);
 			
 			//Z_scripterrlog("FFScript is trying to run lweapon script: %d\n", curscript);
 			//for ( int q = 0; q < 256; q++ )
@@ -14869,7 +14869,7 @@ int run_script(const byte type, const word script, const long i)
 			//}
 			
 			//ffstack = &(Lwpns.spr(i)->stack);
-			ffstack = w->wpnstack;
+			
 			//for ( int q = 0; q < 256; q++ )
 			//{
 			//	al_trace("Current LWeapon Stack Instruction is: %d\n", stack[q]);
@@ -14887,6 +14887,8 @@ int run_script(const byte type, const word script, const long i)
 				//al_trace("InitD[%d] for this npc is: %d\n", q, e->initD[q]);
 				//al_trace("GUYSBUF InitD[%d] for this npc is: %d\n", q, guysbuf[guys.spr(i)->id & 0xFFF].initD[q]);
 			}
+			
+			ri->lwpn = Lwpns.spr(i)->getUID();
 			//memcpy(ri->d, guys.spr(i)->initD, 8 * sizeof(long));
 			
 			//stack = &(guys.spr(GuyH::getNPCIndex(ri->guyref))->stack);
@@ -16998,6 +17000,10 @@ int run_script(const byte type, const word script, const long i)
 		{
 			Z_scripterrlog("Clearing an lweapon script (%d) stack from ffscript.cpp",ri->lwpn);
 			curscript = 0;
+			long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
+			ffstack = &(Lwpns.spr(i)->stack); 
+			memset(ffstack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
+			ffstack = pvsstack;
 			//memset(Lwpns.spr(i)->stack, 0xFFFF, MAX_SCRIPT_REGISTERS * sizeof(long));
 			//weapon *w = (weapon*)Lwpns.spr(i);
 			//long(*pvsstack)[MAX_SCRIPT_REGISTERS] = ffstack;
