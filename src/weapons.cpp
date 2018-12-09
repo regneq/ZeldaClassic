@@ -324,10 +324,7 @@ weapon::weapon(weapon const & other):
 	weapname[q] = 0;		//long -The base wpn->Misc[32] set from the editor
     }
     
-    //long * wpnstack;
-    long(*wpnstack)[MAX_SCRIPT_REGISTERS];
-    wpnstack = new wpnstack;
-    memset(wpnstack, 0xFFFF, sizeof(wpnstack));
+   
     
 	//! END Weapon Editor
     
@@ -476,10 +473,6 @@ weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem
 	canrunscript = 0;
     //memset(stack,0,sizeof(stack));
     memset(stack, 0xFFFF, sizeof(stack));
-    
-    long * wpnstack;
-    wpnstack = new long[1024];
-    memset(wpnstack, 0xFFFF, sizeof(wpnstack));
     
     int defaultw, itemid = parentitem;
     
@@ -2447,10 +2440,8 @@ bool weapon::animate(int index)
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack) ) ffstack = NULL;
-			//if ( ffstack == wpnstack ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(wpnstack));
+			if ( ffstack == &(stack) ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -2729,9 +2720,8 @@ bool weapon::animate(int index)
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack)  ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(stack));
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -2895,9 +2885,8 @@ bool weapon::animate(int index)
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack)  ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(stack));
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -3085,9 +3074,8 @@ bool weapon::animate(int index)
 			else
 			{
 				curscript = 0;
-				//if ( ffstack == &(stack)  ) ffstack = NULL;
-				//memset(stack, 0xFFFF, sizeof(stack));
-				memset(wpnstack, 0xFFFF, sizeof(stack));
+				if ( ffstack == &(stack)  ) ffstack = NULL;
+				memset(stack, 0xFFFF, sizeof(stack));
 				weaponscript = 0;
 			}
 		}
@@ -3199,11 +3187,6 @@ bool weapon::animate(int index)
         if(parentitem>-1 && clk>=itemsbuf[parentitem].misc1)
         {
             dead=1;
-	    curscript = 0;
-	    //if ( ffstack == &(stack)  ) ffstack = NULL;
-	    //memset(stack, 0xFFFF, sizeof(stack));
-	    memset(wpnstack, 0xFFFF, sizeof(stack));
-	    weaponscript = 0;
         }
         if ( weaponscript > 0 ) 
 	{
@@ -3240,9 +3223,8 @@ bool weapon::animate(int index)
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack)  ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(stack));
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -3448,9 +3430,8 @@ bool weapon::animate(int index)
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack)  ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(stack));
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -4074,9 +4055,8 @@ mirrors:
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack)  ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(stack));
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -4183,9 +4163,8 @@ mirrors:
 		else
 		{
 			curscript = 0;
-			//if ( ffstack == &(stack)  ) ffstack = NULL;
-			//memset(stack, 0xFFFF, sizeof(stack));
-			memset(wpnstack, 0xFFFF, sizeof(stack));
+			if ( ffstack == &(stack)  ) ffstack = NULL;
+			memset(stack, 0xFFFF, sizeof(stack));
 			weaponscript = 0;
 		}
 	}
@@ -4444,9 +4423,8 @@ mirrors:
 			else
 			{
 				curscript = 0;
-				//if ( ffstack == &(stack)  ) ffstack = NULL;
-				//memset(stack, 0xFFFF, sizeof(stack));
-				memset(wpnstack, 0xFFFF, sizeof(stack));
+				if ( ffstack == &(stack)  ) ffstack = NULL;
+				memset(stack, 0xFFFF, sizeof(stack));
 				weaponscript = 0;
 			}
 		}
