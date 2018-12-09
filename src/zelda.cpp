@@ -50,6 +50,8 @@
 #include "particles.h"
 #include "gamedata.h"
 #include "ffscript.h"
+#include "weapons.h"
+//extern weapon weaponclass;
 extern FFScript FFCore; //the core script engine.
 extern ZModule zcm; //modules
 extern zcmodule moduledata;
@@ -2845,6 +2847,7 @@ void game_loop()
 	al_trace("game_loop is calling: %s\n", "Lwpns.animate()\n");
 	#endif
         Lwpns.animate();
+        //weaponclass.runscripts(0);
         #if LOGGAMELOOP > 0
 	al_trace("game_loop is calling: %s\n", "FFCore.itemScriptEngine())\n");
 	#endif

@@ -169,6 +169,7 @@ public:
     void draw2(BITMAP* dest,bool lowfirst);
     void drawcloaked2(BITMAP* dest,bool lowfirst);
     void animate();
+
     void check_conveyor();
     int Count();
     int hit(sprite *s);

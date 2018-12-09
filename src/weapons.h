@@ -26,7 +26,7 @@ extern byte boomframe[16];
 extern byte bszboomflip[4];
 
 #define WEAPON_CLOCKS 10
-
+ 
 class weapon : public sprite
 {
 private:
@@ -114,6 +114,7 @@ public:
     virtual bool hit(int tx,int ty,int tz,int txsz,int tysz,int tzsz);
     virtual void draw(BITMAP *dest);
     virtual void update_weapon_frame(int change, int orig);
+    void runscripts(int index);
 };
 
 void putweapon(BITMAP *dest,int x,int y,int weapon_id, int type, int dir, int &aclk, int &aframe,

@@ -37,6 +37,7 @@ extern int directWpn;
 extern FFScript FFCore;
 extern ZModule zcm;
 extern enemy Enemy;
+//weapon.sprite weaponclass;
 
 /**************************************/
 /***********  Weapon Class  ***********/
@@ -2162,6 +2163,193 @@ bool weapon::blocked()
     return blocked(8, 8);
 }
 
+void weapon::runscripts(int index)
+{
+        for(word i = 0; i < Lwpns.Count(); i++)
+        {
+            if(Lwpns.spr(i)->getUID() == getUID())
+            {
+		switch(id)
+		{
+			// Link's weapons
+		    case wSword:
+		    case wWand:
+		    case wHammer:
+		    {
+			break;
+		    }
+		    case wCByrna:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);		
+			}
+			break;
+		    }
+		    
+		    
+		    case wBeam:
+		    case wRefBeam:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+		    
+		    case wWhistle:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+			
+		    case wWind:
+		    {
+			break;
+		    }
+		    
+		    case wFire:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+		    
+		    case wLitBomb:
+		    case wBomb:
+		    case ewLitBomb:
+		    case ewBomb:
+		    case ewLitSBomb:
+		    case ewSBomb:
+		    case wLitSBomb:
+		    case wSBomb:
+		    {
+			break;
+		    }
+		    
+		    case wArrow:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			
+			break;
+		    }
+		    
+		    case wSSparkle:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+
+		    case wBait:
+		    {
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+		    case wBrang:
+		    {
+			//call before the sfx
+			if ( doscript && weaponscript > 0 ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			
+			break;
+		    }
+		   
+		    case wMagic:
+		    {
+			//:Weapon Only
+			if ( doscript && weaponscript > 0 && (id == wMagic || id == wRefMagic) ) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+		    
+		    case wRefFireball:
+		    {
+			if ( doscript && weaponscript > 0) 
+			{
+				if ( Dead() )
+				{
+					doscript = 0;
+					weaponscript = 0;
+				}
+				else ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, i);	
+			}
+			break;
+		    }
+		    
+		    
+		}
+	    }
+	}
+}
+    
+
+
+
+
 bool weapon::blocked(int xOffset, int yOffset)
 {
     int wx = x+xOffset;
@@ -2380,6 +2568,7 @@ bool weapon::animate(int index)
         {
             dead=23;
         }
+        /*
         if ( doscript && weaponscript > 0 ) 
         {
                 if ( Dead() )
@@ -2401,6 +2590,7 @@ bool weapon::animate(int index)
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
     }
     case ewSword:
         if(blocked())
@@ -2641,6 +2831,7 @@ bool weapon::animate(int index)
         {
             dead=1;
         }
+        /*
         if ( doscript && weaponscript > 0 ) 
         {
                 if ( Dead() )
@@ -2662,6 +2853,7 @@ bool weapon::animate(int index)
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
         break;
     }
         
@@ -2787,6 +2979,7 @@ bool weapon::animate(int index)
             isLit=false;
             checkLightSources();
         }
+        /*
         if ( doscript && weaponscript > 0 ) 
         {
                 if ( Dead() )
@@ -2808,6 +3001,7 @@ bool weapon::animate(int index)
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
         break;
     }
     
@@ -2995,7 +3189,7 @@ bool weapon::animate(int index)
         {
             dead=4;
         }
-        
+        /*
         if ( doscript && weaponscript > 0 ) 
         {
                 if ( Dead() )
@@ -3017,6 +3211,7 @@ bool weapon::animate(int index)
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
         
         break;
     }
@@ -3061,6 +3256,7 @@ bool weapon::animate(int index)
         {
             dead=1;
         }
+        /*
         if ( doscript && weaponscript > 0 ) 
         {
                 if ( Dead() )
@@ -3082,6 +3278,7 @@ bool weapon::animate(int index)
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
         break;
     }
     case wBrang:
@@ -3250,6 +3447,7 @@ bool weapon::animate(int index)
             seekLink();
         }
         //call before the sfx
+        /*
         if ( doscript && weaponscript > 0 ) 
         {
                 if ( Dead() )
@@ -3271,7 +3469,7 @@ bool weapon::animate(int index)
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
-        
+        */
         sfx(itemsbuf[parentitem>-1 ? parentitem : current_item_id(itype_brang)].usesound,pan(int(x)),true,false);
         
         break;
@@ -3862,6 +4060,7 @@ mirrors:
             }
         }
         //:Weapon Only
+        /*
         if ( doscript && weaponscript > 0 && (id == wMagic || id == wRefMagic) ) 
         {
                 if ( Dead() )
@@ -3883,6 +4082,7 @@ mirrors:
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
     }
     break;
     
@@ -4021,7 +4221,7 @@ mirrors:
         {
             dead=1;
         }
-        
+        /*
         if ( doscript && weaponscript > 0 && id == wRefFireball) 
         {
                 if ( Dead() )
@@ -4043,6 +4243,7 @@ mirrors:
                         ZScriptVersion::RunScript(SCRIPT_LWPN, weaponscript, w_index);		
                 }
         }
+        */
         break;
     }
     
