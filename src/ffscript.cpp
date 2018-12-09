@@ -16920,7 +16920,12 @@ int run_script(const byte type, const word script, const long i)
 		
 		default:
 		{
-		    Z_scripterrlog("Invalid ZASM command %ld reached\n", scommand);
+			if ( type == SCRIPT_LWPN )
+			{
+				Z_scripterrlog("Aborting LWeapon Script at command: %d\n",scommand);
+				scommand = 0xFFFF; 
+			}
+			else Z_scripterrlog("Invalid ZASM command %ld reached\n", scommand);
 		    break;
 		}
 	}
@@ -16934,12 +16939,33 @@ int run_script(const byte type, const word script, const long i)
         if(increment)	pc++;
         else			increment = true;
         
-        if(scommand != 0xFFFF)
-        {
-            scommand = curscript[pc].command;
-            sarg1 = curscript[pc].arg1;
-            sarg2 = curscript[pc].arg2;
-        }
+	if ( type == SCRIPT_LWPN )
+	{
+		bool can_run = false;
+		for(int j = 0; j < Lwpns.Count(); j++) //validate that the weapon remains valid.
+		{
+			if(Lwpns.spr(j)->getUID() == ri->lwpn)
+			{
+				can_run = true;
+				if(scommand < 0xFFFF)
+				{
+				    scommand = curscript[pc].command;
+				    sarg1 = curscript[pc].arg1;
+				    sarg2 = curscript[pc].arg2;
+				}
+			}
+		}
+		if (!can_run) scommand = 0xFFFF; 
+	}
+	else
+	{
+		if(scommand != 0xFFFF)
+		{
+		    scommand = curscript[pc].command;
+		    sarg1 = curscript[pc].arg1;
+		    sarg2 = curscript[pc].arg2;
+		}
+	}
     }
     
     if(!scriptCanSave)
