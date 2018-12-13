@@ -175,6 +175,8 @@ bool screenIsScrolling();
 //void quit_game();
 int d_timer_proc(int msg, DIALOG *d, int c);
 
+void LWeaponScriptEngine();
+
 /*ZScript
 const int TINT_NONE = 0;
 const int TINT_GREY = 0;

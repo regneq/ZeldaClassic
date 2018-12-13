@@ -53,6 +53,7 @@
 extern FFScript FFCore; //the core script engine.
 extern ZModule zcm; //modules
 extern zcmodule moduledata;
+extern refInfo *ri;
 extern char runningItemScripts[256];
 #include "init.h"
 #include <assert.h>
@@ -2853,11 +2854,12 @@ void game_loop()
 	al_trace("game_loop is calling: %s\n", "Lwpns.animate()\n");
 	#endif
         Lwpns.animate();
-	FFCore.lweaponScriptEngine();
+	//FFCore.lweaponScriptEngine();
+	LWeaponScriptEngine();
         #if LOGGAMELOOP > 0
 	al_trace("game_loop is calling: %s\n", "FFCore.itemScriptEngine())\n");
 	#endif
-        FFCore.itemScriptEngine();
+        //FFCore.itemScriptEngine();
 	#if LOGGAMELOOP > 0
 	al_trace("game_loop is calling: %s\n", "decorations.animate()\n");
 	#endif
@@ -4491,7 +4493,8 @@ int main(int argc, char* argv[])
 #endif
             game_loop();
 	    //Perpetual item Script:
-	    FFCore.newScriptEngine();
+	    //FFCore.newScriptEngine();
+		advanceframe(true);
             
 		
 	     //clear Link's last hits 
@@ -4946,3 +4949,322 @@ void __zc_always_assert(bool e, const char* expression, const char* file, int li
 
 /*** end of zelda.cc ***/
 
+
+void LWeaponScriptEngine()
+{
+	for ( int q = 0; q < Lwpns.Count(); q++ )
+	{
+		//ri->lwpn = Lwpns.spr(q)->getUID();
+		Z_scripterrlog("lweaponScriptEngine(): UID (%d) ri->lwpn (%d)\n", Lwpns.spr(q)->getUID(), ri->lwpn);
+		//ri->lwpn = Lwpns.spr(q)->getUID();
+		weapon *wp = (weapon*)Lwpns.spr(q);
+		if ( wp->Dead() ) continue;
+		if ( Lwpns.spr(q)->weaponscript == 0 ) continue;
+		if ( Lwpns.spr(q)->doscript == 0 ) continue;
+		if ( Lwpns.spr(q)->id == wBeam )
+		{
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					//memset(w->stack, 0xFFFF, sizeof(w->stack));
+					continue;
+				}
+				
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
+					ri->lwpn = w->getUID();
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
+				}
+				*/
+			}
+		}
+		/*	
+		    case wWhistle:
+		    {
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) break;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					break;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());	
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);
+					ri->lwpn = w->getUID();
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+				}
+			}
+			break;
+		    }
+			*/
+		if ( Lwpns.spr(q)->id == wWind ) { continue; }
+		
+		if ( Lwpns.spr(q)->id == wFire )
+		{
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					continue;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					ri->lwpn = w->getUID();
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());	
+					continue;
+				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+			}
+		
+		}
+		/*
+		    case wLitBomb:
+		    case wBomb:
+		    case ewLitBomb:
+		    case ewBomb:
+		    case ewLitSBomb:
+		    case ewSBomb:
+		    case wLitSBomb:
+		    case wSBomb:
+		    {
+			break;
+		    }
+		*/
+		if ( Lwpns.spr(q)->id == wArrow )
+		{
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					continue;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
+					ri->lwpn = w->getUID();					
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());	
+					continue;
+				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+			}
+			
+		
+		}
+		    /*
+		    case wSSparkle:
+		    {
+			break;
+		    }
+			
+		    case wFSparkle:
+		    {
+			break;
+		    }
+		*/
+		if ( Lwpns.spr(q)->id == wBait )
+		{
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					continue;
+				}
+				else
+				{
+				    //al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+				    //ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+				    //ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+				    //ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
+				    ri->lwpn = w->getUID();
+				    ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());	
+				    continue;
+				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+			}
+		}
+		if ( Lwpns.spr(q)->id == wBrang )
+		{
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					continue;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
+					ri->lwpn = w->getUID();
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
+				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+			}
+		
+		    }
+		    /*
+		    case wHookshot:
+		    {
+			break;
+		    }
+		    case wHSHandle:
+		    {
+			break;
+		    }
+		    case wPhantom:
+		    {
+			break;
+		    }
+		    case wRefMagic:
+		    */
+		if ( Lwpns.spr(q)->id == wMagic )
+		{
+			//:Weapon Only
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					continue;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
+					ri->lwpn = w->getUID();
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
+				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+			}
+		}
+		    /*
+		    case wRefFireball:
+		    {
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) break;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 && wa->ScriptGenerated ) 
+			{
+			
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					break;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
+					ri->lwpn = w->getUID();
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+				}
+			}
+			break;
+		    }
+		    */
+		if ( Lwpns.spr(q)->id == wScript1 || Lwpns.spr(q)->id == wScript2 || Lwpns.spr(q)->id == wScript3
+				|| Lwpns.spr(q)->id == wScript4 || Lwpns.spr(q)->id == wScript5 || Lwpns.spr(q)->id == wScript6
+				|| Lwpns.spr(q)->id == wScript7 || Lwpns.spr(q)->id == wScript8 || Lwpns.spr(q)->id == wScript9
+				|| Lwpns.spr(q)->id == wScript10
+		
+		)
+		{
+			
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
+			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
+			{
+				/*
+				weapon *w = (weapon*)Lwpns.spr(q);
+				if ( w->Dead() )
+				{
+					Lwpns.spr(q)->doscript = 0;
+					Lwpns.spr(q)->weaponscript = 0;
+					continue;
+				}
+				else
+				{
+					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
+					ri->lwpn = w->getUID();
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
+				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+			}
+		}
+	}
+}

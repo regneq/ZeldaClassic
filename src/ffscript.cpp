@@ -11459,7 +11459,12 @@ case AUDIOPAN:
         if(arg >= D(0) && arg <= D(7))			ri->d[arg - D(0)] = value;
         else if(arg >= A(0) && arg <= A(1))		ri->a[arg - A(0)] = value;
         else if(arg >= GD(0) && arg <= GD(MAX_SCRIPT_REGISTERS))	game->global_d[arg-GD(0)] = value;
-        
+        else 
+	{
+		Z_scripterrlog("Invalid varg value (%d) passed to set_register()\n", arg);
+		break;
+		
+	}
         break;
     }
     }
@@ -11475,6 +11480,7 @@ case AUDIOPAN:
 
 void do_set(const bool v, byte whichFFC)
 {
+	//Z_scripterrlog("Calling do_set() with arg whichFFC: %d\n", whichFFC);
     // Trying to change the current script?
     if(sarg1==FFSCRIPT && ri->ffcref==whichFFC)
         return;
@@ -14854,13 +14860,30 @@ int run_script(const byte type, const word script, const long i)
 	    
 	    case SCRIPT_LWPN:
 	    {
+		        //loop through all lweapons and check validity, or abort:
+		        bool lwValid = false;
+		        for ( int q = 0; q < Lwpns.Count(); q++ )
+		        {
+				if ( Lwpns.spr(q)->getUID() == i ) //if we match the UID
+				{
+					Z_scripterrlog("Matched a valid sprite in run_script(), inside ffscript.cpp for lweapon UID (%d)\n", i);
+					lwValid = true;
+					break;
+				}
+			}
+				
+			if ( !lwValid ) goto runscript_invalid_lweapon; //Huzzah, for random jumps.
 			int lwpn_index = LwpnH::getLWeaponIndex(i);
-			//ri = &(lweaponScriptData[i]);
+			
 			ri = &(lweaponScriptData[LwpnH::getLWeaponIndex(i)]);
+		        curscript = lwpnscripts[Lwpns.spr(LwpnH::getLWeaponIndex(i))->weaponscript];
+			
+		        stack = &(Lwpns.spr(LwpnH::getLWeaponIndex(i))->stack);
+			weapon *wa = (weapon*)Lwpns.spr(LwpnH::getLWeaponIndex(i));
+		        ri->lwpn = wa->getUID();
 			//weapon *w = (weapon*)Lwpns.spr(i);
 			//curscript = lwpnscripts[script];
-			curscript = lwpnscripts[Lwpns.spr(LwpnH::getLWeaponIndex(i))->weaponscript];
-			
+			//ri = &(lweaponScriptData[i]);
 			//Z_scripterrlog("FFScript is trying to run lweapon script: %d\n", curscript);
 			//for ( int q = 0; q < 256; q++ )
 			//{
@@ -14869,15 +14892,15 @@ int run_script(const byte type, const word script, const long i)
 				
 			//}
 			
-			stack = &(Lwpns.spr(LwpnH::getLWeaponIndex(i))->stack);
+			
 			//stack = &(w->stack);
 			//for ( int q = 0; q < 256; q++ )
 			//{
 			//	al_trace("Current LWeapon Stack Instruction is: %d\n", stack[q]);
 			//}
 			//ri->lwpn = Lwpns.spr(i)->getUID();
-			weapon *wa = (weapon*)Lwpns.spr(LwpnH::getLWeaponIndex(i));
-			ri->lwpn = wa->getUID();
+			
+			
 			//i; //Lwpns.spr(LwpnH::getLWeaponIndex(i))->getUID();
 			Z_scripterrlog("Trying to run an lw script. ri->lwpn is: %d\n", ri->lwpn);
 			Z_scripterrlog("Trying to run an lw script. Script ID passed is: %d\n", script);
@@ -16965,6 +16988,7 @@ int run_script(const byte type, const word script, const long i)
     
     if(scommand == 0xFFFF) //Quit/command list end reached/bad command
     {
+	runscript_invalid_lweapon:
         switch(type)
         {
 		case SCRIPT_FFC:
@@ -17017,6 +17041,18 @@ int run_script(const byte type, const word script, const long i)
 			//Lwpns.spr(i)->weaponscript = 0;
 			Z_scripterrlog("Cleaning up a script weapon, ID: %d\n",i);
 			Z_scripterrlog("Cleaning up a script weapon, ri->lwpn: %d\n",ri->lwpn);
+			 bool lwValid = false;
+		        for ( int q = 0; q < Lwpns.Count(); q++ )
+		        {
+				if ( Lwpns.spr(q)->getUID() == i ) //if we match the UID
+				{
+					Z_scripterrlog("Matched a valid sprite in run_script(), inside ffscript.cpp for lweapon UID (%d)\n", i);
+					lwValid = true;
+					break;
+				}
+			}
+				
+			if ( !lwValid ) goto runscript_invalid_lweapon_cleanup; //Huzzah, for random jumps.
 			Lwpns.spr(LwpnH::getLWeaponIndex(i))->doscript = 0;
 			Lwpns.spr(LwpnH::getLWeaponIndex(i))->weaponscript = 0;
 			
@@ -17042,8 +17078,16 @@ int run_script(const byte type, const word script, const long i)
     remove_int(update_script_counter);
 #endif
     
+   
     
     return 0;
+    
+    //random jump point for cleanups
+     runscript_invalid_lweapon_cleanup: 
+     scommand = 0xFFFF;
+     //ri->pc = 0; //What is NULL here?
+     return 0;
+     
 }
 
 //This keeps ffc scripts running beyond the first frame. 
@@ -18615,10 +18659,19 @@ FFScript::FFScript()
 */
 void FFScript::init()
 {
+	
+	for ( int q = 0; q < versiontypesLAST; q++ ) quest_format[q] = 0;
 	coreflags = 0;
 	for ( int q = 0; q < UID_TYPES; ++q ) { script_UIDs[q] = 0; }
 	//for ( int q = 0; q < 512; q++ ) FF_rules[q] = 0;
-	setFFRules(); //copy the quest rules over. 
+	for ( int q = 0; q < FFRULES_SIZE; q++ ) FF_rules[q] = 0;
+	FF_gravity = 0;
+	FF_terminalv = 0;
+	FF_msg_speed = 0;
+	FF_transition_type = 0;
+	FF_jump_link_layer_threshold = 0;
+	FF_link_swim_speed = 0;
+	 
 	long usr_midi_volume = usr_digi_volume = usr_sfx_volume = usr_music_volume = usr_panstyle = 0;
 	FF_link_tile = 0; FF_link_action = 0;
 	for ( int q = 0; q < 4; q++ ) 
@@ -18629,6 +18682,10 @@ void FFScript::init()
 		FF_eweapon_removal_bounds[q] = 0; 
 		FF_lweapon_removal_bounds[q] = 0;
 	}
+	for ( int q = 0; q < 2; q++ ) passive_subscreen_offsets[q] = 0;
+	active_subscreen_scrollspeed_adjustment = 0;
+	subscreen_scroll_speed = 0;
+	for ( int q = 0; q < MAXITEMS; q++ ) item_messages_played[q] = 0;
 	for ( int q = 0; q < FFSCRIPTCLASS_CLOCKS; q++ )
 	{
 		FF_clocks[q] = 0;
@@ -18643,6 +18700,7 @@ void FFScript::init()
 	}
 	subscreen_scroll_speed = 0; //make a define for a default and read quest override! -Z
 	kb_typing_mode = false;
+	setFFRules(); //copy the quest rules over.
 	//clearRunningItemScripts();
 }
 
@@ -19271,7 +19329,7 @@ void FFScript::clearRunningItemScripts()
 
 bool FFScript::newScriptEngine()
 {
-	itemScriptEngine();
+	//itemScriptEngine();
 	//lweaponScriptEngine();
 	advanceframe(true);
 	return false;
@@ -19288,23 +19346,23 @@ void FFScript::lweaponScriptEngine()
 		if ( wp->Dead() ) continue;
 		if ( Lwpns.spr(q)->weaponscript == 0 ) continue;
 		if ( Lwpns.spr(q)->doscript == 0 ) continue;
-		switch(Lwpns.spr(q)->id)
+		if ( Lwpns.spr(q)->id == wBeam )
 		{
-		    case wBeam:
-		    case wRefBeam:
-		    {
 			weapon *wa = (weapon*)Lwpns.spr(q);
-			if ( wa->Dead() ) break;
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
 					//memset(w->stack, 0xFFFF, sizeof(w->stack));
-					break;
+					continue;
 				}
+				
 				else
 				{
 					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
@@ -19312,12 +19370,13 @@ void FFScript::lweaponScriptEngine()
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
 					ri->lwpn = w->getUID();
-					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
 				}
+				*/
 			}
-			break;
-		    }
-			
+		}
+		/*	
 		    case wWhistle:
 		    {
 			weapon *wa = (weapon*)Lwpns.spr(q);
@@ -19343,24 +19402,22 @@ void FFScript::lweaponScriptEngine()
 			}
 			break;
 		    }
-			
-		    case wWind:
-		    {
-			break;
-		    }
-		    
-		    case wFire:
-		    {
+			*/
+		if ( Lwpns.spr(q)->id == wWind ) { continue; }
+		
+		if ( Lwpns.spr(q)->id == wFire )
+		{
 			weapon *wa = (weapon*)Lwpns.spr(q);
-			if ( wa->Dead() ) break;
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
-					break;
+					continue;
 				}
 				else
 				{
@@ -19369,12 +19426,15 @@ void FFScript::lweaponScriptEngine()
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);
 					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
 					ri->lwpn = w->getUID();
-					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());	
+					continue;
 				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
 			}
-			break;
-		    }
-		    
+		
+		}
+		/*
 		    case wLitBomb:
 		    case wBomb:
 		    case ewLitBomb:
@@ -19386,19 +19446,20 @@ void FFScript::lweaponScriptEngine()
 		    {
 			break;
 		    }
-		    
-		    case wArrow:
-		    {
+		*/
+		if ( Lwpns.spr(q)->id == wArrow )
+		{
 			weapon *wa = (weapon*)Lwpns.spr(q);
-			if ( wa->Dead() ) break;
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
-					break;
+					continue;
 				}
 				else
 				{
@@ -19407,13 +19468,16 @@ void FFScript::lweaponScriptEngine()
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
 					ri->lwpn = w->getUID();					
-					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());	
+					continue;
 				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
 			}
 			
-			break;
-		    }
-		    
+		
+		}
+		    /*
 		    case wSSparkle:
 		    {
 			break;
@@ -19423,18 +19487,20 @@ void FFScript::lweaponScriptEngine()
 		    {
 			break;
 		    }
-		    case wBait:
-		    {
+		*/
+		if ( Lwpns.spr(q)->id == wBait )
+		{
 			weapon *wa = (weapon*)Lwpns.spr(q);
-			if ( wa->Dead() ) break;
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
-					break;
+					continue;
 				}
 				else
 				{
@@ -19443,23 +19509,26 @@ void FFScript::lweaponScriptEngine()
 				    //ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
 				    //ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
 				    ri->lwpn = w->getUID();
-				    ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+				    ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());	
+				    continue;
 				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
 			}
-			break;
-		    }
-		    case wBrang:
-		    {
+		}
+		if ( Lwpns.spr(q)->id == wBrang )
+		{
 			weapon *wa = (weapon*)Lwpns.spr(q);
-			if ( wa->Dead() ) break;
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
-					break;
+					continue;
 				}
 				else
 				{
@@ -19468,14 +19537,15 @@ void FFScript::lweaponScriptEngine()
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
 					ri->lwpn = w->getUID();
-					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
 				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
 			}
 		
-			
-			break;
 		    }
-		    
+		    /*
 		    case wHookshot:
 		    {
 			break;
@@ -19489,37 +19559,44 @@ void FFScript::lweaponScriptEngine()
 			break;
 		    }
 		    case wRefMagic:
-		    case wMagic:
-		    {
+		    */
+		if ( Lwpns.spr(q)->id == wMagic )
+		{
 			//:Weapon Only
+			weapon *wa = (weapon*)Lwpns.spr(q);
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
-					break;
+					continue;
 				}
 				else
 				{
 					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
-					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
 					ri->lwpn = w->getUID();
-					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
 				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
 			}
-			break;
-		    }
-		    
+		}
+		    /*
 		    case wRefFireball:
 		    {
 			weapon *wa = (weapon*)Lwpns.spr(q);
 			if ( wa->Dead() ) break;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 && wa->ScriptGenerated ) 
 			{
+			
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
@@ -19539,41 +19616,40 @@ void FFScript::lweaponScriptEngine()
 			}
 			break;
 		    }
-		    case wScript1:
-		    case wScript2:
-		    case wScript3:
-		    case wScript4:
-		    case wScript5:
-		    case wScript6:
-		    case wScript7:
-		    case wScript8:
-		    case wScript9:
-		    case wScript10:
-		    {
+		    */
+		if ( Lwpns.spr(q)->id == wScript1 || Lwpns.spr(q)->id == wScript2 || Lwpns.spr(q)->id == wScript3
+				|| Lwpns.spr(q)->id == wScript4 || Lwpns.spr(q)->id == wScript5 || Lwpns.spr(q)->id == wScript6
+				|| Lwpns.spr(q)->id == wScript7 || Lwpns.spr(q)->id == wScript8 || Lwpns.spr(q)->id == wScript9
+				|| Lwpns.spr(q)->id == wScript10
+		
+		)
+		{
+			
 			weapon *wa = (weapon*)Lwpns.spr(q);
-			//if ( wa->Dead() ) break;
+			if ( wa->Dead() ) continue;
 			if ( Lwpns.spr(q)->doscript && Lwpns.spr(q)->weaponscript > 0 ) 
 			{
+				/*
 				weapon *w = (weapon*)Lwpns.spr(q);
 				if ( w->Dead() )
 				{
 					Lwpns.spr(q)->doscript = 0;
 					Lwpns.spr(q)->weaponscript = 0;
-					break;
+					continue;
 				}
 				else
 				{
 					//al_trace("Found an lweapon index of: %d, when trying to run an lweapon script.\n",w_index);
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, index);		
 					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, Lwpns.spr(q)->getUID());		
-					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);	
+					//ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, ri->lwpn);		
 					ri->lwpn = w->getUID();
-					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());		
+					ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, w->getUID());
+					continue;
 				}
+				*/
+				ZScriptVersion::RunScript(SCRIPT_LWPN, Lwpns.spr(q)->weaponscript, wa->getUID());
 			}
-			break;
-		    }
-		    default: break;
 		}
 	}
 }
