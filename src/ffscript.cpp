@@ -19279,6 +19279,7 @@ bool FFScript::newScriptEngine()
 
 void FFScript::lweaponScriptEngine()
 {
+	return;
 	for ( int q = 0; q < Lwpns.Count(); q++ )
 	{
 		//ri->lwpn = Lwpns.spr(q)->getUID();
