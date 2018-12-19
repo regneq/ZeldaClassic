@@ -186,10 +186,10 @@ void clear_global_stack()
     memset(global_stack, 0, sizeof(global_stack));
 }
 
-void clear_link_stack(int i)
+void clear_link_stack()
 {
-    //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
-    memset(link_stack, 0, sizeof(link_stack));
+    memset(link_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+    //memset(link_stack, 0, sizeof(link_stack));
 }
 
 /*void clear_link_stack(int i)
@@ -15060,11 +15060,11 @@ int run_script(const byte type, const word script, const long i)
 		    
 		
 		//stack = &(link_stack[i]);
-		stack = &(link_stack);
-		for ( int q = 0; q < 1024; q++ )
-		{
-			al_trace("Link script (%d), command (%d): %d\n", script, q, linkscripts[script][q].command);
-		}
+		stack = &link_stack;
+		//for ( int q = 0; q < 1024; q++ )
+		//{
+		//	al_trace("Link script (%d), command (%d): %d\n", script, q, linkscripts[script][q].command);
+		//}
 	    }
 	    break;
 	    
@@ -17064,25 +17064,27 @@ int run_script(const byte type, const word script, const long i)
 		{
 			Z_scripterrlog("Closing Link Script (script == %d)\n", script);
 			//Z_scripterrlog("Closing Link Script (script == %d)\n", script);
-			if ( script == 0 ) 
-			{
-				Z_scripterrlog("Closing Link Script (script == %d)\n", script);
-				link_doinitscript = 0;
+			//if ( script == 0 ) 
+			//{
+			//	Z_scripterrlog("Closing Link Script (script == %d)\n", script);
+			//	link_doinitscript = 0;
 				
-				linkScriptData.Clear();
-				memset(link_stack, 0, sizeof(link_stack));
-				break;
-			}
+			//	linkScriptData.Clear();
+				//memset(link_stack, 0, sizeof(link_stack));
+			//	for ( int q = 0; q < 1024; q++ ) link_stack[q] = 0xFFFF;
+			//	break;/
+			//}
 				
 			//if ( script == 1 ) 
 			//{
-			//	link_doscript = 0;
+				link_doscript = 0;
+				 break;
 			//	break;
 			//}
 			//linkScriptData[i].Clear();
 			//clear_link_stack();
 		}
-		    break;
+		    //break;
 		    
 		case SCRIPT_ITEM:
 		{
