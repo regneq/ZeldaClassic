@@ -15040,6 +15040,7 @@ int run_script(const byte type, const word script, const long i)
 		
 		curscript = linkscripts[script];
 		//Link has special stacks for his scripts. Choose the correct slot. 
+		    /*
 		if ( script == LINK_SCRIPT_INIT )
 		{
 			stack = &link_stack[LINK_STACK_INIT]; //Runs for one frame, only. 
@@ -15052,7 +15053,9 @@ int run_script(const byte type, const word script, const long i)
 		{
 			stack = &link_stack[LINK_STACK_ACTIVE];
 		}
+		    */
 		    //
+		stack = &link_stack[LINK_STACK_ACTIVE];
 	    }
 	    break;
 	    

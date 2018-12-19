@@ -20169,13 +20169,42 @@ int onCompileScript()
                 }
                 for(int i = 0; i < NUMSCRIPTLINK-1; i++)
                 {
+		    char buffer[64];
+                    const char* format;
+                    const char* asterisks;
+			
+		    switch(i)
+                    {
+                        case 0: format="Init: %s%s%s"; break;
+                        case 1: format="Active: %s%s%s"; break;
+                        case 2: format="onDeath: %s%s%s"; break;
+			default: format = "%s%s%s"; break;
+                    }
+		    
+		    /*
+		    
+		        if(globalmap[i].second == "")
+                        asterisks="";
+                    else if(scripts.find(globalmap[i].second) != scripts.end())
+                        asterisks="";
+                    else // Unloaded
+                        asterisks="**";
+                    snprintf(buffer, 50, format, asterisks, globalmap[i].second.c_str(), asterisks);
+                    globalmap[i].first=buffer;
+		    
+		    */
                     if(linkmap[i].second == "")
-                        sprintf(temp, "Slot %d: <none>", i+1);
+                        //sprintf(temp, "Slot %d: <none>", i+1);
+			asterisks="";
                     else if(scripts.find(linkmap[i].second) != scripts.end())
-                        sprintf(temp, "Slot %d: %s", i+1, linkmap[i].second.c_str());
+                        //sprintf(temp, "Slot %d: %s", i+1, linkmap[i].second.c_str());
+			asterisks="";
                     else // Previously loaded script not found
-                        sprintf(temp, "Slot %d: **%s**", i+1, linkmap[i].second.c_str());
-                    linkmap[i].first = temp;
+                        //sprintf(temp, "Slot %d: **%s**", i+1, linkmap[i].second.c_str());
+			asterisks="**";
+		    
+		    snprintf(buffer, 50, format, asterisks, linkmap[i].second.c_str(), asterisks);
+                    linkmap[i].first = buffer;
                 }
                 for(int i = 0; i < NUMSCRIPTSCREEN-1; i++)
                 {

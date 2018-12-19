@@ -1882,10 +1882,17 @@ int init_game()
     {
         memset(game->screen_d, 0, MAXDMAPS * 64 * 8 * sizeof(long));
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_INIT);
+	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
     }
     else
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_CONTINUE); //Do this after global arrays have been loaded
+    }
+    
+    while ( link_doscript ) 
+    {
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+	advanceframe(true);
     }
     
     if ( Link.getDontDraw() < 2 ) { Link.setDontDraw(0); }

@@ -887,7 +887,7 @@ void LinkClass::init()
 	
 	//Run Link's Init Script
 	link_doscript = 1;
-	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 
 }
 
