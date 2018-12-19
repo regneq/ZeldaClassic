@@ -136,7 +136,9 @@ refInfo linkScriptData;
 refInfo screenScriptData;
 refInfo dmapScriptData;
 word g_doscript = 1;
+word link_doscript = 1;
 bool global_wait = false;
+bool link_waitdraw = false;
 
 //Sprite script data
 refInfo itemScriptData[256];
@@ -157,9 +159,15 @@ refInfo itemactiveScriptData[256];
 #define GLOBAL_STACK_LINK 3
 #define GLOBAL_STACK_MAX 4
 
+#define LINK_STACK_INIT 0
+#define LINK_STACK_ACTIVE 1
+#define LINK_STACK_DEATH 2
+#define LINK_STACK_MAX 3
+
 long(*stack)[MAX_SCRIPT_REGISTERS] = NULL;
 long ffc_stack[32][MAX_SCRIPT_REGISTERS];
 long global_stack[GLOBAL_STACK_MAX][MAX_SCRIPT_REGISTERS];
+long link_stack[LINK_STACK_MAX][MAX_SCRIPT_REGISTERS];
 long item_stack[256][MAX_SCRIPT_REGISTERS];
 long ffmisc[32][16];
 refInfo ffcScriptData[32];
@@ -173,6 +181,11 @@ void clear_global_stack()
 {
     //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
     memset(global_stack, 0, sizeof(global_stack));
+}
+
+void FFScript::clear_link_stack()
+{
+	memset(link_stack, 0, sizeof(link_stack));
 }
 
 //ScriptHelper
@@ -15023,10 +15036,22 @@ int run_script(const byte type, const word script, const long i)
 	    case SCRIPT_LINK:
 	    {
 		ri = &linkScriptData;
-		    //should this become ri = &(globalScriptData[link_slot]);
+		    //should this become ri = &(globalScriptData[global_slot]);
 		
 		curscript = linkscripts[script];
-		stack = &global_stack[GLOBAL_STACK_LINK];
+		//Link has special stacks for his scripts. Choose the correct slot. 
+		if ( script == LINK_SCRIPT_INIT )
+		{
+			stack = &link_stack[LINK_STACK_INIT]; //Runs for one frame, only. 
+		}
+		else if ( script == LINK_SCRIPT_DEATH )
+		{
+			stack = &link_stack[LINK_STACK_DEATH];
+		}
+		else	
+		{
+			stack = &link_stack[LINK_STACK_ACTIVE];
+		}
 		    //
 	    }
 	    break;
@@ -17000,6 +17025,10 @@ int run_script(const byte type, const word script, const long i)
         case SCRIPT_GLOBAL:
             global_wait = true;
             break;
+	
+	case SCRIPT_LINK:
+            link_waitdraw = true;
+            break;
             
         default:
             Z_scripterrlog("Waitdraw can only be used in the active global script\n");
@@ -17017,6 +17046,10 @@ int run_script(const byte type, const word script, const long i)
 		    
 		case SCRIPT_GLOBAL:
 		    g_doscript = 0;
+		    break;
+		    
+		case SCRIPT_LINK:
+		    link_doscript = 0;
 		    break;
 		    
 		case SCRIPT_ITEM:

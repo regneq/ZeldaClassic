@@ -395,7 +395,9 @@ extern refInfo linkScriptData;
 extern refInfo screenScriptData;
 extern refInfo dmapScriptData;
 extern word g_doscript;
+extern word link_doscript;
 extern bool global_wait;
+extern bool link_waitdraw;
 
 //ZScript array storage
 std::vector<ZScriptArray> globalRAM;
@@ -460,6 +462,8 @@ void initZScriptGlobalRAM()
     globalScriptData.Clear();
     clear_global_stack();
 }
+
+//Do we need to do this for Link?
 
 dword getNumGlobalArrays()
 {
@@ -1764,7 +1768,7 @@ int init_game()
     
     initZScriptArrayRAM(firstplay);
     initZScriptGlobalRAM();
-    
+    FFCore.clear_link_stack(); //Initialise all of Link's script stacks.
     //Run the init script or the oncontinue script with the highest priority.
     //GLobal Script Init ~Init
 /*
@@ -1780,6 +1784,7 @@ int init_game()
     }
 */
     global_wait=false;
+    link_waitdraw = false;
     
     //loadscr(0,currscr,up);
     loadscr(0,currdmap,currscr,-1,false);
@@ -2782,6 +2787,7 @@ void game_loop()
         update_freeform_combos();
     }
     
+    //Global script before waitdraw.
     // Arbitrary Rule 637: neither 'freeze' nor 'freezeff' freeze the global script.
     if(!freezemsg && g_doscript)
     {

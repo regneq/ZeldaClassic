@@ -3933,6 +3933,11 @@ extern void removeFromItemCache(int itemid);
 #define GLOBAL_SCRIPT_END		2
 #define GLOBAL_SCRIPT_CONTINUE 	3
 
+#define LINK_SCRIPT_INIT 0
+#define LINK_SCRIPT_ACTIVE 1
+#define LINK_SCRIPT_DEATH 2
+
+
 //Link Internal Flags
 #define LF_PAID_SWORD_COST		0x01
 #define LF_PAID_WAND_COST		0x02

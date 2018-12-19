@@ -51,6 +51,7 @@ extern int draw_screen_clip_rect_y1;
 extern int draw_screen_clip_rect_y2;
 //extern bool draw_screen_clip_rect_show_link;
 extern bool global_wait;
+extern bool link_waitdraw;
 
 int link_count = -1;
 int link_animation_speed = 1; //lower is faster animation
@@ -66,6 +67,7 @@ int directItemB = -1;
 int directWpn = -1;
 int whistleitem=-1;
 extern word g_doscript;
+extern word link_doscript;
 
 void playLevelMusic();
 
@@ -882,6 +884,10 @@ void LinkClass::init()
 	for ( int q = 0; q < NUM_HIT_TYPES_USED; q++ ) lastHitBy[q][0] = 0; 
 	for ( int q = 0; q < NUM_HIT_TYPES_USED; q++ ) lastHitBy[q][1] = 0; 
 	for ( int q = 0; q < wMax; q++ ) defence[q] = 0; //we will need to have a Link section in the quest load/save code! -Z
+	
+	//Run Link's Init Script
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+
 }
 
 void LinkClass::draw_under(BITMAP* dest)
@@ -4892,6 +4898,11 @@ bool LinkClass::animate(int)
     checkstab();
     
     check_conveyor();
+    
+    //Run Link's Active Script Here
+    
+    ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
+
     PhantomsCleanup();
     
     return false;
@@ -13605,7 +13616,7 @@ fade((specialcave > 0) ? (specialcave >= GUYCAVE) ? 10 : 11 : currcset, true, fa
             }
         }
         //FFScript.OnWaitdraw()
-        if(global_wait)
+        if(global_wait || link_waitdraw)
         {
             // And now to injure your other eye
             lastaction=action;
@@ -13613,6 +13624,7 @@ fade((specialcave > 0) ? (specialcave >= GUYCAVE) ? 10 : 11 : currcset, true, fa
             ZScriptVersion::RunScrollingScript(scrolldir, cx, sx, sy, end_frames);
             action=lastaction; FFCore.setLinkAction(lastaction);
             global_wait=false;
+            link_waitdraw=false;
         }
         
         //Drawing
@@ -15848,6 +15860,9 @@ void LinkClass::gameover()
 	int f=0;
     
 	action=none; FFCore.setLinkAction(dying); //mayhaps a new action of 'gameover'? -Z
+	
+	//Run Link Death Script Here! --Z
+	
 	Playing=false;
     
 	if(!debug_enabled)

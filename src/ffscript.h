@@ -162,6 +162,7 @@ void clearRunningItemScripts();
 bool itemScriptEngine();
 void lweaponScriptEngine();
 bool newScriptEngine();
+void clear_link_stack();
 
 /*
 long getQuestHeaderInfo(int type)
