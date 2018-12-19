@@ -68,6 +68,7 @@ int directWpn = -1;
 int whistleitem=-1;
 extern word g_doscript;
 extern word link_doscript;
+extern word link_doinitscript;
 
 void playLevelMusic();
 
@@ -13156,9 +13157,11 @@ void LinkClass::run_scrolling_script(int scrolldir, int cx, int sx, int sy, bool
     
     if(g_doscript)
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
+    Z_scripterrlog("Link.cpp line 13160; link_doscript is: %s\n", link_doscript ? "true" : "false");
     if (link_doscript)
+    {
 	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE); 
-	
+    }
         
     x = storex, y = storey;
 }
@@ -13344,6 +13347,7 @@ void LinkClass::scrollscr(int scrolldir, int destscr, int destdmap)
     
     lstep = (lstep + 6) % 12;
     cx = scx;
+    Z_scripterrlog("Link.cpp line 13350; link_doscript is: %s\n", link_doscript ? "true" : "false");
     
     if(global_wait)
     {

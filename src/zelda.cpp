@@ -401,6 +401,7 @@ extern refInfo screenScriptData;
 extern refInfo dmapScriptData;
 extern word g_doscript;
 extern word link_doscript;
+extern word link_doinitscript;
 extern bool global_wait;
 extern bool link_waitdraw;
 
@@ -1905,13 +1906,18 @@ int init_game()
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_INIT);
 	
 	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
-	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+	Z_scripterrlog("zelda.cpp line 1909; link_doinitscript is: %s\n", link_doinitscript ? "true" : "false");
+    
+	if ( link_doinitscript )
+		ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 	
     }
     else
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_CONTINUE); //Do this after global arrays have been loaded
-        ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+        Z_scripterrlog("zelda.cpp line 1918; link_doinitscript is: %s\n", link_doinitscript ? "true" : "false");
+	if ( link_doinitscript )
+		ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
     }
     
     //while ( link_doscript ) 
@@ -2847,17 +2853,21 @@ void game_loop()
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
     }
-    if(!freezemsg && link_doscript)
+    Z_scripterrlog("zelda.cpp line 2586; link_doscript is: %s\n", link_doscript ? "true" : "false");
+    
+    if(!freezemsg && !link_doinitscript && link_doscript)
     {
 	//for ( int q = 0; q < 3; q++ )
 	//{
 	//	ri = &(linkScriptData[q]);
 	//	ri->Clear();
 	//}
-	ri = &(linkScriptData);
-	ri->Clear();
+	//ri = &(linkScriptData);
+	//ri->Clear();
 	//Z_scripterrlog("Running Link's Active Script\n");
         //ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE,1);
+	ri = &(linkScriptData);
+	ri->Clear();
         ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
     }
     
@@ -2977,8 +2987,13 @@ void game_loop()
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
         global_wait=false;
     }
-    if ( link_waitdraw ) 
+    
+    Z_scripterrlog("zelda.cpp line 2981; link_doscript is: %s\n", link_doscript ? "true" : "false");
+    
+    if ( link_waitdraw && !link_doinitscript ) 
     {
+	ri = &(linkScriptData);
+	ri->Clear();
 	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);    
 	link_waitdraw = false;
     }

@@ -19770,7 +19770,7 @@ const char *linkscriptlist2(int index, int *list_size)
     if(index>=0)
     {
         char buf[20];
-        bound(index,0,3);
+        bound(index,0,1);
         
         if(linkmap[index].second=="")
             strcpy(buf, "<none>");
@@ -19779,15 +19779,15 @@ const char *linkscriptlist2(int index, int *list_size)
             strncpy(buf, linkmap[index].second.c_str(), 19);
             buf[19]='\0';
         }
-	
+	/*
 	if(index==0)
             sprintf(linkscript_str_buf2,"Init: %s", buf);
             
         if(index==1)
             sprintf(linkscript_str_buf2,"Active: %s", buf);
-	
-	if(index==2)
-            sprintf(linkscript_str_buf2,"Death: %s", buf);
+	*/
+	//if(index==2)
+        //    sprintf(linkscript_str_buf2,"Death: %s", buf);
             
         
         //sprintf(linkscript_str_buf2,"%d: %s",index+1, buf);
@@ -20169,6 +20169,7 @@ int onCompileScript()
                 }
                 for(int i = 0; i < NUMSCRIPTLINK-1; i++)
                 {
+		/*
 		    char buffer[64];
                     const char* format;
                     const char* asterisks;
@@ -20181,18 +20182,6 @@ int onCompileScript()
 			default: format = "%s%s%s"; break;
                     }
 		    
-		    /*
-		    
-		        if(globalmap[i].second == "")
-                        asterisks="";
-                    else if(scripts.find(globalmap[i].second) != scripts.end())
-                        asterisks="";
-                    else // Unloaded
-                        asterisks="**";
-                    snprintf(buffer, 50, format, asterisks, globalmap[i].second.c_str(), asterisks);
-                    globalmap[i].first=buffer;
-		    
-		    */
                     if(linkmap[i].second == "")
                         //sprintf(temp, "Slot %d: <none>", i+1);
 			asterisks="";
@@ -20205,6 +20194,16 @@ int onCompileScript()
 		    
 		    snprintf(buffer, 50, format, asterisks, linkmap[i].second.c_str(), asterisks);
                     linkmap[i].first = buffer;
+		    */
+		    
+		    if(linkmap[i].second == "")
+                        sprintf(temp, "Slot %d: <none>", i+1);
+                    else if(scripts.find(linkmap[i].second) != scripts.end())
+                        sprintf(temp, "Slot %d: %s", i+1, linkmap[i].second.c_str());
+                    else // Previously loaded script not found
+                        sprintf(temp, "Slot %d: **%s**", i+1, linkmap[i].second.c_str());
+                    linkmap[i].first = temp;
+		    
                 }
                 for(int i = 0; i < NUMSCRIPTSCREEN-1; i++)
                 {

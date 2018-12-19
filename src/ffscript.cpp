@@ -138,6 +138,7 @@ refInfo screenScriptData;
 refInfo dmapScriptData;
 word g_doscript = 1;
 word link_doscript = 1;
+word link_doinitscript = 1;
 bool global_wait = false;
 bool link_waitdraw = false;
 
@@ -15049,6 +15050,7 @@ int run_script(const byte type, const word script, const long i)
 	    
 	    case SCRIPT_LINK:
 	    {
+		Z_scripterrlog("Trying to run Link Script (%d)\n",script);
 		//ri = &linkScriptData[i];
 		ri = &linkScriptData;
 		    //should this become ri = &(globalScriptData[global_slot]);
@@ -15059,6 +15061,10 @@ int run_script(const byte type, const word script, const long i)
 		
 		//stack = &(link_stack[i]);
 		stack = &(link_stack);
+		for ( int q = 0; q < 1024; q++ )
+		{
+			al_trace("Link script (%d), command (%d): %d\n", script, q, linkscripts[script][q].command);
+		}
 	    }
 	    break;
 	    
@@ -17055,9 +17061,27 @@ int run_script(const byte type, const word script, const long i)
 		    break;
 		    
 		case SCRIPT_LINK:
-		    link_doscript = 0;
+		{
+			Z_scripterrlog("Closing Link Script (script == %d)\n", script);
+			//Z_scripterrlog("Closing Link Script (script == %d)\n", script);
+			if ( script == 0 ) 
+			{
+				Z_scripterrlog("Closing Link Script (script == %d)\n", script);
+				link_doinitscript = 0;
+				
+				linkScriptData.Clear();
+				memset(link_stack, 0, sizeof(link_stack));
+				break;
+			}
+				
+			//if ( script == 1 ) 
+			//{
+			//	link_doscript = 0;
+			//	break;
+			//}
 			//linkScriptData[i].Clear();
 			//clear_link_stack();
+		}
 		    break;
 		    
 		case SCRIPT_ITEM:
