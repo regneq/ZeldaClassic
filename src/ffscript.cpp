@@ -132,7 +132,8 @@ word curScriptNum;
 
 //Global script data
 refInfo globalScriptData;
-refInfo linkScriptData[3];
+//refInfo linkScriptData[3];
+refInfo linkScriptData;
 refInfo screenScriptData;
 refInfo dmapScriptData;
 word g_doscript = 1;
@@ -167,7 +168,8 @@ refInfo itemactiveScriptData[256];
 long(*stack)[MAX_SCRIPT_REGISTERS] = NULL;
 long ffc_stack[32][MAX_SCRIPT_REGISTERS];
 long global_stack[GLOBAL_STACK_MAX][MAX_SCRIPT_REGISTERS];
-long link_stack[LINK_STACK_MAX][MAX_SCRIPT_REGISTERS];
+//long link_stack[LINK_STACK_MAX][MAX_SCRIPT_REGISTERS];
+long link_stack[MAX_SCRIPT_REGISTERS];
 long item_stack[256][MAX_SCRIPT_REGISTERS];
 long ffmisc[32][16];
 refInfo ffcScriptData[32];
@@ -186,9 +188,15 @@ void clear_global_stack()
 void clear_link_stack(int i)
 {
     //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
-    memset(link_stack[i], 0, sizeof(link_stack[i]));
+    memset(link_stack, 0, sizeof(link_stack));
 }
 
+/*void clear_link_stack(int i)
+{
+    //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+    memset(link_stack[i], 0, sizeof(link_stack[i]));
+}
+*/
 void FFScript::clear_link_stack()
 {
 	memset(link_stack, 0, sizeof(link_stack));
@@ -15041,14 +15049,16 @@ int run_script(const byte type, const word script, const long i)
 	    
 	    case SCRIPT_LINK:
 	    {
-		ri = &linkScriptData[i];
+		//ri = &linkScriptData[i];
+		ri = &linkScriptData;
 		    //should this become ri = &(globalScriptData[global_slot]);
 		
 		curscript = linkscripts[script];
 		//Link has special stacks for his scripts. Choose the correct slot. 
 		    
 		
-		stack = &(link_stack[i]);
+		//stack = &(link_stack[i]);
+		stack = &(link_stack);
 	    }
 	    break;
 	    

@@ -55,7 +55,8 @@ extern ZModule zcm; //modules
 extern zcmodule moduledata;
 extern char runningItemScripts[256];
 extern refInfo *ri;
-extern long link_stack[4][MAX_SCRIPT_REGISTERS];
+//extern long link_stack[4][MAX_SCRIPT_REGISTERS];
+extern long link_stack[MAX_SCRIPT_REGISTERS];
 #include "init.h"
 #include <assert.h>
 #include "zc_array.h"
@@ -394,7 +395,8 @@ ffscript *screenscripts[NUMSCRIPTSCREEN];
 ffscript *dmapscripts[NUMSCRIPTSDMAP];
 
 extern refInfo globalScriptData;
-extern refInfo linkScriptData[3];
+//extern refInfo linkScriptData[3];
+extern refInfo linkScriptData;
 extern refInfo screenScriptData;
 extern refInfo dmapScriptData;
 extern word g_doscript;
@@ -1888,19 +1890,22 @@ int init_game()
     if(firstplay)
     {
 	zc_player_is_initialised = true;
-	for ( int q = 0; q < 3; q++ )
-	{
-		ri = &(linkScriptData[q]);
-		ri->Clear();
-	}
-	memset(link_stack[0], 0, sizeof(link_stack[0]));
-	memset(link_stack[1], 0, sizeof(link_stack[1]));
-	memset(link_stack[2], 0, sizeof(link_stack[2]));
-	memset(link_stack[3], 0, sizeof(link_stack[3]));
+	//for ( int q = 0; q < 3; q++ )
+	//{
+	//	ri = &(linkScriptData[q]);
+	//	ri->Clear();
+	//}
+	ri = &(linkScriptData);
+	ri->Clear();
+	memset(link_stack, 0, sizeof(link_stack));
+	//memset(link_stack[1], 0, sizeof(link_stack[1]));
+	//memset(link_stack[2], 0, sizeof(link_stack[2]));
+	//memset(link_stack[3], 0, sizeof(link_stack[3]));
         memset(game->screen_d, 0, MAXDMAPS * 64 * 8 * sizeof(long));
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_INIT);
 	
-	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
+	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 	
     }
     else
@@ -1913,16 +1918,20 @@ int init_game()
     if ( !zc_player_is_initialised )
     {
 	zc_player_is_initialised = true;
-	memset(link_stack[0], 0, sizeof(link_stack[0]));
-	memset(link_stack[1], 0, sizeof(link_stack[1]));
-	memset(link_stack[2], 0, sizeof(link_stack[2]));
-	memset(link_stack[3], 0, sizeof(link_stack[3]));
-	for ( int q = 0; q < 3; q++ )
-	{
-		ri = &(linkScriptData[q]);
-		ri->Clear();
-	}
-	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
+	memset(link_stack, 0, sizeof(link_stack));
+	//memset(link_stack[0], 0, sizeof(link_stack[0]));
+	//memset(link_stack[1], 0, sizeof(link_stack[1]));
+	//memset(link_stack[2], 0, sizeof(link_stack[2]));
+	//memset(link_stack[3], 0, sizeof(link_stack[3]));
+	//for ( int q = 0; q < 3; q++ )
+	//{
+	//	ri = &(linkScriptData[q]);
+	//	ri->Clear();
+	//}
+	ri = &(linkScriptData);
+	ri->Clear();
+	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 	
     }
     
@@ -2837,13 +2846,16 @@ void game_loop()
     }
     if(!freezemsg /*&& link_doscript*/)
     {
-	for ( int q = 0; q < 3; q++ )
-	{
-		ri = &(linkScriptData[q]);
-		ri->Clear();
-	}
+	//for ( int q = 0; q < 3; q++ )
+	//{
+	//	ri = &(linkScriptData[q]);
+	//	ri->Clear();
+	//}
+	ri = &(linkScriptData);
+	ri->Clear();
 	//Z_scripterrlog("Running Link's Active Script\n");
         //ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE,1);
+        ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
     }
     
     if(!freeze && !freezemsg)
