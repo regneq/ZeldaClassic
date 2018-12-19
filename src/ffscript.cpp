@@ -132,7 +132,7 @@ word curScriptNum;
 
 //Global script data
 refInfo globalScriptData;
-refInfo linkScriptData;
+refInfo linkScriptData[3];
 refInfo screenScriptData;
 refInfo dmapScriptData;
 word g_doscript = 1;
@@ -162,7 +162,7 @@ refInfo itemactiveScriptData[256];
 #define LINK_STACK_INIT 0
 #define LINK_STACK_ACTIVE 1
 #define LINK_STACK_DEATH 2
-#define LINK_STACK_MAX 3
+#define LINK_STACK_MAX 4
 
 long(*stack)[MAX_SCRIPT_REGISTERS] = NULL;
 long ffc_stack[32][MAX_SCRIPT_REGISTERS];
@@ -181,6 +181,12 @@ void clear_global_stack()
 {
     //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
     memset(global_stack, 0, sizeof(global_stack));
+}
+
+void clear_link_stack(int i)
+{
+    //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
+    memset(link_stack[i], 0, sizeof(link_stack[i]));
 }
 
 void FFScript::clear_link_stack()
@@ -15035,27 +15041,14 @@ int run_script(const byte type, const word script, const long i)
 	    
 	    case SCRIPT_LINK:
 	    {
-		ri = &linkScriptData;
+		ri = &linkScriptData[i];
 		    //should this become ri = &(globalScriptData[global_slot]);
 		
 		curscript = linkscripts[script];
 		//Link has special stacks for his scripts. Choose the correct slot. 
-		    /*
-		if ( script == LINK_SCRIPT_INIT )
-		{
-			stack = &link_stack[LINK_STACK_INIT]; //Runs for one frame, only. 
-		}
-		else if ( script == LINK_SCRIPT_DEATH )
-		{
-			stack = &link_stack[LINK_STACK_DEATH];
-		}
-		else	
-		{
-			stack = &link_stack[LINK_STACK_ACTIVE];
-		}
-		    */
-		    //
-		stack = &link_stack[LINK_STACK_ACTIVE];
+		    
+		
+		stack = &(link_stack[i]);
 	    }
 	    break;
 	    
@@ -17052,7 +17045,9 @@ int run_script(const byte type, const word script, const long i)
 		    break;
 		    
 		case SCRIPT_LINK:
-		    link_doscript = 0;
+		    //link_doscript = 0;
+			//linkScriptData[i].Clear();
+			//clear_link_stack();
 		    break;
 		    
 		case SCRIPT_ITEM:

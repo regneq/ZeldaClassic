@@ -54,6 +54,8 @@ extern FFScript FFCore; //the core script engine.
 extern ZModule zcm; //modules
 extern zcmodule moduledata;
 extern char runningItemScripts[256];
+extern refInfo *ri;
+extern long link_stack[4][MAX_SCRIPT_REGISTERS];
 #include "init.h"
 #include <assert.h>
 #include "zc_array.h"
@@ -91,6 +93,7 @@ int strike_hint_counter=0;
 int strike_hint_timer=0;
 int strike_hint;
 int slot_arg, slot_arg2;
+bool zc_player_is_initialised = false;
 char *SAVE_FILE = (char *)"zc.sav";
 
 CScriptDrawingCommands script_drawing_commands;
@@ -391,7 +394,7 @@ ffscript *screenscripts[NUMSCRIPTSCREEN];
 ffscript *dmapscripts[NUMSCRIPTSDMAP];
 
 extern refInfo globalScriptData;
-extern refInfo linkScriptData;
+extern refInfo linkScriptData[3];
 extern refInfo screenScriptData;
 extern refInfo dmapScriptData;
 extern word g_doscript;
@@ -985,6 +988,10 @@ void Z_scripterrlog(const char * const format,...)
             
         case SCRIPT_ITEM:
             al_trace("Item script %u (%s): ", curScriptNum, itemmap[curScriptNum-1].second.c_str());
+            break;
+	
+	case SCRIPT_LINK:
+            al_trace("Link script %u (%s): ", curScriptNum, linkmap[curScriptNum-1].second.c_str());
             break;
         }
         
@@ -1768,7 +1775,8 @@ int init_game()
     
     initZScriptArrayRAM(firstplay);
     initZScriptGlobalRAM();
-    FFCore.clear_link_stack(); //Initialise all of Link's script stacks.
+    
+    //clear_link_stack(); //Initialise all of Link's script stacks.
     //Run the init script or the oncontinue script with the highest priority.
     //GLobal Script Init ~Init
 /*
@@ -1877,23 +1885,49 @@ int init_game()
     map_bkgsfx(true);
     
     
-    
     if(firstplay)
     {
+	zc_player_is_initialised = true;
+	for ( int q = 0; q < 3; q++ )
+	{
+		ri = &(linkScriptData[q]);
+		ri->Clear();
+	}
+	memset(link_stack[0], 0, sizeof(link_stack[0]));
+	memset(link_stack[1], 0, sizeof(link_stack[1]));
+	memset(link_stack[2], 0, sizeof(link_stack[2]));
+	memset(link_stack[3], 0, sizeof(link_stack[3]));
         memset(game->screen_d, 0, MAXDMAPS * 64 * 8 * sizeof(long));
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_INIT);
-	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+	
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
+	
     }
     else
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_CONTINUE); //Do this after global arrays have been loaded
     }
     
-    while ( link_doscript ) 
+    //while ( link_doscript ) 
+    //{
+    if ( !zc_player_is_initialised )
     {
-	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
-	advanceframe(true);
+	zc_player_is_initialised = true;
+	memset(link_stack[0], 0, sizeof(link_stack[0]));
+	memset(link_stack[1], 0, sizeof(link_stack[1]));
+	memset(link_stack[2], 0, sizeof(link_stack[2]));
+	memset(link_stack[3], 0, sizeof(link_stack[3]));
+	for ( int q = 0; q < 3; q++ )
+	{
+		ri = &(linkScriptData[q]);
+		ri->Clear();
+	}
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT,0);
+	
     }
+    
+	//advanceframe(true);
+    //}
     
     if ( Link.getDontDraw() < 2 ) { Link.setDontDraw(0); }
     openscreen();
@@ -2800,6 +2834,16 @@ void game_loop()
     if(!freezemsg && g_doscript)
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
+    }
+    if(!freezemsg /*&& link_doscript*/)
+    {
+	for ( int q = 0; q < 3; q++ )
+	{
+		ri = &(linkScriptData[q]);
+		ri->Clear();
+	}
+	//Z_scripterrlog("Running Link's Active Script\n");
+        //ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE,1);
     }
     
     if(!freeze && !freezemsg)
