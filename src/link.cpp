@@ -886,6 +886,7 @@ void LinkClass::init()
 	for ( int q = 0; q < wMax; q++ ) defence[q] = 0; //we will need to have a Link section in the quest load/save code! -Z
 	
 	//Run Link's Init Script
+	link_doscript = 1;
 	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 
 }
@@ -4900,8 +4901,13 @@ bool LinkClass::animate(int)
     check_conveyor();
     
     //Run Link's Active Script Here
+    bool freezemsg = ((msg_active || (intropos && intropos<72) || (linkedmsgclk && get_bit(quest_rules,qr_MSGDISAPPEAR)))
+                      && get_bit(quest_rules,qr_MSGFREEZE));
     
-    ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
+    if ( !freezemsg && link_doscript )
+    {
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
+    }
 
     PhantomsCleanup();
     

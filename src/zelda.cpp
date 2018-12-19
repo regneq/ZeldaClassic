@@ -1908,6 +1908,7 @@ int init_game()
         
     
     initZScriptGlobalRAM(); //Call again so we're set up for GLOBAL_SCRIPT_GAME
+    link_doscript = 1; //We ran his Init scriptm so reset for his active script.
     ffscript_engine(true);  //Here is a much safer place...
     
     return 0;
