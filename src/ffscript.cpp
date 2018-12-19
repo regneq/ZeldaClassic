@@ -17055,7 +17055,7 @@ int run_script(const byte type, const word script, const long i)
 		    break;
 		    
 		case SCRIPT_LINK:
-		    //link_doscript = 0;
+		    link_doscript = 0;
 			//linkScriptData[i].Clear();
 			//clear_link_stack();
 		    break;

@@ -1911,10 +1911,12 @@ int init_game()
     else
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_CONTINUE); //Do this after global arrays have been loaded
+        ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
     }
     
     //while ( link_doscript ) 
     //{
+    /*
     if ( !zc_player_is_initialised )
     {
 	zc_player_is_initialised = true;
@@ -1934,6 +1936,7 @@ int init_game()
 	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 	
     }
+    */
     
 	//advanceframe(true);
     //}
@@ -2844,7 +2847,7 @@ void game_loop()
     {
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
     }
-    if(!freezemsg /*&& link_doscript*/)
+    if(!freezemsg && link_doscript)
     {
 	//for ( int q = 0; q < 3; q++ )
 	//{
@@ -2974,7 +2977,11 @@ void game_loop()
         ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_GAME);
         global_wait=false;
     }
-    
+    if ( link_waitdraw ) 
+    {
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);    
+	link_waitdraw = false;
+    }
     
     
     #if LOGGAMELOOP > 0
