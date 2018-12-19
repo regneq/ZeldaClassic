@@ -162,7 +162,8 @@ void clearRunningItemScripts();
 bool itemScriptEngine();
 void lweaponScriptEngine();
 bool newScriptEngine();
-void clear_link_stack();
+void linkScriptEngine();
+//void clear_link_stack();
 
 /*
 long getQuestHeaderInfo(int type)
@@ -600,6 +601,7 @@ static void set_screen_d(long index1, long index2, int val);
 static int whichlayer(long scr);
 static void clear_ffc_stack(const byte i);
 static void clear_global_stack();
+//static void clear_link_stack();
 static void do_zapout();
 static void do_zapin();
 static void do_openscreen();
@@ -1222,6 +1224,7 @@ int ffscript_engine(const bool preload);
 
 void clear_ffc_stack(const byte i);
 void clear_global_stack();
+void clear_link_stack();
 void deallocateArray(const long ptrval);
 void clearScriptHelperData();
 

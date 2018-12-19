@@ -70,6 +70,8 @@ typedef struct tilesequence
 #define GUYCAVE 3
 #define STAIRCAVE 4
 
+class refInfo;
+
 class LinkClass : public sprite
 {
     class WalkflagInfo
@@ -251,6 +253,8 @@ public:
 	int last_lens_id;// The item ID of the last Lens of Truth type item used
     
 	long misc_internal_link_flags;// Flags to hold data temporarily for misc handling
+	
+	refInfo* refinfo;
 	
     // Methods below here.
     void explode(int type);

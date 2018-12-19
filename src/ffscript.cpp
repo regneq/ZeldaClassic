@@ -167,7 +167,7 @@ refInfo itemactiveScriptData[256];
 long(*stack)[MAX_SCRIPT_REGISTERS] = NULL;
 long ffc_stack[32][MAX_SCRIPT_REGISTERS];
 long global_stack[GLOBAL_STACK_MAX][MAX_SCRIPT_REGISTERS];
-long link_stack[LINK_STACK_MAX][MAX_SCRIPT_REGISTERS];
+long link_stack[MAX_SCRIPT_REGISTERS];
 long item_stack[256][MAX_SCRIPT_REGISTERS];
 long ffmisc[32][16];
 refInfo ffcScriptData[32];
@@ -182,8 +182,13 @@ void clear_global_stack()
     //memset(global_stack, 0, MAX_SCRIPT_REGISTERS * sizeof(long));
     memset(global_stack, 0, sizeof(global_stack));
 }
-
+/*
 void FFScript::clear_link_stack()
+{
+	memset(link_stack, 0xFFFF, sizeof(link_stack));
+}
+*/
+void clear_link_stack()
 {
 	memset(link_stack, 0, sizeof(link_stack));
 }
@@ -15037,13 +15042,25 @@ int run_script(const byte type, const word script, const long i)
 	    {
 		ri = &linkScriptData;
 		    //should this become ri = &(globalScriptData[global_slot]);
-		
+		/*
+		ri = Link.refinfo;
+		if (!ri) 
+		{
+			ri = Link.refinfo = new refInfo;
+		}*/
+			
 		curscript = linkscripts[script];
+		Z_scripterrlog("Trying to run Link script: %d\n", script);
 		//Link has special stacks for his scripts. Choose the correct slot. 
+		stack = &link_stack;
 		    /*
 		if ( script == LINK_SCRIPT_INIT )
 		{
 			stack = &link_stack[LINK_STACK_INIT]; //Runs for one frame, only. 
+		}
+		else if ( script == LINK_SCRIPT_ACTIVE )
+		{
+			stack = &link_stack[LINK_STACK_ACTIVE];
 		}
 		else if ( script == LINK_SCRIPT_DEATH )
 		{
@@ -15055,7 +15072,7 @@ int run_script(const byte type, const word script, const long i)
 		}
 		    */
 		    //
-		stack = &link_stack[LINK_STACK_ACTIVE];
+		//stack = &link_stack[LINK_STACK_ACTIVE];
 	    }
 	    break;
 	    
@@ -17052,7 +17069,9 @@ int run_script(const byte type, const word script, const long i)
 		    break;
 		    
 		case SCRIPT_LINK:
+		    Z_scripterrlog("Link script exited with instruction: %d\n", scommand);
 		    link_doscript = 0;
+		    //clear_link_stack();
 		    break;
 		    
 		case SCRIPT_ITEM:
@@ -19352,9 +19371,15 @@ void FFScript::clearRunningItemScripts()
 bool FFScript::newScriptEngine()
 {
 	itemScriptEngine();
+	//linkScriptEngine();
 	//lweaponScriptEngine();
 	advanceframe(true);
 	return false;
+}
+
+void FFScript::linkScriptEngine()
+{
+	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
 }
 
 void FFScript::lweaponScriptEngine()

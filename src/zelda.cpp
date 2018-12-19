@@ -54,6 +54,7 @@ extern FFScript FFCore; //the core script engine.
 extern ZModule zcm; //modules
 extern zcmodule moduledata;
 extern char runningItemScripts[256];
+extern long link_stack[1024];
 #include "init.h"
 #include <assert.h>
 #include "zc_array.h"
@@ -461,6 +462,13 @@ void initZScriptGlobalRAM()
     g_doscript = 1;
     globalScriptData.Clear();
     clear_global_stack();
+}
+
+void initZScriptLinkRAM()
+{
+    link_doscript = 1;
+    linkScriptData.Clear();
+    clear_link_stack();
 }
 
 //Do we need to do this for Link?
@@ -1768,7 +1776,8 @@ int init_game()
     
     initZScriptArrayRAM(firstplay);
     initZScriptGlobalRAM();
-    FFCore.clear_link_stack(); //Initialise all of Link's script stacks.
+    //initZScriptLinkRAM();
+    //clear_link_stack(); //Initialise all of Link's script stacks.
     //Run the init script or the oncontinue script with the highest priority.
     //GLobal Script Init ~Init
 /*
@@ -1795,6 +1804,7 @@ int init_game()
     //ffscript_engine(true); Can't do this here! Global arrays haven't been allocated yet... ~Joe
     FFCore.init(); ///Initialise new ffscript engine core. 
     Link.init();
+    linkScriptData.Clear();
     Link.resetflags(true);
     Link.setEntryPoints(LinkX(),LinkY());
     if ( Link.getDontDraw() < 2 ) { Link.setDontDraw(1); }
@@ -2853,12 +2863,21 @@ void game_loop()
                 {
                     Quit = qGAMEOVER;
                 }
-                
+		
                 return;
             }
             
             checklink=false;
         }
+	link_doscript = 1;
+	linkScriptData.Clear();
+	for ( int q = 0; q < 1024; q++ ) link_stack[q] = 0;
+	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_INIT);
+	al_trace("link_doscript is: %s\n", link_doscript ? "true" : "false");
+	//if ( link_doscript )
+	//{
+	//	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
+	//}
         #if LOGGAMELOOP > 0
 	al_trace("game_loop is calling: %s\n", "do_magic_casting()\n");
 	#endif
@@ -2868,6 +2887,7 @@ void game_loop()
 	#endif
         Lwpns.animate();
 	FFCore.lweaponScriptEngine();
+	//FFCore.linkScriptEngine();
         #if LOGGAMELOOP > 0
 	al_trace("game_loop is calling: %s\n", "FFCore.itemScriptEngine())\n");
 	#endif

@@ -814,6 +814,7 @@ void LinkClass::init()
     sdir = up;
     ilswim=true;
     walkable=false;
+    refinfo = 0;
     
     if(get_bit(quest_rules,qr_NOARRIVALPOINT))
     {
@@ -4904,10 +4905,10 @@ bool LinkClass::animate(int)
     bool freezemsg = ((msg_active || (intropos && intropos<72) || (linkedmsgclk && get_bit(quest_rules,qr_MSGDISAPPEAR)))
                       && get_bit(quest_rules,qr_MSGFREEZE));
     
-    if ( !freezemsg && link_doscript )
-    {
-	ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
-    }
+    //if ( !freezemsg && link_doscript )
+    //{
+	//ZScriptVersion::RunScript(SCRIPT_LINK, LINK_SCRIPT_ACTIVE);
+    //}
 
     PhantomsCleanup();
     
