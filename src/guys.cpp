@@ -11999,46 +11999,46 @@ void ePatraBS::draw(BITMAP *dest)
         switch(lookat)                                          //directions get screwed up after 8.  *shrug*
         {
         case up:                                              //u
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip :0;
             break;
             
         case down:                                            //d
-            flip=0;
-            tile+=8;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=8;
             break;
             
         case left:                                            //l
-            flip=0;
-            tile+=40;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=40;
             break;
             
         case right:                                           //r
-            flip=0;
-            tile+=48;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=48;
             break;
             
         case l_up:                                            //ul
-            flip=0;
-            tile+=80;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=80;
             break;
             
         case r_up:                                            //ur
-            flip=0;
-            tile+=88;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=88;
             break;
             
         case l_down:                                          //dl
-            flip=0;
-            tile+=120;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=120;
             break;
             
         case r_down:                                          //dr
-            flip=0;
-            tile+=128;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=128;
             break;
         }
         
-        tile+=(2*(clk&3));
+        if ( scripttile <= -1 )tile+=(2*(clk&3));
         xofs-=8;
         yofs-=8;
         drawblock(dest,15);
@@ -12047,7 +12047,7 @@ void ePatraBS::draw(BITMAP *dest)
     }
     else
     {
-        flip=(clk&1);
+        flip=scriptflip > -1 ? scriptflip :((clk&1));
         xofs-=8;
         yofs-=8;
         enemy::draw(dest);
@@ -12098,7 +12098,7 @@ bool esPatraBS::animate(int index)
 
 void esPatraBS::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     
     if(get_bit(quest_rules,qr_NEWENEMYTILES))
     {
