@@ -804,7 +804,7 @@ void enemy::FireBreath(bool seeklink)
     if(wpn==ewFlame && wpnsbuf[ewFLAME].frames>1)
     {
         ew->aframe=rand()%wpnsbuf[ewFLAME].frames;
-        ew->tile+=ew->aframe;
+        if ( ew->scripttile <= -1 ) ew->tile+=ew->aframe;
     }
     
     for(int j=Ewpns.Count()-1; j>0; j--)
@@ -1726,14 +1726,18 @@ void enemy::old_draw(BITMAP *dest)
             return;
         }
         
-        flip = 0;
-        tile = wpnsbuf[iwDeath].newtile;
+        flip = scriptflip > -1 ? scriptflip : 0;
+        tile = scripttile > -1 ? scripttile : wpnsbuf[iwDeath].newtile;
 	//The scale of this tile shouldx be based on the enemy size. -Z
         
         if(BSZ)
-            tile += zc_min((15-clk2)/3,4);
+	{
+            if ( scripttile <= -1 ) tile += zc_min((15-clk2)/3,4);
+	}
         else if(clk2>6 && clk2<=12)
-            ++tile;
+	{
+            if ( scripttile <= -1 ) ++tile;
+	}
             
         /* trying to get more death frames here
           if(wpnsbuf[wid].frames)
@@ -1937,15 +1941,18 @@ void enemy::draw(BITMAP *dest)
             return;
         }
         
-        flip = 0;
-        tile = wpnsbuf[iwDeath].newtile;
+        flip = scriptflip > -1 ? scriptflip: 0;
+        tile = scripttile > -1 ? scripttile : wpnsbuf[iwDeath].newtile;
 	//The scale of this tile shouldx be based on the enemy size. -Z
         
         if(BSZ)
-            tile += zc_min((15-clk2)/3,4);
+	{
+            if ( scripttile <= -1 )tile += zc_min((15-clk2)/3,4);
+	}
         else if(clk2>6 && clk2<=12)
-            ++tile;
-            
+	{
+            if ( scripttile <= -1 ) ++tile;
+	}
         /* trying to get more death frames here
           if(wpnsbuf[wid].frames)
           {
@@ -2063,11 +2070,11 @@ void enemy::draw(BITMAP *dest)
 // similar to the overblock function--can do up to a 32x32 sprite
 void enemy::drawblock(BITMAP *dest,int mask)
 {
-    int thold=tile;
-    int t1=tile;
-    int t2=tile+20;
-    int t3=tile+1;
-    int t4=tile+21;
+    int thold=scripttile > -1 ? scripttile : tile;
+    int t1=thold;
+    int t2=thold+20;
+    int t3=thold+1;
+    int t4=thold+21;
     
     switch(mask)
     {
@@ -3243,7 +3250,7 @@ void enemy::n_frame_n_dir(int frames, int ndir, int f4)
     case eeWALK:
         if(dmisc9==e9tPOLSVOICE && clk2>=0)
         {
-            tile=s_tile;
+            tile= scripttile > -1 ? scripttile : s_tile;
             t=s_tile;
         }
         
@@ -3252,7 +3259,7 @@ void enemy::n_frame_n_dir(int frames, int ndir, int f4)
     case eeTRAP:
         if(dummy_int[1] && guysbuf[id].flags2 & eneflag_trp2)  // Just to make sure
         {
-            tile=s_tile;
+            tile= scripttile > -1 ? scripttile : s_tile;
             t=s_tile;
         }
         
@@ -3261,7 +3268,7 @@ void enemy::n_frame_n_dir(int frames, int ndir, int f4)
     case eeSPINTILE:
         if(misc>=96)
         {
-            tile=o_tile+frames*ndir;
+            tile= scripttile > -1 ? scripttile : (o_tile+frames*ndir);
             t=tile;
         }
         
@@ -3284,9 +3291,11 @@ void enemy::n_frame_n_dir(int frames, int ndir, int f4)
         }
         
     if(family==eeWALK)
-        tile=zc_min(tile+f4, t+frames*(zc_max(dir, 0)+1)-1);
+        tile= scripttile > -1 ? scripttile : (zc_min(tile+f4, t+frames*(zc_max(dir, 0)+1)-1));
     else
-        tile+=f4;
+    {
+        if ( scripttile <= -1 ) tile+=f4;
+    }
 }
 
 void enemy::tiledir_three(int ndir)
@@ -3296,13 +3305,13 @@ void enemy::tiledir_three(int ndir)
     switch(ndir)
     {
     case right:
-        tile+=3; // fallthrough
+        if ( scripttile <= -1 ) tile+=3; // fallthrough
         
     case left:
-        tile+=3;  // fallthrough
+        if ( scripttile <= -1 )tile+=3;  // fallthrough
         
     case down:
-        tile+=3;  // fallthrough
+        if ( scripttile <= -1 ) tile+=3;  // fallthrough
         
     case up:
         break;
@@ -3321,17 +3330,17 @@ void enemy::tiledir_small(int ndir, bool fourdir)
         
     case 12:
     case down:
-        tile+=2;
+        if ( scripttile <= -1 )tile+=2;
         break;
         
     case 14:
     case left:
-        tile+=4;
+        if ( scripttile <= -1 )tile+=4;
         break;
         
     case 10:
     case right:
-        tile+=6;
+        if ( scripttile <= -1 )tile+=6;
         break;
         
     case 9:
@@ -3339,24 +3348,32 @@ void enemy::tiledir_small(int ndir, bool fourdir)
         if(fourdir)
             break;
             
-        tile+=10;
+        if ( scripttile <= -1 )tile+=10;
         break;
         
     case 11:
     case r_down:
         if(fourdir)
-            tile+=2;
+	{
+            if ( scripttile <= -1 )tile+=2;
+	}
         else
-            tile+=14;
+	{
+            if ( scripttile <= -1 )tile+=14;
+	}
             
         break;
         
     case 13:
     case l_down:
         if(fourdir)
-            tile+=2;
+	{
+            if ( scripttile <= -1 )tile+=2;
+	}
         else
-            tile+=12;
+	{
+            if ( scripttile <= -1 )tile+=12;
+	}
             
         break;
         
@@ -3365,7 +3382,7 @@ void enemy::tiledir_small(int ndir, bool fourdir)
         if(fourdir)
             break;
             
-        tile+=8;
+        if ( scripttile <= -1 )tile+=8;
         break;
         
     default:
@@ -3389,17 +3406,17 @@ void enemy::tiledir(int ndir, bool fourdir)
         
     case 12:
     case down:
-        tile+=4;
+        if ( scripttile <= -1 )tile+=4;
         break;
         
     case 14:
     case left:
-        tile+=8;
+        if ( scripttile <= -1 )tile+=8;
         break;
         
     case 10:
     case right:
-        tile+=12;
+        if ( scripttile <= -1 )tile+=12;
         break;
         
     case 9:
@@ -3407,25 +3424,35 @@ void enemy::tiledir(int ndir, bool fourdir)
         if(fourdir)
             break;
         else
-            tile+=24;
+	{
+            if ( scripttile <= -1 )tile+=24;
+	}
             
         break;
         
     case 11:
     case r_down:
         if(fourdir)
-            tile+=4;
+	{
+            if ( scripttile <= -1 )tile+=4;
+	}
         else
-            tile+=32;
+	{
+            if ( scripttile <= -1 )tile+=32;
+	}
             
         break;
         
     case 13:
     case l_down:
         if(fourdir)
-            tile+=4;
+	{
+            if ( scripttile <= -1 )tile+=4;
+	}
         else
-            tile+=28;
+	{
+            if ( scripttile <= -1 )tile+=28;
+	}
             
         break;
         
@@ -3434,7 +3461,9 @@ void enemy::tiledir(int ndir, bool fourdir)
         if(fourdir)
             break;
         else
-            tile+=20;
+	{
+            if ( scripttile <= -1 )tile+=20;
+	}
             
         break;
         
@@ -3459,17 +3488,17 @@ void enemy::tiledir_big(int ndir, bool fourdir)
         
     case 12:
     case down:
-        tile+=8;
+        if ( scripttile <= -1 )tile+=8;
         break;
         
     case 14:
     case left:
-        tile+=40;
+        if ( scripttile <= -1 )tile+=40;
         break;
         
     case 10:
     case right:
-        tile+=48;
+        if ( scripttile <= -1 )tile+=48;
         break;
         
     case 9:
@@ -3477,24 +3506,32 @@ void enemy::tiledir_big(int ndir, bool fourdir)
         if(fourdir)
             break;
             
-        tile+=88;
+        if ( scripttile <= -1 )tile+=88;
         break;
         
     case 11:
     case r_down:
         if(fourdir)
-            tile+=8;
+	{
+            if ( scripttile <= -1 )tile+=8;
+	}
         else
-            tile+=128;
+	{
+            if ( scripttile <= -1 )tile+=128;
+	}
             
         break;
         
     case 13:
     case l_down:
         if(fourdir)
-            tile+=8;
+	{
+            if ( scripttile <= -1 )tile+=8;
+	}
         else
-            tile+=120;
+	{
+            if ( scripttile <= -1 )tile+=120;
+	}
             
         break;
         
@@ -3503,7 +3540,7 @@ void enemy::tiledir_big(int ndir, bool fourdir)
         if(fourdir)
             break;
             
-        tile+=80;
+        if ( scripttile <= -1 )tile+=80;
         break;
         
     default:
@@ -3521,7 +3558,7 @@ void enemy::update_enemy_frame()
     int f4=clk/(newfrate/4); // casts clk to [0,1,2,3]
     int f2=clk/(newfrate/2); // casts clk to [0,1]
     int fx = get_bit(quest_rules, qr_NEWENEMYTILES) ? f4 : f2;
-    tile = o_tile;
+    tile = scripttile > -1 ? scripttile : o_tile;
     int tilerows = 1; // How many rows of tiles? The Extend code needs to know.
     
     switch(anim)
@@ -3536,29 +3573,29 @@ void enemy::update_enemy_frame()
             switch(dir)
             {
             case up:
-                tile+=9;
-                flip=0;
+                if ( scripttile <= -1 ) tile+=9;
+                if ( scriptflip <= -1 ) flip=0;
                 xofs=0;
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case down:
-                tile+=7;
-                flip=0;
+                if ( scripttile <= -1 ) tile+=7;
+                if ( scriptflip <= -1 )flip=0;
                 xofs=0;
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case left:
-                flip=1;
-                tile+=4;
+                if ( scriptflip <= -1 )flip=1;
+                if ( scripttile <= -1 )tile+=4;
                 xofs=16;
                 dummy_int[1]=1; //second tile is next tile
                 break;
                 
             case right:
-                flip=0;
-                tile+=5;
+                if ( scriptflip <= -1 )flip=0;
+                if ( scripttile <= -1 )tile+=5;
                 xofs=16;
                 dummy_int[1]=-1; //second tile is previous tile
                 break;
@@ -3570,29 +3607,29 @@ void enemy::update_enemy_frame()
             switch(dir)
             {
             case up:
-                tile+=8;
-                flip=(clk&fr)?1:0;
+                if ( scripttile <= -1 )tile+=8;
+                if ( scriptflip <= -1 )flip=(clk&fr)?1:0;
                 xofs=0;
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case down:
-                tile+=6;
-                flip=(clk&fr)?1:0;
+                if ( scripttile <= -1 )tile+=6;
+                if ( scriptflip <= -1 )flip=(clk&fr)?1:0;
                 xofs=0;
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case left:
-                flip=1;
-                tile+=(clk&fr)?2:0;
+                if ( scriptflip <= -1 )flip=1;
+                if ( scripttile <= -1 )tile+=(clk&fr)?2:0;
                 xofs=16;
                 dummy_int[1]=1; //second tile is next tile
                 break;
                 
             case right:
-                flip=0;
-                tile+=(clk&fr)?3:1;
+                if ( scriptflip <= -1 )flip=0;
+                if ( scripttile <= -1 )tile+=(clk&fr)?3:1;
                 xofs=16;
                 dummy_int[1]=-1; //second tile is next tile
                 break;
@@ -3632,24 +3669,24 @@ void enemy::update_enemy_frame()
             {
             case up:
                 xofs=0;
-                tile+=8+fr4;
+                if ( scripttile <= -1 ) tile+=8+fr4;
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case down:
                 xofs=0;
-                tile+=12+fr4;
+                if ( scripttile <= -1 )tile+=12+fr4;
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case left:
-                tile+=29+(2*fr4);
+                if ( scripttile <= -1 )tile+=29+(2*fr4);
                 xofs=16;
                 dummy_int[1]=-1; //second tile is previous tile
                 break;
                 
             case right:
-                tile+=49+(2*fr4);
+                if ( scripttile <= -1 )tile+=49+(2*fr4);
                 xofs=16;
                 dummy_int[1]=-1; //second tile is previous tile
                 break;
@@ -3662,25 +3699,25 @@ void enemy::update_enemy_frame()
             {
             case up:
                 xofs=0;
-                tile+=((clk&12)>>2);
+                if ( scripttile <= -1 )tile+=((clk&12)>>2);
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case down:
                 xofs=0;
-                tile+=4+((clk&12)>>2);
+                if ( scripttile <= -1 )tile+=4+((clk&12)>>2);
                 dummy_int[1]=0; //no additional tiles
                 break;
                 
             case left:
-                tile+=21+((clk&12)>>1);
+                if ( scripttile <= -1 )tile+=21+((clk&12)>>1);
                 xofs=16;
                 dummy_int[1]=-1; //second tile is previous tile
                 break;
                 
             case right:
                 flip=0;
-                tile+=41+((clk&12)>>1);
+                if ( scripttile <= -1 )tile+=41+((clk&12)>>1);
                 xofs=16;
                 dummy_int[1]=-1; //second tile is previous tile
                 break;
@@ -3719,7 +3756,7 @@ void enemy::update_enemy_frame()
             switch(dir)
             {
             case up:
-                tile+=28+fr4;
+                if ( scripttile <= -1 )tile+=28+fr4;
                 yofs+=8;
                 dummy_int[1]=-20; //second tile change
                 dummy_int[2]=0;   //new xofs change
@@ -3727,7 +3764,7 @@ void enemy::update_enemy_frame()
                 break;
                 
             case down:
-                tile+=12+fr4;
+                if ( scripttile <= -1 )tile+=12+fr4;
                 yofs-=8;
                 dummy_int[1]=20; //second tile change
                 dummy_int[2]=0;  //new xofs change
@@ -3735,7 +3772,7 @@ void enemy::update_enemy_frame()
                 break;
                 
             case left:
-                tile+=49+(2*fr4);
+                if ( scripttile <= -1 )tile+=49+(2*fr4);
                 xofs+=8;
                 dummy_int[1]=-1; //second tile change
                 dummy_int[2]=-16; //new xofs change
@@ -3743,7 +3780,7 @@ void enemy::update_enemy_frame()
                 break;
                 
             case right:
-                tile+=69+(2*fr4);
+                if ( scripttile <= -1 )tile+=69+(2*fr4);
                 xofs+=8;
                 dummy_int[1]=-1; //second tile change
                 dummy_int[2]=-16; //new xofs change
@@ -3757,7 +3794,7 @@ void enemy::update_enemy_frame()
             switch(dir)
             {
             case up:
-                tile+=20+((clk&24)>>3);
+                if ( scripttile <= -1 )tile+=20+((clk&24)>>3);
                 yofs+=8;
                 dummy_int[1]=-20; //second tile change
                 dummy_int[2]=0;   //new xofs change
@@ -3765,7 +3802,7 @@ void enemy::update_enemy_frame()
                 break;
                 
             case down:
-                tile+=4+((clk&24)>>3);
+                if ( scripttile <= -1 )tile+=4+((clk&24)>>3);
                 yofs-=8;
                 dummy_int[1]=20; //second tile change
                 dummy_int[2]=0;  //new xofs change
@@ -3774,14 +3811,14 @@ void enemy::update_enemy_frame()
                 
             case left:
                 xofs=-8;
-                tile+=40+((clk&24)>>2);
+                if ( scripttile <= -1 )tile+=40+((clk&24)>>2);
                 dummy_int[1]=1; //second tile change
                 dummy_int[2]=16; //new xofs change
                 dummy_int[3]=0; //new xofs change
                 break;
                 
             case right:
-                tile+=60+((clk&24)>>2);
+               if ( scripttile <= -1 )tile+=60+((clk&24)>>2);
                 xofs=-8;
                 dummy_int[1]=1; //second tile change
                 dummy_int[2]=16; //new xofs change
@@ -3799,14 +3836,14 @@ void enemy::update_enemy_frame()
         {
             if(clk&8)
             {
-                ++tile;
+                if ( scripttile <= -1 ) ++tile;
             }
         }
         else
         {
             if(frame&4)
             {
-                ++tile;
+                if ( scripttile <= -1 )++tile;
             }
         }
         
@@ -3815,7 +3852,7 @@ void enemy::update_enemy_frame()
         case 9:
         case 15:
         case up:
-            tile+=2;
+            if ( scripttile <= -1 )tile+=2;
             break;
             
         case down:
@@ -3823,11 +3860,11 @@ void enemy::update_enemy_frame()
             
         case 13:
         case left:
-            flip=1;
+            if ( scriptflip > -1 ) flip=1;
             break;
             
         default:
-            flip=0;
+            if ( scriptflip > -1 ) flip=0;
             break;
         }
     }
@@ -3842,19 +3879,19 @@ void enemy::update_enemy_frame()
         {
             if(clk&8)
             {
-                tile+=2;
+                if ( scripttile <= -1 )tile+=2;
             }
             
             if(clk&4)
             {
-                tile+=1;
+                if ( scripttile <= -1 )tile+=1;
             }
             
             if(!(dummy_bool[1]||dummy_bool[2]))                               //should never be charging or firing for these wizzrobes
             {
                 if(dummy_int[1]>0)
                 {
-                    tile+=40;
+                    if ( scripttile <= -1 )tile+=40;
                 }
             }
         }
@@ -3862,15 +3899,15 @@ void enemy::update_enemy_frame()
         {
             if(dummy_bool[1]||dummy_bool[2])
             {
-                tile+=20;
+                if ( scripttile <= -1 )tile+=20;
                 
                 if(dummy_bool[2])
                 {
-                    tile+=20;
+                    if ( scripttile <= -1 )tile+=20;
                 }
             }
             
-            tile+=((frame>>1)&3);
+            if ( scripttile <= -1 )tile+=((frame>>1)&3);
         }
     }
     break;
@@ -3891,17 +3928,17 @@ void enemy::update_enemy_frame()
     {
         if(dir==up)
         {
-            tile+=2;
+            if ( scripttile <= -1 )tile+=2;
         }
         
-        tile+=fx;
+        if ( scripttile <= -1 )tile+=fx;
     }
     break;
     
     case aROPE:
     {
-        tile+=(1-fx);
-        flip = dir==left ? 1:0;
+        if ( scripttile <= -1 )tile+=(1-fx);
+        if ( scriptflip <= -1 )flip = dir==left ? 1:0;
     }
     break;
     
@@ -3916,12 +3953,12 @@ void enemy::update_enemy_frame()
         }
         
         if(clk<36+66)
-            tile=(dir==up)?o_tile+1:o_tile;
+            tile= scripttile > -1 ? scripttile : ((dir==up)?o_tile+1:o_tile);
         else
         {
             dl=clk-36-66;
 waves2:
-            tile=((dl/11)&1)+s_tile;
+            tile= scripttile > -1 ? scripttile ( ((dl/11)&1)+s_tile);
         }
     }
     break;
@@ -3937,14 +3974,14 @@ waves2:
         {
             if((clk>=(35+10))&&(clk<(38+56)))                     //mouth open
             {
-                tile+=80;
+                if ( scripttile <= -1 )tile+=80;
             }                                                     //mouth closed
             else
             {
-                tile+=40;
+                if ( scripttile <= -1 )tile+=40;
             }
             
-            tile+=f4;
+            if ( scripttile <= -1 )tile+=f4;
         }
         else
         {
@@ -3957,7 +3994,7 @@ waves2:
                 dl=clk-36-66;
             }
             
-            tile+=((dl/5)&3);
+            if ( scripttile <= -1 )tile+=((dl/5)&3);
         }
     }
     break;
@@ -4018,13 +4055,13 @@ waves2:
     
     case a2FRM:
     {
-        tile += (1-f2);
+        if ( scripttile <= -1 )tile += (1-f2);
     }
     break;
     
     case a2FRMB:
     {
-        tile+= 2*(1-f2);
+        if ( scripttile <= -1 )tile+= 2*(1-f2);
     }
     break;
     
@@ -4040,11 +4077,11 @@ waves2:
         
         if(clk2>0)                                              //stopped to fire
         {
-            tile+=20;
+            if ( scripttile <= -1 )tile+=20;
             
             if(clk2<17)                                           //firing
             {
-                tile+=20;
+                if ( scripttile <= -1 )tile+=20;
             }
         }
     }
@@ -4063,11 +4100,11 @@ waves2:
         
         if(clk2>0)                                              //stopped to fire
         {
-            tile+=40;
+            if ( scripttile <= -1 )tile+=40;
             
             if(clk2<17)                                           //firing
             {
-                tile+=40;
+                if ( scripttile <= -1 )tile+=40;
             }
         }
     }
@@ -4077,7 +4114,7 @@ waves2:
     {
         tilerows = 2;
         tiledir_big(dir,false);
-        tile+=2*f4;
+        if ( scripttile <= -1 )tile+=2*f4;
     }
     break;
     
@@ -4086,25 +4123,25 @@ waves2:
         switch(dir)
         {
         case up:
-            flip = 2;
+            flip = scriptflip > -1 ? scriptflip : 2;
             break;
             
         case down:
-            flip = 0;
+            flip = scriptflip > -1 ? scriptflip : 0;
             break;
             
         case left:
-            flip = 0;
-            tile += 2;
+            flip = scriptflip > -1 ? scriptflip : 0;
+            if ( scripttile <= -1 )tile += 2;
             break;
             
         case right:
-            flip = 1;
-            tile += 2;
+            flip = scriptflip > -1 ? scriptflip : 1;
+            if ( scripttile <= -1 )tile += 2;
             break;
         }
         
-        tile+=f2;
+        if ( scripttile <= -1 )tile+=f2;
     }
     break;
     
@@ -4113,23 +4150,23 @@ waves2:
         switch(dir)
         {
         case up:
-            tile+=3;
-            flip = f2;
+            if ( scripttile <= -1 )tile+=3;
+            flip = scriptflip > -1 ? scriptflip : f2;
             break;
             
         case down:
-            tile+=2;
-            flip = f2;
+            if ( scripttile <= -1 )tile+=2;
+            flip = scriptflip > -1 ? scriptflip : f2;
             break;
             
         case left:
-            flip=1;
-            tile += f2;
+            flip= scriptflip > -1 ? scriptflip : 1;
+            if ( scripttile <= -1 )tile += f2;
             break;
             
         case right:
-            flip=0;
-            tile += f2;
+            flip= scriptflip > -1 ? scriptflip : 0;
+            if ( scripttile <= -1 )tile += f2;
             break;
         }
     }
@@ -4139,29 +4176,29 @@ waves2:
     {
         if((get_bit(quest_rules,qr_BRKNSHLDTILES)) && (dummy_bool[1]==true))
         {
-            tile=s_tile;
+            tile= scripttile > -1 ? scripttile : s_tile;
         }
         
         switch(dir)
         {
         case up:
-            tile+=2;
-            flip=f2;
+	    if ( scripttile <= -1 ) tile+=2;
+            flip=scriptflip > -1 ? scriptflip : f2;
             break;
             
         case down:
-            flip=0;
-            tile+=(1-f2);
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 ) tile+=(1-f2);
             break;
             
         case left:
-            flip=1;
-            tile+=(3+f2);
+            flip=scriptflip > -1 ? scriptflip :1;
+            if ( scripttile <= -1 ) tile+=(3+f2);
             break;
             
         case right:
-            flip=0;
-            tile+=(3+f2);
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 ) tile+=(3+f2);
             break;
         }
     }
@@ -4171,11 +4208,11 @@ waves2:
     {
         if(misc==0)
         {
-            tile += f2;
+            if ( scripttile <= -1 ) tile += f2;
         }
         else if(misc!=1)
         {
-            ++tile;
+            if ( scripttile <= -1 ) ++tile;
         }
     }
     break;
@@ -4187,13 +4224,13 @@ waves2:
             switch(clk3)
             {
             case left:
-                flip=0;
-                tile+=20;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 ) tile+=20;
                 break;
                 
             case right:
-                flip=0;
-                tile+=24;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 ) tile+=24;
                 break;
             }
         }
@@ -4202,13 +4239,13 @@ waves2:
             switch(clk3)
             {
             case left:
-                flip=0;
-                tile+=8;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 ) tile+=8;
                 break;
                 
             case right:
-                flip=0;
-                tile+=12;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 ) tile+=12;
                 break;
             }
         }                                                       //down
@@ -4217,24 +4254,24 @@ waves2:
             switch(clk3)
             {
             case left:
-                flip=0;
-                tile+=28;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 ) tile+=28;
                 break;
                 
             case right:
-                flip=0;
-                tile+=32;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 ) tile+=32;
                 break;
             }
         }
         
         if(misc==0)
         {
-            tile+=f4;
+            if ( scripttile <= -1 ) tile+=f4;
         }
         else if(misc!=1)
         {
-            tile+=2;
+            if ( scripttile <= -1 ) tile+=2;
         }
     }
     break;
@@ -4243,10 +4280,12 @@ waves2:
     {
         if(!fading)
         {
-            tile += fx;
+            if ( scripttile <= -1 ) tile += fx;
             
             if(dir==up)
-                tile += 2;
+	    {
+                if ( scripttile <= -1 ) tile += 2;
+	    }
         }
     }
     break;
@@ -4256,28 +4295,28 @@ waves2:
         switch(dir)
         {
         case up:
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip :0;
             break;
             
         case down:
-            flip=0;
-            tile+=4;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 ) tile+=4;
             break;
             
         case left:
-            flip=0;
-            tile+=8;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 ) tile+=8;
             break;
             
         case right:
-            flip=0;
-            tile+=12;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 ) tile+=12;
             break;
         }
         
         if(!fading)
         {
-            tile+=f4;
+            if ( scripttile <= -1 ) tile+=f4;
         }
     }
     break;
@@ -4289,23 +4328,23 @@ waves2:
         case 8:
         case 9:
         case up:
-            ++tile;
-            flip=0;
+            if ( scripttile <= -1 ) ++tile;
+            flip=scriptflip > -1 ? scriptflip :0;
             break;
             
         case 15:
-            ++tile;
-            flip=1;
+            if ( scripttile <= -1 ) ++tile;
+            flip=scriptflip > -1 ? scriptflip :1;
             break;
             
         case 10:
         case 11:
         case right:
-            flip=1;
+            flip=scriptflip > -1 ? scriptflip :1;
             break;
             
         default:
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip :0;
             break;
         }
     }
@@ -4313,7 +4352,7 @@ waves2:
     
     case a2FRMPOS:
     {
-        tile+=posframe;
+        if ( scripttile <= -1 ) tile+=posframe;
     }
     break;
     
@@ -4321,7 +4360,7 @@ waves2:
     {
         n_frame_n_dir(4,4,0);
         //        tile+=f2;
-        tile+=posframe;
+        if ( scripttile <= -1 ) tile+=posframe;
     }
     break;
     
@@ -4331,16 +4370,16 @@ waves2:
         
         if(clk2>0)                                              //stopped to fire
         {
-            tile+=20;
+            if ( scripttile <= -1 ) tile+=20;
             
             if(clk2<17)                                           //firing
             {
-                tile+=20;
+                if ( scripttile <= -1 ) tile+=20;
             }
         }
         
         //        tile+=f2;
-        tile+=posframe;
+        if ( scripttile <= -1 ) tile+=posframe;
     }
     break;
     
@@ -4349,7 +4388,7 @@ waves2:
         tilerows = 2;
         n_frame_n_dir(4,8,0);
         //        tile+=f2;
-        tile+=posframe;
+        if ( scripttile <= -1 ) tile+=posframe;
     }
     break;
     
@@ -4360,16 +4399,16 @@ waves2:
         
         if(clk2>0)                                              //stopped to fire
         {
-            tile+=40;
+            if ( scripttile <= -1 ) tile+=40;
             
             if(clk2<17)                                           //firing
             {
-                tile+=40;
+                if ( scripttile <= -1 ) tile+=40;
             }
         }
         
         //        tile+=f2;
-        tile+=posframe;
+       if ( scripttile <= -1 )  tile+=posframe;
     }
     break;
     
@@ -4392,15 +4431,15 @@ waves2:
             
         case 2:
         case 4:
-            tile += 20;
+            if ( scripttile <= -1 ) tile += 20;
             break;
             
         case 3:
-            tile += 40;
+            if ( scripttile <= -1 ) tile += 40;
             break;
         }
         
-        tile+=f4;
+        if ( scripttile <= -1 ) tile+=f4;
     }
     break;
     
@@ -4418,17 +4457,17 @@ waves2:
         
 //        case 5: tile += (f2) ? 1 : 0; cs = d->misc2; break;
         case 5:
-            tile += (f2) ? 1 : 0;
+            if ( scripttile <= -1 ) tile += (f2) ? 1 : 0;
             cs = dmisc2;
             break;
             
         case 2:
         case 4:
-            tile += 2;
+            if ( scripttile <= -1 ) tile += 2;
             break;
             
         case 3:
-            tile += (f4) ? 4 : 3;
+            if ( scripttile <= -1 ) tile += (f4) ? 4 : 3;
             break;
         }
     }
@@ -4438,7 +4477,7 @@ waves2:
     {
         if(!dummy_bool[1])
         {
-            tile += f2;
+            if ( scripttile <= -1 ) tile += f2;
         }
     }
     break;
@@ -4470,14 +4509,14 @@ waves2:
         
         if(!dummy_bool[1])
         {
-            tile+=f4;
+            if ( scripttile <= -1 ) tile+=f4;
         }
     }
     break;
     
     case a4FRMNODIR:
     {
-        tile+=f4;
+        if ( scripttile <= -1 ) tile+=f4;
     }
     break;
     
@@ -4496,21 +4535,22 @@ waves2:
     }
     
     int change = tile-o_tile;
+    //int change = ( (scripttile > -1 ) ? scripttile-otile : tile-o_tile);
     
     if(extend > 2)
     {
         if(o_tile/TILES_PER_ROW==(o_tile+((txsz*change)/tilerows))/TILES_PER_ROW)
         {
-            tile=o_tile+txsz*change;
+            tile= (scripttile > -1) ? scripttile : o_tile+txsz*change;
         }
         else
         {
-            tile=o_tile+(txsz*change)+((tysz-1)*TILES_PER_ROW)*((o_tile+txsz*change)/TILES_PER_ROW)-(o_tile/TILES_PER_ROW);
+            tile= (scripttile > -1) ? scripttile : (o_tile+(txsz*change)+((tysz-1)*TILES_PER_ROW)*((o_tile+txsz*change)/TILES_PER_ROW)-(o_tile/TILES_PER_ROW));
         }
     }
     else
     {
-        tile=o_tile+change;
+        tile= (scripttile > -1) ? scripttile : o_tile+change;
     }
 }
 
@@ -7326,7 +7366,7 @@ bool eStalfos::animate(int index)
         if(wpn==ewFIRETRAIL && wpnsbuf[ewFIRETRAIL].frames>1)
         {
             ew->aframe=rand()%wpnsbuf[ewFIRETRAIL].frames;
-            ew->tile+=ew->aframe;
+            if ( ew->scripttile <= -1 ) ew->tile+=ew->aframe;
         }
     }
     // Goriya
@@ -7390,7 +7430,7 @@ bool eStalfos::animate(int index)
             
             if((clk5>24)&&(clk5<52))
             {
-                tile+=20;                                         //firing
+                if ( scripttile <= -1 )tile+=20;                                         //firing
                 
                 if(!fired&&(clk5>=38))
                 {
@@ -7498,7 +7538,7 @@ void eStalfos::draw(BITMAP *dest)
     
     if((dmisc2==e2tBOMBCHU)&&dashing)
     {
-        tile+=20;
+        if ( scripttile <= -1 )tile+=20;
     }
     
     enemy::draw(dest);
@@ -8394,7 +8434,7 @@ bool eDodongo::animate(int index)
 
 void eDodongo::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile= scripttile > -1 ? scripttile : o_tile;
     
     if(clk<0)
     {
@@ -8407,7 +8447,7 @@ void eDodongo::draw(BITMAP *dest)
     
     if(dummy_int[1]!=0)  //additional tiles
     {
-        tile+=dummy_int[1]; //second tile is previous tile
+        if ( scripttile <= -1 ) tile+=dummy_int[1]; //second tile is previous tile
         xofs-=16;           //new xofs change
         enemy::draw(dest);
         xofs+=16;
@@ -8534,7 +8574,7 @@ void eDodongo2::draw(BITMAP *dest)
     int tempy=yofs;
     update_enemy_frame();
     enemy::draw(dest);
-    tile+=dummy_int[1]; //second tile change
+    if ( scripttile <= -1 ) tile+=dummy_int[1]; //second tile change
     xofs+=dummy_int[2]; //new xofs change
     yofs+=dummy_int[3]; //new yofs change
     enemy::draw(dest);
@@ -8776,7 +8816,7 @@ void eAquamentus::draw(BITMAP *dest)
     if(get_bit(quest_rules,qr_NEWENEMYTILES))
     {
         xofs=(dmisc1?-16:0);
-        tile=o_tile+((clk&24)>>2)+(clk3>-32?(clk3>0?40:80):0);
+        tile= scripttile > -1 ? scripttile : (o_tile+((clk&24)>>2)+(clk3>-32?(clk3>0?40:80):0));
         
         if(dying)
         {
@@ -8800,19 +8840,19 @@ void eAquamentus::draw(BITMAP *dest)
         }
         
         // face (0=firing, 2=resting)
-        tile=o_tile+((clk3>0)?0:2);
+        tile= scripttile > -1 ? scripttile : (o_tile+((clk3>0)?0:2));
         enemy::draw(dest);
         // tail (
-        tile=o_tile+((clk&16)?1:3);
+        tile=scripttile > -1 ? scripttile : (o_tile+((clk&16)?1:3));
         xofs=xblockofs;
         enemy::draw(dest);
         // body
         yofs+=16;
         xofs=0;
-        tile=o_tile+((clk&16)?20:22);
+        tile=scripttile > -1 ? scripttile : (o_tile+((clk&16)?20:22));
         enemy::draw(dest);
         xofs=xblockofs;
-        tile=o_tile+((clk&16)?21:23);
+        tile=scripttile > -1 ? scripttile : (o_tile+((clk&16)?21:23));
         enemy::draw(dest);
         yofs-=16;
     }
@@ -8916,7 +8956,7 @@ bool eGohma::animate(int index)
 
 void eGohma::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     
     if(clk<0 || dying)
     {
@@ -8931,29 +8971,37 @@ void eGohma::draw(BITMAP *dest)
         flip=0;
         //      if(clk&16) tile=180;
         //      else { tile=182; flip=1; }
-        tile+=(3*((clk&48)>>4));
+        if ( scripttile <= -1 ) tile+=(3*((clk&48)>>4));
         enemy::draw(dest);
         
         // right side
         xofs=16;
         //      tile=(180+182)-tile;
-        tile=o_tile;
-        tile+=(3*((clk&48)>>4))+2;
+        tile=scripttile > -1 ? scripttile : o_tile;
+        if ( scripttile <= -1 ) tile+=(3*((clk&48)>>4))+2;
         enemy::draw(dest);
         
         // body
         xofs=0;
-        tile=o_tile;
+        tile=scripttile > -1 ? scripttile : o_tile;
         
         //      tile+=(3*((clk&24)>>3))+2;
         if(clk3<16)
-            tile+=7;
+	{
+            if 9 scripttile <= - 1) tile+=7;
+	}
         else if(clk3<116)
-            tile+=10;
+	{
+            if ( scripttile <= -1 ) tile+=10;
+	}
         else if(clk3<132)
-            tile+=7;
+	{
+            if ( scripttile <= -1 ) tile+=7;
+	}
         else
-            tile+=((clk3-132)&24)?4:1;
+	{ 
+            if ( scripttile <= -1 ) tile+=((clk3-132)&24)?4:1;
+	} 
             
         enemy::draw(dest);
         
@@ -8962,36 +9010,48 @@ void eGohma::draw(BITMAP *dest)
     {
         // left side
         xofs=-16;
-        flip=0;
+        flip=scriptflip > -1 ? scriptflip:0;
         
         if(!(clk&16))
         {
-            tile+=2;
-            flip=1;
+            if ( scripttile <= -1 )tile+=2;
+            flip=scriptflip > -1 ? scriptflip:1;
         }
         
         enemy::draw(dest);
         
         // right side
-        tile=o_tile;
+        tile=scripttile > -1 ? scripttile:o_tile;
         xofs=16;
         
-        if((clk&16)) tile+=2;
+        if((clk&16)) 
+	{
+		if ( scripttile <= -1 ) tile+=2;
+	}
         
         //      tile=(180+182)-tile;
         enemy::draw(dest);
         
         // body
-        tile=o_tile;
+        tile=scripttile > -1 ? scripttile:o_tile;
         xofs=0;
         
         if(clk3<16)
-            tile+=4;
+	{
+            if ( scripttile <= -1 )tile+=4;
+	}
         else if(clk3<116)
-            tile+=5;
+	{
+            if ( scripttile <= -1 )tile+=5;
+	}
         else if(clk3<132)
-            tile+=4;
-        else tile+=((clk3-132)&8)?3:1;
+	{
+            if ( scripttile <= -1 )tile+=4;
+	}
+        else 
+	{
+		if ( scripttile <= -1 )tile+=((clk3-132)&8)?3:1;
+	}
         
         enemy::draw(dest);
         
@@ -9046,7 +9106,7 @@ bool eLilDig::animate(int index)
 
 void eLilDig::draw(BITMAP *dest)
 {
-    tile = o_tile;
+    tile = scripttile > -1 ? scripttile: o_tile;
     //    tile = 160;
     int fdiv = frate/4;
     int efrate = fdiv == 0 ? 0 : clk/fdiv;
@@ -9059,50 +9119,50 @@ void eLilDig::draw(BITMAP *dest)
         switch(dir-8)                                           //directions get screwed up after 8.  *shrug*
         {
         case up:                                              //u
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip:0;
             break;
             
         case l_up:                                            //d
-            flip=0;
-            tile+=4;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 ) tile+=4;
             break;
             
         case l_down:                                          //l
-            flip=0;
-            tile+=8;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=8;
             break;
             
         case left:                                            //r
-            flip=0;
-            tile+=12;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=12;
             break;
             
         case r_down:                                          //ul
-            flip=0;
-            tile+=20;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=20;
             break;
             
         case down:                                            //ur
-            flip=0;
-            tile+=24;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=24;
             break;
             
         case r_up:                                            //dl
-            flip=0;
-            tile+=28;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=28;
             break;
             
         case right:                                           //dr
-            flip=0;
-            tile+=32;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=32;
             break;
         }
         
-        tile+=f2;
+        if ( scripttile <= -1 )tile+=f2;
     }
     else
     {
-        tile+=(clk>=6)?1:0;
+        if ( scripttile <= -1 )tile+=(clk>=6)?1:0;
     }
     
     enemy::draw(dest);
@@ -9187,7 +9247,7 @@ void eBigDig::draw(BITMAP *dest)
         return;
     }
     
-    tile = o_tile;
+    tile = scripttile > -1 ? scripttile : o_tile;
     int fdiv = frate/4;
     int efrate = fdiv == 0 ? 0 : clk/fdiv;
     
@@ -9199,52 +9259,52 @@ void eBigDig::draw(BITMAP *dest)
         switch(dir-8)                                           //directions get screwed up after 8.  *shrug*
         {
         case up:                                              //u
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip:0;
             break;
             
         case l_up:                                            //d
-            flip=0;
-            tile+=8;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 ) tile+=8;
             break;
             
         case l_down:                                          //l
-            flip=0;
-            tile+=40;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=40;
             break;
             
         case left:                                            //r
-            flip=0;
-            tile+=48;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=48;
             break;
             
         case r_down:                                          //ul
-            flip=0;
-            tile+=80;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=80;
             break;
             
         case down:                                            //ur
-            flip=0;
-            tile+=88;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=88;
             
             break;
             
         case r_up:                                            //dl
-            flip=0;
-            tile+=120;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=120;
             break;
             
         case right:                                           //dr
-            flip=0;
-            tile+=128;
+            flip=scriptflip > -1 ? scriptflip:0;
+            if ( scripttile <= -1 )tile+=128;
             break;
         }
         
-        tile+=(f2*2);
+        if ( scripttile <= -1 )tile+=(f2*2);
     }
     else
     {
-        tile+=(f2)?0:2;
-        flip=(clk&1)?1:0;
+        if ( scripttile <= -1 )tile+=(f2)?0:2;
+        flip= scriptflip > -1 ? scriptflip : ((clk&1)?1:0);
     }
     
     xofs-=8;
@@ -9726,7 +9786,7 @@ void eGanon::draw(BITMAP *dest)
     {
     case 0:
         if((clk&3)==3)
-            tile=(rand()%5)*2+o_tile;
+            tile=scripttile > -1 ? scripttile : ((rand()%5)*2+o_tile);
             
         if(db!=999)
             break;
@@ -9736,7 +9796,7 @@ void eGanon::draw(BITMAP *dest)
             break;
             
     case -1:
-        tile=o_tile;
+        tile=scripttile > -1 ? scripttile : o_tile;
         
         //fall through
     case 1:
@@ -9754,15 +9814,15 @@ void eGanon::draw(BITMAP *dest)
 void eGanon::draw_guts(BITMAP *dest)
 {
     int c = zc_min(clk>>3,8);
-    tile = clk<24 ? 74 : 75;
-    overtile16(dest,tile,x+8,y+c+playing_field_offset,9,0);
-    overtile16(dest,tile,x+8,y+16-c+playing_field_offset,9,0);
-    overtile16(dest,tile,x+c,y+8+playing_field_offset,9,0);
-    overtile16(dest,tile,x+16-c,y+8+playing_field_offset,9,0);
-    overtile16(dest,tile,x+c,y+c+playing_field_offset,9,0);
-    overtile16(dest,tile,x+16-c,y+c+playing_field_offset,9,0);
-    overtile16(dest,tile,x+c,y+16-c+playing_field_offset,9,0);
-    overtile16(dest,tile,x+16-c,y+16-c+playing_field_offset,9,0);
+    tile = scripttile > -1 ? scripttile : clk<24 ? 74 : 75; 
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+8,y+c+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+8,y+16-c+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+c,y+8+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+16-c,y+8+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+c,y+c+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+16-c,y+c+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+c,y+16-c+playing_field_offset,9,0);
+    overtile16(dest,((scripttile > -1) ? scripttile : tile),x+16-c,y+16-c+playing_field_offset,9,0);
 }
 
 void eGanon::draw_flash(BITMAP *dest)
@@ -9770,7 +9830,7 @@ void eGanon::draw_flash(BITMAP *dest)
 
     int c = clk-(clk>>2);
     cs = (frame&3)+6;
-    overtile16(dest,194,x+8,y+8-clk+playing_field_offset,cs,0);
+    overtile16(dest,194,x+8,y+8-clk+playing_field_offset,cs,0); //no scripttile here? -Z
     overtile16(dest,194,x+8,y+8+clk+playing_field_offset,cs,2);
     overtile16(dest,195,x+8-clk,y+8+playing_field_offset,cs,0);
     overtile16(dest,195,x+8+clk,y+8+playing_field_offset,cs,1);
@@ -9868,7 +9928,7 @@ eMoldorm::eMoldorm(fix X,fix Y,int Id,int Clk) : enemy(X,Y,Id,Clk)
     clk=0;
     id=guys.Count();
     yofs=playing_field_offset;
-    tile=o_tile;
+    tile=(scripttile > -1) ? scripttile : o_tile;
     /*
       if (get_bit(quest_rules,qr_NEWENEMYTILES))
       {
@@ -9933,7 +9993,7 @@ bool eMoldorm::animate(int index)
                 y=segment->y;
             }
             
-            segment->o_tile=tile;
+            segment->o_tile= ((scripttile > -1) ? scripttile : tile);
             
             if((i==index+segcnt)&&(i!=index+1))                   //tail
             {
@@ -10048,7 +10108,7 @@ int esMoldorm::takehit(weapon *w)
 
 void esMoldorm::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     int fdiv = frate/4;
     int efrate = fdiv == 0 ? 0 : clk/fdiv;
     
@@ -10057,62 +10117,64 @@ void esMoldorm::draw(BITMAP *dest)
            
     if(get_bit(quest_rules,qr_NEWENEMYTILES))
     {
-        tile+=dummy_int[1]*40;
+        if ( scripttile <= -1 ) tile+=dummy_int[1]*40;
         
         if(dir<8)
         {
-            flip=0;
-            tile+=4*zc_max(dir, 0); // dir is -1 if trapped
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=4*zc_max(dir, 0); // dir is -1 if trapped
             
             if(dir>3) // Skip to the next row for diagonals
-                tile+=4;
+	    {
+                if ( scripttile <= -1 )tile+=4;
+	    }
         }
         else
         {
             switch(dir-8)                                           //directions get screwed up after 8.  *shrug*
             {
             case up:                                              //u
-                flip=0;
+                flip=scriptflip > -1 ? scriptflip :0;
                 break;
                 
             case l_up:                                            //d
-                flip=0;
-                tile+=4;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=4;
                 break;
                 
             case l_down:                                          //l
-                flip=0;
-                tile+=8;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=8;
                 break;
                 
             case left:                                            //r
-                flip=0;
-                tile+=12;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=12;
                 break;
                 
             case r_down:                                          //ul
-                flip=0;
-                tile+=20;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=20;
                 break;
                 
             case down:                                            //ur
-                flip=0;
-                tile+=24;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=24;
                 break;
                 
             case r_up:                                            //dl
-                flip=0;
-                tile+=28;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=28;
                 break;
                 
             case right:                                           //dr
-                flip=0;
-                tile+=32;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=32;
                 break;
             }
         }
         
-        tile+=f2;
+        if ( scripttile <= -1 )tile+=f2;
     }
     
     if(clk>=0)
@@ -10288,7 +10350,7 @@ int esLanmola::takehit(weapon *w)
 
 void esLanmola::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     int fdiv = frate/4;
     int efrate = fdiv == 0 ? 0 : clk/fdiv;
     
@@ -10299,43 +10361,43 @@ void esLanmola::draw(BITMAP *dest)
     {
         if(id>=0x2000)
         {
-            tile+=20;
+            if ( scripttile <= -1 )tile+=20;
             
             if(dummy_int[1]==1)
             {
-                tile+=20;
+                if ( scripttile <= -1 )tile+=20;
             }
         }
         
         switch(dir)
         {
         case up:
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip :0;
             break;
             
         case down:
-            flip=0;
-            tile+=4;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=4;
             break;
             
         case left:
-            flip=0;
-            tile+=8;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=8;
             break;
             
         case right:
-            flip=0;
-            tile+=12;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=12;
             break;
         }
         
-        tile+=f2;
+        if ( scripttile <= -1 )tile+=f2;
     }
     else
     {
         if(id>=0x2000)
         {
-            tile+=1;
+            if ( scripttile <= -1 )tile+=1;
         }
     }
     
@@ -10578,7 +10640,7 @@ int eManhandla::takehit(weapon *w)
 
 void eManhandla::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     int fdiv = frate/4;
     int efrate = fdiv == 0 ? 0 : clk/fdiv;
     
@@ -10592,46 +10654,46 @@ void eManhandla::draw(BITMAP *dest)
             switch(dir-8)                                         //directions get screwed up after 8.  *shrug*
             {
             case up:                                            //u
-                flip=0;
+                flip=scriptflip > -1 ? scriptflip :0;
                 break;
                 
             case l_up:                                          //d
-                flip=0;
-                tile+=4;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=4;
                 break;
                 
             case l_down:                                        //l
-                flip=0;
-                tile+=8;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=8;
                 break;
                 
             case left:                                          //r
-                flip=0;
-                tile+=12;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=12;
                 break;
                 
             case r_down:                                        //ul
-                flip=0;
-                tile+=20;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=20;
                 break;
                 
             case down:                                          //ur
-                flip=0;
-                tile+=24;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=24;
                 break;
                 
             case r_up:                                          //dl
-                flip=0;
-                tile+=28;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=28;
                 break;
                 
             case right:                                         //dr
-                flip=0;
-                tile+=32;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=32;
                 break;
             }
             
-            tile+=f2;
+            if ( scripttile <= -1 )tile+=f2;
             enemy::draw(dest);
         }                                                       //manhandla 2, big body
         else
@@ -10640,46 +10702,46 @@ void eManhandla::draw(BITMAP *dest)
             switch(dir-8)                                         //directions get screwed up after 8.  *shrug*
             {
             case up:                                            //u
-                flip=0;
+                flip=scriptflip > -1 ? scriptflip :0;
                 break;
                 
             case l_up:                                          //d
-                flip=0;
-                tile+=8;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=8;
                 break;
                 
             case l_down:                                        //l
-                flip=0;
-                tile+=40;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=40;
                 break;
                 
             case left:                                          //r
-                flip=0;
-                tile+=48;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=48;
                 break;
                 
             case r_down:                                        //ul
-                flip=0;
-                tile+=80;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=80;
                 break;
                 
             case down:                                          //ur
-                flip=0;
-                tile+=88;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=88;
                 break;
                 
             case r_up:                                          //dl
-                flip=0;
-                tile+=120;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=120;
                 break;
                 
             case right:                                         //dr
-                flip=0;
-                tile+=128;
+                flip=scriptflip > -1 ? scriptflip :0;
+                if ( scripttile <= -1 )tile+=128;
                 break;
             }
             
-            tile+=(f2*2);
+            if ( scripttile <= -1 ) tile+=(f2*2);
             xofs-=8;
             yofs-=8;
             drawblock(dest,15);
@@ -10753,7 +10815,7 @@ bool esManhandla::animate(int index)
 
 void esManhandla::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     int fdiv = frate/4;
     int efrate = fdiv == 0 ? 0 : clk/fdiv;
     int f2=get_bit(quest_rules,qr_NEWENEMYTILES)?
@@ -10767,36 +10829,36 @@ void esManhandla::draw(BITMAP *dest)
             break;
             
         case down:
-            tile+=4;
+            if ( scripttile <= -1 )tile+=4;
             break;
             
         case left:
-            tile+=8;
+            if ( scripttile <= -1 )tile+=8;
             break;
             
         case right:
-            tile+=12;
+            if ( scripttile <= -1 )tile+=12;
             break;
         }
         
-        tile+=f2;
+        if ( scripttile <= -1 )tile+=f2;
     }
     else
     {
         switch(misc&3)
         {
         case down:
-            flip=2;
+            flip=scriptflip > -1 ? scriptflip :2;
             
         case up:
-            tile=(clk3)?188:189;
+            tile=scripttile > -1 ? scripttile : ((clk3)?188:189);
             break;
             
         case right:
-            flip=1;
+            flip=scriptflip > -1 ? scriptflip :1;
             
         case left:
-            tile=(clk3)?186:187;
+            tile=scripttile > -1 ? scripttile : ((clk3)?186:187);
             break;
         }
     }
@@ -10967,7 +11029,7 @@ int eGleeok::takehit(weapon*)
 
 void eGleeok::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     
     if(dying)
     {
@@ -10987,19 +11049,19 @@ void eGleeok::draw(BITMAP *dest)
         
         {
         case 0:
-            tile+=0;
+            if ( scripttile <= -1 ) tile+=0;
             break;
             
         case 1:
-            tile+=2;
+            if ( scripttile <= -1 ) tile+=2;
             break;
             
         case 2:
-            tile+=4;
+            if ( scripttile <= -1 ) tile+=4;
             break;
             
         default:
-            tile+=6;
+            if ( scripttile <= -1 ) tile+=6;
             break;
         }
     }
@@ -11012,15 +11074,15 @@ void eGleeok::draw(BITMAP *dest)
         switch(f)
         {
         case 0:
-            tile+=0;
+            if ( scripttile <= -1 ) tile+=0;
             break;
             
         case 2:
-            tile+=4;
+            if ( scripttile <= -1 ) tile+=4;
             break;
             
         default:
-            tile+=2;
+            if ( scripttile <= -1 ) tile+=2;
             break;
         }
     }
@@ -11031,13 +11093,13 @@ void eGleeok::draw(BITMAP *dest)
 void eGleeok::draw2(BITMAP *dest)
 {
     // the neck stub
-    tile=necktile;
+    tile=scripttile > -1 ? scripttile : necktile;
     xofs=0;
     yofs=playing_field_offset;
     
     if(get_bit(quest_rules,qr_NEWENEMYTILES))
     {
-        tile+=((clk&24)>>3);
+        if ( scripttile <= -1 ) tile+=((clk&24)>>3);
     }
     
     /*
@@ -11153,7 +11215,7 @@ bool esGleeok::animate(int index)
     {
     case 0:                                                 // live head
         //  set up the attached head tiles
-        tile=headtile;
+        tile=scripttile > -1 ? scripttile : headtile;
         
         if(get_bit(quest_rules,qr_NEWENEMYTILES))
         {
@@ -11320,11 +11382,11 @@ void esGleeok::draw(BITMAP *dest)
         break;
         
     case 1:                                                 //flying head
-        tile=flyingheadtile;
+        tile=scripttile > -1 ? scripttile : flyingheadtile;
         
         if(get_bit(quest_rules,qr_NEWENEMYTILES))
         {
-            tile+=((clk&24)>>3);
+            if ( scripttile <= -1 ) tile+=((clk&24)>>3);
             break;
         }
         
@@ -11659,7 +11721,7 @@ bool ePatra::animate(int index)
 
 void ePatra::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     update_enemy_frame();
     enemy::draw(dest);
 }
@@ -11705,53 +11767,53 @@ void esPatra::draw(BITMAP *dest)
 {
     if(get_bit(quest_rules,qr_NEWENEMYTILES))
     {
-        tile = o_tile+(clk&3);
+        tile = scripttile > -1 ? scripttile : (o_tile+(clk&3));
         
         switch(dir)                                             //directions get screwed up after 8.  *shrug*
         {
         case up:                                              //u
-            flip=0;
+            flip=scriptflip > -1 ? scriptflip :0;
             break;
             
         case down:                                            //d
-            flip=0;
-            tile+=4;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 ) tile+=4;
             break;
             
         case left:                                            //l
-            flip=0;
-            tile+=8;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=8;
             break;
             
         case right:                                           //r
-            flip=0;
-            tile+=12;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=12;
             break;
             
         case l_up:                                            //ul
-            flip=0;
-            tile+=20;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=20;
             break;
             
         case r_up:                                            //ur
-            flip=0;
-            tile+=24;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=24;
             break;
             
         case l_down:                                          //dl
-            flip=0;
-            tile+=28;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=28;
             break;
             
         case r_down:                                          //dr
-            flip=0;
-            tile+=32;
+            flip=scriptflip > -1 ? scriptflip :0;
+            if ( scripttile <= -1 )tile+=32;
             break;
         }
     }
     else
     {
-        tile = o_tile+((clk&2)>>1);
+        tile = scripttile > -1 ? scripttile : (o_tile+((clk&2)>>1));
     }
     
     if(clk>=0)
@@ -11895,7 +11957,7 @@ bool ePatraBS::animate(int index)
 
 void ePatraBS::draw(BITMAP *dest)
 {
-    tile=o_tile;
+    tile=scripttile > -1 ? scripttile : o_tile;
     
     if(get_bit(quest_rules,qr_NEWENEMYTILES))
     {
