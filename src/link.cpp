@@ -993,7 +993,7 @@ int LinkClass::weaponattackpower()
 
 // Must only be called once per frame!
 void LinkClass::positionSword(weapon *w, int itemid)
-{
+{	if ( !do_animation ) return;
 	//if ( w->ScriptGenerated ) return; //t/b/a for script-generated swords.
 	//if ( itemsbuf[itemid].ScriptGenerated ) return; //t/b/a for script-generated swords.
     itemid=vbound(itemid, 0, MAXITEMS-1);
@@ -2027,15 +2027,17 @@ void LinkClass::checkstab()
             wxsz = w->hxsz;
             wysz = w->hysz;
 			parentitem = w->parentitem;
+	    if ( !(w->do_animation) ) goto skip_sword_early_return;
             break;
         }
     }
     
-    if(attack==wSword && attackclk>=14 && charging==0)
+    if(attack==wSword && attackclk>=14 && charging==0 )
         return;
         
     if(!found)
         return;
+    skip_sword_early_return:
     
 	if(attack == wFire)
 		return;

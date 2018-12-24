@@ -1269,10 +1269,13 @@ long get_register(const long arg)
     
 ///----------------------------------------------------------------------------------------------------//
 //Link's Variables
+    case LINKSWORDCLOCK:
+        ret = long(Link.attackclk) * 10000;
+        break;
+    
     case LINKX:
         ret = long(Link.getX()) * 10000;
         break;
-
         
     case LINKY:
         ret = long(Link.getY()) * 10000;
@@ -6537,6 +6540,20 @@ void set_register(const long arg, const long value)
 //Link's Variables
     case LINKX:
         Link.setX(value/10000);
+        break;
+        
+    case LINKSWORDCLOCK:
+    {
+	//for(int q = 0; q < Lwpns.Count(); q++)
+	//{
+	//	weapon *w = (weapon*)Lwpns.spr(q);
+	//	if ( w->id == wSword && !(w->do_animation) )
+	//	{
+			Link.attackclk=(value/10000);
+			break;
+	//	}
+	//}
+    }
         break;
         
     case LINKY:

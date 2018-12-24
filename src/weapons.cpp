@@ -2627,7 +2627,7 @@ bool weapon::animate(int index)
     case wHammer:
         if(LinkAction()!=attacking && LinkAction()!=ischarging && !LinkCharged())
         {
-            dead=0;
+            if ( do_animation ) dead=0;
         }
         
         break;
@@ -5071,7 +5071,7 @@ bool weapon::animateandrunscript(int ii)
     case wHammer:
         if(LinkAction()!=attacking && LinkAction()!=ischarging && !LinkCharged())
         {
-            dead=0;
+            if ( do_animation ) dead=0;
         }
         
         break;

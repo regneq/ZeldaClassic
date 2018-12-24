@@ -1793,6 +1793,7 @@ script_variable variable_list[]=
 	{"NPCENGINEANIMATE", NPCENGINEANIMATE, 0, 0 },
 	{"LWPNENGINEANIMATE", LWPNENGINEANIMATE, 0, 0 },
 	{"EWPNENGINEANIMATE", EWPNENGINEANIMATE, 0, 0 },
+	{"LINKSWORDCLOCK", LINKSWORDCLOCK, 0, 0 },
 	
 	
 	{ " ",                       -1,             0,             0 }

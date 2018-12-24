@@ -3198,6 +3198,7 @@ enum ASM_DEFINE
 #define NPCENGINEANIMATE 		0x1338
 #define LWPNENGINEANIMATE 		0x1339
 #define EWPNENGINEANIMATE 		0x133A
+#define LINKSWORDCLOCK 		0x133B
 
 //bytecode
 
@@ -3205,7 +3206,7 @@ enum ASM_DEFINE
 //#define DMAPDATAJUMPLAYER 	//unimplemented
 //end vars
 
-#define NUMVARIABLES         0x133B
+#define NUMVARIABLES         0x133C
 
 
 // Script types

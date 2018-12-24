@@ -22,6 +22,8 @@
 #define ALLEGRO_COLOR24
 #define ALLEGRO_COLOR32
 
+//#define ALLEGRO_MSVC
+
 
 /* for backward compatibility */
 #ifdef USE_CONSOLE
