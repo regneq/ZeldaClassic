@@ -4261,7 +4261,8 @@ case SCREENCATCH:
 	    //Z_scripterrlog("GetLinkExtend rid->[0] is (%i), trying to use for '%s'\n", dir, "dir");
 		if ( Lwpns.Count() < 256 )
 		{
-			Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,itemid,false,1,Link.getUID(),1));
+			Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,itemid,Link.getUID(), false, 1, 1));
+			//Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,itemid,false,1,Link.getUID(),1));
 			ri->lwpn = Lwpns.spr(Lwpns.Count() - 1)->getUID();
 		}
 		else
@@ -13761,9 +13762,14 @@ void do_createlweapon(const bool v)
     
 	if ( Lwpns.Count() < 256 )
 	{
-			Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,-1,false,1,Link.getUID(),1));
-			ri->lwpn = Lwpns.spr(Lwpns.Count() - 1)->getUID();
-			Z_eventlog("Script created lweapon %ld with UID = %ld\n", ID, ri->lwpn);
+			//Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,-1,false,1,Link.getUID(),1));
+		Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,-1,Link.getUID(), false, 1, 1));
+		//Z_scripterrlog(" Link.getUID() is: %d\n", Link.getUID());
+			//ri->lwpn = Lwpns.spr(Lwpns.Count() - 1)->getUID();
+			//Z_eventlog("Script created lweapon %ld with UID = %ld\n", ID, ri->lwpn);
+		//weapon *w = (weapon*)Lwpns.spr(Lwpns.Count()-1); //We just created it, so it's the highest value. 
+		//w->o_tile = 2;
+		
 	}
 	else
 	{
@@ -13772,9 +13778,11 @@ void do_createlweapon(const bool v)
 	}
 	return;
         //old version is below
-    Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,-1,false,1,Link.getUID(),1));
+    //Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,-1,false,1,Link.getUID(),1));
+    Lwpns.add(new weapon((fix)0,(fix)0,(fix)0,ID,0,0,0,-1,Link.getUID(), false, 1, 1));
+	Z_scripterrlog(" Link.getUID() is: %d\n", Link.getUID());
 		
-    //addLwpn(0, 0, 0, ID, 0, 0, 0, Link.getUID());
+    //addLwpn(0, 0, 0, ID, 0, 0, 0, Link.getUID(), 1, 1);
     
     if(Lwpns.Count() < 1)
     {

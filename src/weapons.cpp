@@ -414,7 +414,7 @@ weapon::~weapon()
 }
 
 //ZScript-only
-weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem, int prntid, bool isDummy, byte script_gen, byte isLW) : sprite(), parentid(prntid)
+weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem, int prntid, bool isDummy, int script_gen, int isLW) : sprite(), parentid(prntid)
 {
     x=X;
     y=Y;
@@ -534,7 +534,7 @@ weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem
 	if(parentitem >-1)
 	{
 		
-		
+		Z_scripterrlog("Create an Script Typed LWeapon (%d) with a parent item of: %d\n", id, parentitem);
 		if ( itemsbuf[parentitem].weapoverrideFLAGS&itemdataOVERRIDE_TILEWIDTH ) { txsz = itemsbuf[parentitem].weap_tilew;}
 		if ( itemsbuf[parentitem].weapoverrideFLAGS&itemdataOVERRIDE_TILEHEIGHT ){  tysz = itemsbuf[parentitem].weap_tileh;}
 		if ( itemsbuf[parentitem].weapoverrideFLAGS&itemdataOVERRIDE_HIT_WIDTH ){  hxsz = itemsbuf[parentitem].weap_hxsz;}
@@ -571,7 +571,13 @@ weapon::weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentitem
 				default: flip = 0; break;
 			}
 		}
+		
 	}
+	else 
+		{
+			Z_scripterrlog("Created an LWeapon with a script type of (%d) and a parentitem of (%d)\n", id, parentitem);
+			LOADGFX(-1);
+		}
 	
 	break;
     } 
@@ -2114,7 +2120,7 @@ void weapon::LOADGFX(int wpn)
     flash = wpnsbuf[wid].misc&3;
     tile  = wpnsbuf[wid].newtile;
     cs = wpnsbuf[wid].csets&15;
-    o_tile = wpnsbuf[wid].newtile;
+    
     o_cset = wpnsbuf[wid].csets;
     o_flip=(wpnsbuf[wid].misc>>2)&3;
     o_speed = wpnsbuf[wid].speed;
@@ -2122,6 +2128,31 @@ void weapon::LOADGFX(int wpn)
     frames = wpnsbuf[wid].frames;
     temp1 = wpnsbuf[wFIRE].newtile;
     behind = (wpnsbuf[wid].misc&WF_BEHIND)!=0;
+    
+    switch(id)
+    {
+	case wScript1:
+	case wScript2:
+	case wScript3:
+	case wScript4:
+	case wScript5:
+	case wScript6:
+	case wScript7:
+	case wScript8:
+	case wScript9:
+	case wScript10:
+	{
+		Z_scripterrlog("LW_SCRIPT Weapon Called LOADGFX() and its parentitem is: %d\n", parentitem);
+			
+		if ( parentitem > -1 && !ScriptGenerated )
+		{
+			o_tile = wpnsbuf[wid].newtile; break; 
+			
+		}
+		else o_tile = -1; break;
+	}
+	default: o_tile = wpnsbuf[wid].newtile; break; 
+    }
 }
 
 bool weapon::Dead()

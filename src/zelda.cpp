@@ -1033,9 +1033,9 @@ LinkClass   Link;
 #include "zc_sys.h"
 
 // Wait... this is only used by ffscript.cpp!?
-void addLwpn(int x,int y,int z,int id,int type,int power,int dir, int parentid)
+void addLwpn(int x,int y,int z,int id,int type,int power,int dir, int parentid, byte scriptgen, byte islw)
 {
-    Lwpns.add(new weapon((fix)x,(fix)y,(fix)z,id,type,power,dir,-1,parentid));
+    Lwpns.add(new weapon((fix)x,(fix)y,(fix)z,id,type,power,dir,-1,parentid, false, scriptgen, islw));
 }
 
 
