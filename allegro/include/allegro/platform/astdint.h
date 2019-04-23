@@ -42,7 +42,7 @@
    #define uint32_t     unsigned int
    #define intptr_t     int32_t
    #define uintptr_t    uint32_t
-#define uint64_t long
+#define uint64_t long long
 /*#else
    #error I dunno how to get the definitions of fixed-width integer types on your platform.  Please report this to your friendly Allegro developer.
 #endif
