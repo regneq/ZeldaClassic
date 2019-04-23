@@ -18241,13 +18241,21 @@ void FFScript::do_readbitmap(const bool v)
 	ArrayH::getString(arrayptr, filename_str, 512);
 	Z_scripterrlog("ReadBitmap() filename is %s\n",filename_str.c_str());
 	int bit_id = 0;
-        do
+	if ( ri->bitmapref < 17 ) //Not initialised yet.
 	{
-		bit_id = FFCore.get_free_bitmap();
-	} while (bit_id < firstUserGeneratedBitmap); //be sure not to overlay with system bitmaps!
+		do
+		{
+			bit_id = FFCore.get_free_bitmap();
+		} while (bit_id < firstUserGeneratedBitmap); //be sure not to overlay with system bitmaps!
+	}
+	else if ( ri->bitmapref >= 17 ) //initialised to a user bitmap
+	{
+		bit_id = ri->bitmapref-10;
+		destroy_bitmap(scb.script_created_bitmaps[bit_id].u_bmp); //Clear the existing bitmap on this pointer. 
+		
+	}
         if ( bit_id > 0 )
         {
-		int bit_id = FFCore.get_free_bitmap();
 		scb.script_created_bitmaps[bit_id].u_bmp = load_bitmap(filename_str.c_str(), RAMpal);
 		if ( scb.script_created_bitmaps[bit_id].u_bmp ) 
 		{
