@@ -17,13 +17,14 @@
 
 #ifndef ASTDINT_H
 #define ASTDINT_H
-
+#endif
 /* Please only include this file from include/allegro/internal/alconfig.h
  * and don't add more than inttypes.h/stdint.h emulation here.  Thanks.
  */
 
 
 
+/*
 #if defined ALLEGRO_HAVE_INTTYPES_H
    #include <inttypes.h>
 #elif defined ALLEGRO_HAVE_STDINT_H
@@ -32,6 +33,7 @@
    #ifndef ALLEGRO_GUESS_INTTYPES_OK
       #warning Guessing the definitions of fixed-width integer types.
    #endif
+*/
    #define int8_t       signed char
    #define uint8_t      unsigned char
    #define int16_t      signed short
@@ -40,10 +42,12 @@
    #define uint32_t     unsigned int
    #define intptr_t     int32_t
    #define uintptr_t    uint32_t
-#else
+#define uint64_t long
+/*#else
    #error I dunno how to get the definitions of fixed-width integer types on your platform.  Please report this to your friendly Allegro developer.
 #endif
+*/
 
 
+//#endif /* ifndef ASTDINT_H */
 
-#endif /* ifndef ASTDINT_H */

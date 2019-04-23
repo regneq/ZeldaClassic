@@ -277,6 +277,15 @@ void ending()
     draw_screen(tmpscr);
     advanceframe(true);
     
+    int creditsLine=0;
+    int endTextLine=0;
+    
+    const EndingTextLine* endText;
+    int numEndTextLines=0;
+    int deathsYPos=-1;
+    int timeYPos=-1;
+    int len=600*2;
+    
     if ( FFCore.skip_ending_credits ) goto credits_skip;
     
     draw_screen_clip_rect_x1=0;
@@ -434,20 +443,14 @@ void ending()
     // draw the brick
     puttile16(scrollbuf,3,256,0,csBOSS,0);
     
-    int len=600*2;
+    
     
     if(game->get_quest()>1)
     {
         len=720*2;
     }
     
-    int creditsLine=0;
-    int endTextLine=0;
     
-    const EndingTextLine* endText;
-    int numEndTextLines=0;
-    int deathsYPos=-1;
-    int timeYPos=-1;
     
     switch(game->get_quest())
     {
