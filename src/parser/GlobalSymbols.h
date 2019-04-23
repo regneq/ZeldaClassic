@@ -18,6 +18,8 @@ namespace ZScript
 	class Scope;
 }
 
+void SET_DATACLASS_MEMBER(const char * const str, int ffins);
+
 static const int SETTER = 0;
 static const int GETTER = 1;
 static const int FUNCTION = 2;

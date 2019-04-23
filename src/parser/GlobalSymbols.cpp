@@ -1328,7 +1328,7 @@ static AccessorTable FFCTable[] =
     { "getID",                ZVARTYPEID_FLOAT,         GETTER,       FFCID,               1,      {  ZVARTYPEID_FFC,          -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
     { "setID",                   ZVARTYPEID_VOID,          SETTER,       FFCID,                   1,      {  ZVARTYPEID_FFC,           ZVARTYPEID_FLOAT,        -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
     { "ChangeFFCScript",                   ZVARTYPEID_VOID,          SETTER,       FFCID,                   1,      {  ZVARTYPEID_FFC,           ZVARTYPEID_FLOAT,        -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
-      { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
+    { "",                      -1,                               -1,           -1,                   -1,      { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
 
 FFCSymbols::FFCSymbols()
@@ -3834,6 +3834,22 @@ void GameSymbols::generateCode()
     //Bitmap
     {
 	    Function* function = getFunction("ReadBitmap");
+	    
+	     int label = function->getLabel();
+        vector<Opcode *> code;
+        //pop off the param
+        Opcode *first = new OPopRegister(new VarArgument(EXP1));
+        first->setLabel(label);
+        code.push_back(first);
+        //pop pointer, and ignore it
+        code.push_back(new OPopRegister(new VarArgument(EXP1)));
+        code.push_back(new OGetReadBitmap(new VarArgument(EXP1)));
+        code.push_back(new OSetRegister(new VarArgument(EXP1), new VarArgument(REFBITMAP)));
+	code.push_back(new OSetRegister(new VarArgument(REFBITMAP), new VarArgument(EXP2)));
+        code.push_back(new OReturn());
+        function->giveCode(code);
+	    
+	/*
         int label = function->getLabel();
         vector<Opcode *> code;
         //pop off the param
@@ -3841,11 +3857,14 @@ void GameSymbols::generateCode()
         first->setLabel(label);
         code.push_back(first);
         //pop pointer, and ignore it
-        code.push_back(new OPopRegister(new VarArgument(NUL)));
+	    code.push_back(new OPopRegister(new VarArgument(EXP2)));
+        code.push_back(new OSetRegister(new VarArgument(REFBITMAP), new VarArgument(EXP2)));
+	    //code.push_back(new OPopRegister(new VarArgument(NUL)));
         code.push_back(new OGetReadBitmap(new VarArgument(EXP1)));
         code.push_back(new OSetRegister(new VarArgument(EXP1), new VarArgument(REFBITMAP)));
-        code.push_back(new OReturn());
+        code.push_back(new OReturn());	
         function->giveCode(code);   
+	*/
     }
     //bool GetScreenState(game, int,int,int)
     {
@@ -7327,7 +7346,8 @@ static AccessorTable BitmapTable[] =
 	{ "getHeight",              ZVARTYPEID_FLOAT,         GETTER,       BITMAPHEIGHT,           1,      {  ZVARTYPEID_BITMAP,          -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "setHeight",              ZVARTYPEID_VOID,         SETTER,       BITMAPHEIGHT,           1,      {  ZVARTYPEID_BITMAP,          ZVARTYPEID_FLOAT,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "Write",			  ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  ZVARTYPEID_BITMAP,          ZVARTYPEID_FLOAT,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
-  
+	{ "ReadBitmap",           ZVARTYPEID_BITMAP,     FUNCTION,     0,                    1,      {  ZVARTYPEID_BITMAP,          ZVARTYPEID_FLOAT,        -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	
 
 	{ "", 		-1,                     -1,             -1,     -1,     { -1,                   -1,                     -1,               -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 } }
 };
@@ -7355,6 +7375,28 @@ void BitmapSymbols::generateCode()
 		code.push_back(new OReturn());
 		function->giveCode(code);
 	}
+	//Bitmap
+	    {
+		    Function* function = getFunction("ReadBitmap");
+		    int label = function->getLabel();
+		    vector<Opcode *> code;
+		    //pop index
+		    Opcode *first = new OPopRegister(new VarArgument(INDEX));
+		    first->setLabel(label);
+		    code.push_back(first);
+		    //pop object pointer
+		    code.push_back(new OPopRegister(new VarArgument(EXP2)));
+
+		    // Load object pointer into ref register.
+		    if (refVar != NUL)
+			code.push_back(new OSetRegister(new VarArgument(refVar), new VarArgument(EXP2)));
+		    code.push_back(new OGetReadBitmap(new VarArgument(EXP1)));
+		    code.push_back(new OReturn());
+		    function->giveCode(code);
+		    
+		
+		    
+	    }
 	//void Write(int arr[])
 	{
 		Function* function = getFunction("Write");

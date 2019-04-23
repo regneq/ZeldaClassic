@@ -18235,11 +18235,13 @@ void FFScript::do_write_bitmap()
 void FFScript::do_readbitmap(const bool v)
 {	
 	long arrayptr = SH::get_arg(sarg1, v) / 10000;
-
+	for ( int q = 0; q < 16; ++q )
+	Z_scripterrlog("readbitmap stack: sp+%d is: %d\n", q, SH::read_stack(ri->sp+q));
 	string filename_str;
 
 	ArrayH::getString(arrayptr, filename_str, 512);
 	Z_scripterrlog("ReadBitmap() filename is %s\n",filename_str.c_str());
+	Z_scripterrlog("ReadBitmap() initial ri->bitmapref is %d\n",ri->bitmapref);
 	int bit_id = 0;
 	if ( ri->bitmapref < 17 ) //Not initialised yet.
 	{
