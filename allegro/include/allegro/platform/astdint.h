@@ -25,9 +25,9 @@
 
 
 //#if defined ALLEGRO_HAVE_INTTYPES_H
-//   #include <inttypes.h>
+#include <inttypes.h>
 //#elif defined ALLEGRO_HAVE_STDINT_H
-//   #include <stdint.h>
+   #include <stdint.h>
 //#if defined ALLEGRO_I386 && defined ALLEGRO_LITTLE_ENDIAN
    //#ifndef ALLEGRO_GUESS_INTTYPES_OK
      // #warning Guessing the definitions of fixed-width integer types.
@@ -40,7 +40,7 @@
    #define uint32_t     unsigned int
    #define intptr_t     int32_t
    #define uintptr_t    uint32_t
-#define uint64_t long
+#define uint64_t long long
 //#else
 //   #error I dunno how to get the definitions of fixed-width integer types on your platform.  Please report this to your friendly Allegro developer.
 //#endif
