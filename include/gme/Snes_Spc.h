@@ -2,7 +2,7 @@
 // Super Nintendo (SNES) SPC-700 APU Emulator
 
 // Game_Music_Emu 0.3.0
-
+#include "stdint.h"
 #ifndef SNES_SPC_H
 #define SNES_SPC_H
 

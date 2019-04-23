@@ -5,7 +5,7 @@
 
 #ifndef BLARGG_COMMON_H
 #define BLARGG_COMMON_H
-
+#include "stdint.h"
 // HAVE_CONFIG_H: If defined, include user's "config.h" first (which *can*
 // re-include blargg_common.h if it needs to)
 #ifdef HAVE_CONFIG_H
