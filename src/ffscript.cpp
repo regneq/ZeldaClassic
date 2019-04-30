@@ -14624,8 +14624,15 @@ void do_drawing_command(const int script_command)
 	}
 	case 	REGENERATEBITMAP:	
 	{
-		Z_scripterrlog("Calling %s\n","CLEARBITMAP");
+		Z_scripterrlog("Calling %s with 3 args\n","CLEARBITMAP");
 		set_user_bitmap_command_args(j, 3);
+		script_drawing_commands[j][17] = SH::read_stack(ri->sp+3); 
+		break;
+	}
+	case 	REGENERATEBITMAP2:	
+	{
+		Z_scripterrlog("Calling %s with 4 args\n","CLEARBITMAP");
+		set_user_bitmap_command_args(j, 4);
 		script_drawing_commands[j][17] = SH::read_stack(ri->sp+3); 
 		break;
 	}

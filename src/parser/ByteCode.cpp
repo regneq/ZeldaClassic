@@ -4367,6 +4367,11 @@ string ORegenerateBitmap::toString()
     return "REGENERATEBITMAP";
 }
 
+string ORegenerateBitmap2::toString()
+{
+    return "REGENERATEBITMAP2";
+}
+
 string OReadBitmap::toString()
 {
     return "READBITMAP";

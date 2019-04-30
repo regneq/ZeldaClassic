@@ -7364,6 +7364,15 @@ namespace ZScript
 			return new ORegenerateBitmap();
 		}
 	};
+	class ORegenerateBitmap2 : public Opcode
+	{
+	public:
+		string toString();
+		Opcode *clone()
+		{
+			return new ORegenerateBitmap2();
+		}
+	};
 	
 	class OWriteBitmap : public Opcode
 	{
