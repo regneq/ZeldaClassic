@@ -9799,7 +9799,7 @@ void do_bmpdrawlayerr(BITMAP *bmp, int *sdci, int xoffset, int yoffset, bool isO
             const int x2 = ((i&15)<<4) + x1;
             const int y2 = (i&0xF0) + y1;
             
-            if(noclip||(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
+            if(noclip&&(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
             {
                 const newcombo & c = combobuf[ l.data[i] ];
                 const int tile = combo_tile(c, x2, y2);
@@ -9948,7 +9948,7 @@ void do_bmpdrawlayersolidmaskr(BITMAP *bmp, int *sdci, int xoffset, int yoffset,
             const int x2 = ((i&15)<<4) + x1;
             const int y2 = (i&0xF0) + y1;
             
-            if((x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY) || noclip)   //in clipping rect
+            if(noclip&&(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
             {
                 int sol = (combobuf[l.data[i]].walk);
                 
@@ -10041,7 +10041,7 @@ void do_bmpdrawlayersolidityr(BITMAP *bmp, int *sdci, int xoffset, int yoffset, 
             const int x2 = ((i&15)<<4) + x1;
             const int y2 = (i&0xF0) + y1;
             
-            if(noclip || (x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
+            if(noclip && (x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
             {
                 clear_to_color(square,(combobuf[l.data[i]].walk&15));
 		blit(square, b, 0, 0, x2, y2, square->w, square->h);
@@ -10117,7 +10117,7 @@ void do_bmpdrawlayercflagr(BITMAP *bmp, int *sdci, int xoffset, int yoffset, boo
             const int x2 = ((i&15)<<4) + x1;
             const int y2 = (i&0xF0) + y1;
             
-            if(noclip||(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
+            if(noclip&&(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
             {
                 clear_to_color(square,l.sflag[i]);
 		blit(square, b, 0, 0, x2, y2, square->w, square->h);
@@ -10191,7 +10191,7 @@ void do_bmpdrawlayerctyper(BITMAP *bmp, int *sdci, int xoffset, int yoffset, boo
             const int x2 = ((i&15)<<4) + x1;
             const int y2 = (i&0xF0) + y1;
             
-            if(noclip||(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
+            if(noclip&&(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
             {
                 clear_to_color(square,(combobuf[l.data[i]].type));
 		blit(square, b, 0, 0, x2, y2, square->w, square->h);
@@ -10265,7 +10265,7 @@ void do_bmpdrawlayerciflagr(BITMAP *bmp, int *sdci, int xoffset, int yoffset, bo
             const int x2 = ((i&15)<<4) + x1;
             const int y2 = (i&0xF0) + y1;
             
-            if(noclip||(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
+            if(noclip&&(x2 > -16 && x2 < maxX && y2 > -16 && y2 < maxY))   //in clipping rect
             {
                 clear_to_color(square,(combobuf[l.data[i]].flag));
 		blit(square, b, 0, 0, x2, y2, square->w, square->h);
