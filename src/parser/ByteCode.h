@@ -7512,6 +7512,17 @@ namespace ZScript
 			return new OGraphicsGetpixel(a->clone());
 		}
 	};
+	
+	class OBitmapGetpixel : public UnaryOpcode
+	{
+	public:
+		OBitmapGetpixel(Argument *A) : UnaryOpcode(A) {}
+		string toString();
+		Opcode *clone()
+		{
+			return new OBitmapGetpixel(a->clone());
+		}
+	};
 }
 
 #endif

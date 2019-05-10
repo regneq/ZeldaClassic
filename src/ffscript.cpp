@@ -14816,6 +14816,8 @@ void do_drawing_command(const int script_command)
 	case 	BMPDRAWSCREENCOMBOIR:
 	case 	BMPDRAWSCREENCOMBOTR:
 		set_user_bitmap_command_args(j, 6); script_drawing_commands[j][17] = SH::read_stack(ri->sp+6); break;
+	case 	BITMAPGETPIXEL:
+		set_user_bitmap_command_args(j, 3); script_drawing_commands[j][17] = SH::read_stack(ri->sp+3); break;
 	case 	BMPBLIT:	
 	{
 		set_user_bitmap_command_args(j, 16); 
@@ -17633,6 +17635,7 @@ int run_script(const byte type, const word script, const long i)
 		case 	BMPDRAWSCREENCOMBOFR:
 		case 	BMPDRAWSCREENCOMBOIR:
 		case 	BMPDRAWSCREENCOMBOTR:
+		case 	BITMAPGETPIXEL:
 		case 	BMPBLIT:
 		case 	BMPBLITTO:
 		case 	BMPMODE7:
@@ -18598,6 +18601,11 @@ void FFScript::do_write_bitmap()
 			Z_scripterrlog("WriteBitmap() failed to write image file %s\n",filename_str.c_str());
 		}
 	}
+}
+
+void FFScript::set_sarg1(int v)
+{
+	set_register(sarg1, v);
 }
 
 void FFScript::do_readbitmap(const bool v)

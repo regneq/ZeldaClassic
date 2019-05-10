@@ -5663,6 +5663,33 @@ void bmp_do_drawquadr(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 }
 
 
+void bmp_do_getpixelr(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
+{
+    //sdci[1]=layer
+    //sdci[2]=x1
+    //sdci[3]=y1
+    
+	//sdci[17] Bitmap Pointer
+    if ( sdci[17] <= 0 )
+    {
+	Z_scripterrlog("bitmap->GetPixel() wanted to read from an invalid bitmap id: %d. Aborting.\n", sdci[17]);
+	return;
+    }
+	BITMAP *refbmp = FFCore.GetScriptBitmap(sdci[17]-10);
+	if ( refbmp == NULL ) return;
+    
+    
+    if ( (sdci[17]-10) != -2 && (sdci[17]-10) != -1 ) yoffset = 0; //Don't crop. 
+    
+    int x1 = sdci[2]/10000;
+    int y1 = (sdci[3]/10000)+yoffset;
+    
+    FFCore.set_sarg1(getpixel(scb.script_created_bitmaps[(sdci[17]-10)].u_bmp, x1, y1));
+}
+
+
+
+
 void bmp_do_drawtriangler(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 {
     //sdci[1]=layer
@@ -10533,6 +10560,7 @@ void do_primitives(BITMAP *targetBitmap, int type, mapscr *, int xoff, int yoff)
 	case 	BMPQUADR: bmp_do_drawquadr(bmp, sdci, xoffset, yoffset); break;
 	case 	BMPQUAD3DR: bmp_do_drawquad3dr(bmp, i, sdci, xoffset, yoffset); break;
 		
+	case 	BITMAPGETPIXEL: bmp_do_getpixelr(bmp, sdci, xoffset, yoffset); break;
 	case 	BMPTRIANGLER: bmp_do_drawtriangler(bmp, sdci, xoffset, yoffset); break;
 	case 	BMPTRIANGLE3DR: bmp_do_drawtriangle3dr(bmp, i, sdci, xoffset, yoffset); break;
 	case 	BMPPOLYGONR: bmp_do_polygonr(bmp, i, sdci, xoffset, yoffset); break;
