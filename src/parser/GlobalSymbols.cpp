@@ -7328,12 +7328,15 @@ static AccessorTable BitmapTable[] =
 	{ "FastTile",               ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     -1,                           -1,                          -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
 	{ "FastCombo",              ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     -1,                           -1,                          -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
 	{ "DrawString",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
-	{ "DrawLayer",     typeVOID, FUNCTION, 0, 1, ARGS_8(ZVARTYPEID_BITMAP,F,F,F,F,F,F,F,F) },
-	{ "DrawLayerSolid",     typeVOID, FUNCTION, 0, 1, ARGS_8(ZVARTYPEID_BITMAP,F,F,F,F,F,F,F,F) },
-	{ "DrawLayerSolidity",     typeVOID, FUNCTION, 0, 1, ARGS_8(ZVARTYPEID_BITMAP,F,F,F,F,F,F,F,F) },
-	{ "DrawLayerComboTypes",     typeVOID, FUNCTION, 0, 1, ARGS_8(ZVARTYPEID_BITMAP,F,F,F,F,F,F,F,F) },
-	{ "DrawLayerComboFlags",     typeVOID, FUNCTION, 0, 1, ARGS_8(ZVARTYPEID_BITMAP,F,F,F,F,F,F,F,F) },
-	{ "DrawLayerComboIFlags",     typeVOID, FUNCTION, 0, 1, ARGS_8(ZVARTYPEID_BITMAP,F,F,F,F,F,F,F,F) },
+	
+	{ "DrawLayerSolid",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  	ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_BOOL,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
+	{ "DrawLayerSolidity",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  	ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_BOOL,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
+	{ "DrawLayerComboTypes",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  	ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_BOOL,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
+	{ "DrawLayerComboFlags",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  	ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_BOOL,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
+	{ "DrawLayerComboIFlags",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  	ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_BOOL,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
+	{ "DrawLayer",             ZVARTYPEID_VOID,          FUNCTION,     0,                    1,      {  	ZVARTYPEID_BITMAP,		 ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_BOOL,     ZVARTYPEID_FLOAT,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,							  } },
+
+	
 	{ "DrawScreen",    typeVOID, FUNCTION, 0, 1, ARGS_6(ZVARTYPEID_BITMAP,F,F,F,F,F,F) },
 	{ "DrawScreenSolid",    typeVOID, FUNCTION, 0, 1, ARGS_6(ZVARTYPEID_BITMAP,F,F,F,F,F,F) },
 	{ "DrawScreenSolidity",    typeVOID, FUNCTION, 0, 1, ARGS_6(ZVARTYPEID_BITMAP,F,F,F,F,F,F) },
@@ -7764,7 +7767,7 @@ void BitmapSymbols::generateCode()
 		Opcode *first = new OBMPDrawLayerRegister();
 		first->setLabel(label);
 		code.push_back(first);
-		POP_ARGS(8, EXP2);
+		POP_ARGS(9, EXP2);
 		//pop pointer, and ignore it
 		code.push_back(new OPopRegister(new VarArgument(EXP2)));
         
@@ -7779,7 +7782,7 @@ void BitmapSymbols::generateCode()
 		Opcode *first = new OBMPDrawScreenCIFlagRegister();
 		first->setLabel(label);
 		code.push_back(first);
-		POP_ARGS(8, EXP2);
+		POP_ARGS(9, EXP2);
 		//pop pointer, and ignore it
 		code.push_back(new OPopRegister(new VarArgument(EXP2)));
         
@@ -7794,7 +7797,7 @@ void BitmapSymbols::generateCode()
 		Opcode *first = new OBMPDrawScreenCFlagRegister();
 		first->setLabel(label);
 		code.push_back(first);
-		POP_ARGS(8, EXP2);
+		POP_ARGS(9, EXP2);
 		//pop pointer, and ignore it
 		code.push_back(new OPopRegister(new VarArgument(EXP2)));
         
@@ -7809,7 +7812,7 @@ void BitmapSymbols::generateCode()
 		Opcode *first = new OBMPDrawScreenSolidMaskRegister();
 		first->setLabel(label);
 		code.push_back(first);
-		POP_ARGS(8, EXP2);
+		POP_ARGS(9, EXP2);
 		//pop pointer, and ignore it
 		code.push_back(new OPopRegister(new VarArgument(EXP2)));
         
@@ -7824,7 +7827,7 @@ void BitmapSymbols::generateCode()
 		Opcode *first = new OBMPDrawScreenCTypeRegister();
 		first->setLabel(label);
 		code.push_back(first);
-		POP_ARGS(8, EXP2);
+		POP_ARGS(9, EXP2);
 		//pop pointer, and ignore it
 		code.push_back(new OPopRegister(new VarArgument(EXP2)));
         
@@ -7840,7 +7843,7 @@ void BitmapSymbols::generateCode()
 		Opcode *first = new OBMPDrawScreenSolidityRegister();
 		first->setLabel(label);
 		code.push_back(first);
-		POP_ARGS(8, EXP2);
+		POP_ARGS(9, EXP2);
 		//pop pointer, and ignore it
 		code.push_back(new OPopRegister(new VarArgument(EXP2)));
         

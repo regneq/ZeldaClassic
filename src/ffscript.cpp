@@ -14803,12 +14803,12 @@ void do_drawing_command(const int script_command)
 		break;
 	}
 	
-	case 	BMPDRAWLAYERR: set_user_bitmap_command_args(j, 8); script_drawing_commands[j][17] = SH::read_stack(ri->sp+8); break;
-	case 	BMPDRAWLAYERSOLIDR: set_user_bitmap_command_args(j, 8); script_drawing_commands[j][17] = SH::read_stack(ri->sp+8); break;
-	case 	BMPDRAWLAYERCFLAGR: set_user_bitmap_command_args(j, 8); script_drawing_commands[j][17] = SH::read_stack(ri->sp+8); break;
-	case 	BMPDRAWLAYERCTYPER: set_user_bitmap_command_args(j, 8); script_drawing_commands[j][17] = SH::read_stack(ri->sp+8); break;
-	case 	BMPDRAWLAYERCIFLAGR: set_user_bitmap_command_args(j, 8); script_drawing_commands[j][17] = SH::read_stack(ri->sp+8); break;
-	case 	BMPDRAWLAYERSOLIDITYR: set_user_bitmap_command_args(j, 8); script_drawing_commands[j][17] = SH::read_stack(ri->sp+8); break;
+	case 	BMPDRAWLAYERR:
+	case 	BMPDRAWLAYERSOLIDR: 
+	case 	BMPDRAWLAYERCFLAGR: 
+	case 	BMPDRAWLAYERCTYPER: 
+	case 	BMPDRAWLAYERCIFLAGR: 
+	case 	BMPDRAWLAYERSOLIDITYR: set_user_bitmap_command_args(j, 9); script_drawing_commands[j][17] = SH::read_stack(ri->sp+9); break;
 	case 	BMPDRAWSCREENR:
 	case 	BMPDRAWSCREENSOLIDR:
 	case 	BMPDRAWSCREENSOLID2R:
