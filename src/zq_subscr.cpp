@@ -5734,7 +5734,7 @@ static DIALOG sel_options_dlg[] =
 const char *sso_str[ssoMAX]=
 {
     "NULL", "(None)", "2x2 Frame", "Text", "Line", "Rectangle", "BS-Zelda Time", "Game Time", "Game Time (Quest Rule)", "Magic Meter", "Life Meter",
-    "Button Item", "-Icon (Not Implemented)", "Counter", "Counter Block", "Minimap Title", "Minimap", "Large Map", "Erase Subscreen", "Current Item", "-Item (Not Implemented)",
+    "Button Item", "-Icon (Not Implemented)", "Counter", "Counter Block", "Minimap Title", "Minimap", "Large Map", "Subscreen Background", "Current Item", "-Item (Not Implemented)",
     "Triforce Frame", "Triforce Piece", "Tile Block", "Minitile", "Selector 1", "Selector 2", "Magic Gauge Piece", "Life Gauge Piece", "Text Box", "-Current Item -> Tile (Not Implemented)",
     "-Selected Item -> Tile (Not Implemented)", "-Current Item -> Text (Not Implemented)", "-Current Item Name (Not Implemented)", "Selected Item Name",
     "-Current Item Class -> Text (Not Implemented)", "-Current Item Class Name (Not Implemented)", "-Selected Item Class Name (Not Implemented)"
