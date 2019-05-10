@@ -7,7 +7,7 @@ The following documents the changes, and expansions to the ZScript language in Z
 	versions 2.54, and 2.55. 
 	
 Document for: 2.55, Alpha 22
-Document Revision: 6th May, 2019
+Document Revision: 10th May, 2019
 
 
 ////////////////////////////////////////////////////
@@ -1134,6 +1134,47 @@ void DrawBitmapEx	( int layer,
  * If these are non-zero, the rotation anchor point will centre on these coordinates.
  * You may specify a colour to 'int lit' to use a lit mode. 
 
+void DrawLayer	(int layer, 
+			int source_map, int source_screen, int source_layer, 
+			int x, int y, float rotation, bool clip, int opacity);
+			
+ * Draws an entire Layer from source_screen on source_map on the specified layer of the current screen at (x,y).
+ * If rotation is not zero, it(the entire layer) will rotate about its center.
+ *
+ * Opacity controls how transparent the solid portions of the tiles will
+ * You may use OP_TRANS (64) for a translucent (50%) image, or OP_OPAQUE (128)
+ * for an opaque (100%) image. Other values are **ignored**, and will be treated 
+ * as translucent (OP_TRANS, or 64).
+ * 
+ 
+ void DrawLayerSolid	(int layer, 
+			int source_map, int source_screen, int source_layer, 
+			int x, int y, float rotation, bool clip, int opacity);
+			
+
+void DrawLayerSolidity	(int layer, 
+			int source_map, int source_screen, int source_layer, 
+			int x, int y, float rotation, bool clip, int opacity);
+			
+void DrawLayerComboTypes	(int layer, 
+			int source_map, int source_screen, int source_layer, 
+			int x, int y, float rotation, bool clip, int opacity);
+			
+void DrawScreenComboFlags	(int layer, 
+			int source_map, int source_screen, int source_layer, 
+			int x, int y, float rotation, bool clip, int opacity);
+			
+void DrawScreenComboIFlags	(int layer, 
+			int source_map, int source_screen, int source_layer, 
+			int x, int y, float rotation, bool clip, int opacity);
+			
+void DrawPlane(int layer, bitmap target, int source_x, int source_y, int dest_x, int dest_y, 
+		int dest_width, int dest_height, int space_z, int horizon, int scale_x, int scale_y,
+			bool masked);
+
+ * Draws an angled planed, line by line, with an effect similar to the SNES 'Mode 7' scaling for a 3d
+ * environmental effect.
+	
 
 void FastCombo()
 void DrawScreen()
