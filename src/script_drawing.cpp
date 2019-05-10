@@ -5856,7 +5856,7 @@ void bmp_do_mode7r(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 	*/
 	
 
-	int bitmapIndex = sdci[2]/10000;
+	int bitmapIndex = sdci[2];
 	int usr_bitmap_index = sdci[2]-10;
 	byte using_user_bitmap = 0;
 	//Z_scripterrlog("bitmap index is: %d\n",bitmapIndex);
@@ -5864,14 +5864,15 @@ void bmp_do_mode7r(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 	#if LOG_BMPBLIT_LEVEL > 0
 	Z_scripterrlog("Blit() found a dest bitmap ID of: %d\n",bitmapIndex);
 	#endif
-	if ( bitmapIndex > 10000 )
+	if ( bitmapIndex >= 10000 )
 	{
 		bitmapIndex = bitmapIndex / 10000; //reduce if ZScript sent a raw value, such as bitmap = <int> 8;
 	}
-	if ( usr_bitmap_index > 0 && usr_bitmap_index < 10000 ) 
+	else if ( usr_bitmap_index > 0 && usr_bitmap_index < 10000 ) 
 	{
 		bitmapIndex = usr_bitmap_index;
 		using_user_bitmap = 1;
+		Z_scripterrlog("Mode7 is using a user bitmap target, pointer: %d\n", usr_bitmap_index);
 		yoffset = 0;
 	}
 	
@@ -5892,23 +5893,23 @@ void bmp_do_mode7r(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 	//int litcolour = sdci[15]/10000;
 	
 	//rendering mode 7 args
-	int srcX = sdci[3];
-	int srcY = sdci[4]; 
-	int destX = sdci[5];
-	int destY = sdci[6];
+	double srcX = sdci[3]/10000.0;
+	double srcY = sdci[4]/10000.0; 
+	double destX = sdci[5]/10000.0;
+	double destY = sdci[6]/10000.0;
 	
 	
 //	int srcW = sdci[5]/10000; 
 //	int srcH = sdci[6]/10000; 
-	int destW = sdci[7];
-	int destH = sdci[8];
+	double destW = sdci[7]/10000.0;
+	double destH = sdci[8]/10000.0;
 //	int angle = sdci[9]/10000; 
 //	int cx = sdci[10]/10000;
 //	int cy = sdci[11]/10000;
-	int space_z = sdci[9];
-	int horizon = sdci[10];
-	int scale_x = sdci[11];
-	int scale_y = sdci[12];
+	double space_z = sdci[9]/10000.0;
+	double horizon = sdci[10]/10000.0;
+	double scale_x = sdci[11]/10000.0;
+	double scale_y = sdci[12]/10000.0;
 	byte masked = ( sdci[13] ) ? 1 : 0;
 	
 	
@@ -6056,15 +6057,15 @@ void bmp_do_mode7r(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 	//All of these are a factor of 10000 as fix. 
 	int screen_x = 0; int screen_y = 0;
 	
-	int distance = 0; int horizontal_scale = 0;
+	double distance = 0; double horizontal_scale = 0;
 	
 	int screen_y_horizon = 0;
 	
-	int line_dx = 0; int line_dy = 0;
+	double line_dx = 0; double line_dy = 0;
 	
 	int space_x = 0; int space_y = 0;
 	
-	for(screen_y = 0; screen_y < destH; screen_y += 10000) //fix, offset by .0000
+	for(screen_y = 0; screen_y < destH; screen_y++) //fix, offset by .0000
 	{
 		//Calculate the distance of each line from the camera point
 		screen_y_horizon = screen_y + horizon;
@@ -6080,18 +6081,18 @@ void bmp_do_mode7r(BITMAP *bmp, int *sdci, int xoffset, int yoffset)
 		line_dy = 0;
 		
 		//space_x,space_y - where to grab each scanline from on the space bitmap
-		space_x = srcX - destW/2 * line_dx;
-		space_y = srcY - distance + destH/2 * line_dy;
+		space_x = srcX - destW/2.0 * line_dx;
+		space_y = srcY - distance + destH/2.0 * line_dy;
 		
 		//Keep blits within the bounds of both bitmaps to avoid crashes
 		int y1 = srcY+space_y;
 		int y2 = destY+screen_y;
-		if(y1>=0 && (y1/10000 ) <= (sourceBitmap->h-1) && y2 >=0 && (y2/10000) <= (destBMP->h-1) )
+		if(y1 >=0 && y1 <= (sourceBitmap->h-1) && y2 >=0 && y2 <= (destBMP->h-1) )
 		{
-			if ( masked ) masked_stretch_blit(sourceBitmap, destBMP, (srcX+space_x/10000), (srcY+space_y/10000), 
-				(line_dx*destW)/10000, 1, (screen_x/10000), (screen_y/10000)+yoffset, (destW/10000), 1);
-			else stretch_blit(sourceBitmap, destBMP, (srcX+space_x/10000), (srcY+space_y/10000), 
-				(line_dx*destW)/10000, 1, (screen_x/10000), (screen_y/10000)+yoffset, (destW/10000), 1);
+			if ( masked ) masked_stretch_blit(sourceBitmap, destBMP, (int)(srcX+space_x), (int)(srcY+space_y), 
+				(int)(line_dx*destW), 1, (int)(screen_x), (int)(screen_y)+yoffset, (int)(destW), 1);
+			else stretch_blit(sourceBitmap, destBMP, (int)(srcX+space_x), (int)(srcY+space_y), 
+				(int)(line_dx*destW), 1, (int)(screen_x), (int)(screen_y)+yoffset, (int)(destW), 1);
 		}
 	}
 	
