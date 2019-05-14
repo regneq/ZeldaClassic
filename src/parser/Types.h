@@ -109,6 +109,7 @@ namespace ZScript
 		ZVARTYPEID_PALCYCLE,
 		ZVARTYPEID_GAMEDATA,
 		ZVARTYPEID_CHEATS,
+		ZVARTYPEID_SUBSCREENDATA,
 		ZVARTYPEID_CLASS_END,
 
 		ZVARTYPEID_END = ZVARTYPEID_CLASS_END
@@ -212,6 +213,7 @@ namespace ZScript
 		static DataTypeClassConst CRGBDATA;
 		static DataTypeClassConst CSHOPDATA;
 		static DataTypeClassConst CSPRITEDATA;
+		static DataTypeClassConst CSUBSCREENDATA;
 		static DataTypeClassConst CTUNES;
 		static DataTypeClassConst CWARPRING;
 		//Class: Var Types
@@ -238,6 +240,7 @@ namespace ZScript
 		static DataTypeClass RGBDATA;
 		static DataTypeClass SHOPDATA;
 		static DataTypeClass SPRITEDATA;
+		static DataTypeClass SUBSCREENDATA;
 		static DataTypeClass TUNES;
 		static DataTypeClass WARPRING;
 	};
@@ -431,6 +434,7 @@ namespace ZScript
 			idDMap,
 			idItemSprite,
 			idUntyped,
+			idSubscreenData,
 			
 			idEnd
 		};
@@ -451,8 +455,9 @@ namespace ZScript
 		static ScriptType const link;
 		static ScriptType const dmapdata;
 		static ScriptType const screendata;
-		static ScriptType const ScriptType::itemsprite;
-		static ScriptType const ScriptType::untyped;
+		static ScriptType const itemsprite;
+		static ScriptType const untyped;
+		static ScriptType const subscreendata;
 
 	private:
 		ScriptType(Id id) : id_(id) {}

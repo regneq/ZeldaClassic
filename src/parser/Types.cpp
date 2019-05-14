@@ -165,6 +165,7 @@ DataTypeClassConst DataType::CPONDS(ZCLASSID_PONDS, "const Ponds");
 DataTypeClassConst DataType::CRGBDATA(ZCLASSID_RGBDATA, "const RgbData");
 DataTypeClassConst DataType::CSHOPDATA(ZCLASSID_SHOPDATA, "const ShopData");
 DataTypeClassConst DataType::CSPRITEDATA(ZCLASSID_SPRITEDATA, "const SpriteData");
+DataTypeClassConst DataType::CSUBSCREENDATA(ZCLASSID_SUBSCREENDATA, "const SubscreenData");
 DataTypeClassConst DataType::CTUNES(ZCLASSID_TUNES, "const Tunes");
 DataTypeClassConst DataType::CWARPRING(ZCLASSID_WARPRING, "const WarpRing");
 //Class: Var Types
@@ -191,6 +192,7 @@ DataTypeClass DataType::PONDS(ZCLASSID_PONDS, "Ponds", &CPONDS);
 DataTypeClass DataType::RGBDATA(ZCLASSID_RGBDATA, "RgbData", &CRGBDATA);
 DataTypeClass DataType::SHOPDATA(ZCLASSID_SHOPDATA, "ShopData", &CSHOPDATA);
 DataTypeClass DataType::SPRITEDATA(ZCLASSID_SPRITEDATA, "SpriteData", &CSPRITEDATA);
+DataTypeClass DataType::SUBSCREENDATA(ZCLASSID_SUBSCREENDATA, "SubscreenData", &CSUBSCREENDATA);
 DataTypeClass DataType::TUNES(ZCLASSID_TUNES, "Tunes", &CTUNES);
 DataTypeClass DataType::WARPRING(ZCLASSID_WARPRING, "WarpRing", &CWARPRING);
 
@@ -228,6 +230,7 @@ DataType const* DataType::get(DataTypeId id)
 		case ZVARTYPEID_AUDIO: return &AUDIO;
 		case ZVARTYPEID_COMBOS: return &COMBOS;
 		case ZVARTYPEID_SPRITEDATA: return &SPRITEDATA;
+		case ZVARTYPEID_SUBSCREENDATA: return &SUBSCREENDATA;
 		case ZVARTYPEID_GRAPHICS: return &GRAPHICS;
 		case ZVARTYPEID_BITMAP: return &BITMAP;
 		case ZVARTYPEID_TEXT: return &TEXT;
@@ -269,6 +272,7 @@ DataTypeClass const* DataType::getClass(int classId)
 		case ZCLASSID_AUDIO: return &AUDIO;
 		case ZCLASSID_COMBOS: return &COMBOS;
 		case ZCLASSID_SPRITEDATA: return &SPRITEDATA;
+		case ZCLASSID_SUBSCREENDATA: return &SUBSCREENDATA;
 		case ZCLASSID_GRAPHICS: return &GRAPHICS;
 		case ZCLASSID_BITMAP: return &BITMAP;
 		case ZCLASSID_TEXT: return &TEXT;
@@ -600,6 +604,7 @@ ScriptType const ScriptType::screendata(idScreen);
 ScriptType const ScriptType::dmapdata(idDMap);
 ScriptType const ScriptType::itemsprite(idItemSprite);
 ScriptType const ScriptType::untyped(idUntyped);
+ScriptType const ScriptType::subscreendata(idSubscreenData);
 
 string const& ScriptType::getName() const
 {
