@@ -328,6 +328,7 @@ string VarArgument::toString()
      case REFPALCYCLE: return "REFPALCYCLE";
      case REFGAMEDATA: return "REFGAMEDATA";
      case REFCHEATS: return "REFCHEATS";
+	 case REFSUBSCREEN: return "REFSUBSCREEN";
         
     case REFITEM:
         return "REFITEM";

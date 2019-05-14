@@ -1116,8 +1116,9 @@ using namespace std;
 #define KEYMODIFIERS 			1047
 #define SIMULATEKEYPRESS 			1048
 #define KEYBINDINGS 			1049
+#define REFSUBSCREEN			1050
 
-#define LAST_BYTECODE 		1050
+#define LAST_BYTECODE 		1051
 
 //END OF BYTECODE
 

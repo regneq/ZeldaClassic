@@ -1847,6 +1847,7 @@ script_variable variable_list[]=
 	{"KEYMODIFIERS", KEYMODIFIERS, 0, 0 },
 	{"SIMULATEKEYPRESS", SIMULATEKEYPRESS, 0, 0 },
 	{"KEYBINDINGS", KEYBINDINGS, 0, 0 },
+	{ "REFSUBSCREEN",         REFSUBSCREEN,            0,             0 },
 	
 	
 	{ " ",                       -1,             0,             0 }

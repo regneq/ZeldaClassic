@@ -11300,3 +11300,25 @@ void CheatsSymbols::generateCode()
 {
 }
 
+SubscreenDataSymbols SubscreenDataSymbols::singleton = SubscreenDataSymbols();
+
+static AccessorTable SubscreenDataTable[] =
+{
+//	All of these return a function label error when used:
+//	  name,                     rettype,                  setorget,     var,              numindex,      funcFlags,                            numParams,   params
+	{ "getTest",                ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,      1,             0,                                    1,           {  ZVARTYPEID_CHEATS,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	
+	{ "",                       -1,                       -1,           -1,               -1,            0,                                    0,           { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
+};
+
+SubscreenDataSymbols::SubscreenDataSymbols()
+{
+    table = SubscreenDataTable;
+    refVar = REFSUBSCREEN;
+}
+
+void SubscreenDataSymbols::generateCode()
+{
+	
+}
+

@@ -565,6 +565,20 @@ private:
     void generateCode();
 };
 
+class SubscreenDataSymbols : public LibrarySymbols
+{
+public:
+    static SubscreenDataSymbols &getInst()
+    {
+        return singleton;
+    }
+protected:
+private:
+    static SubscreenDataSymbols singleton;
+    SubscreenDataSymbols();
+    void generateCode();
+};
+
 
 #endif
 
