@@ -467,8 +467,13 @@ void sprite::draw(BITMAP* dest)
 	if (FFCore.getQuestHeaderInfo(0) < 0x255 || ( FFCore.getQuestHeaderInfo(0) == 0x255 && FFCore.getQuestHeaderInfo(2) < 42 ))
 	{
 		drawzcboss(dest);
+		return;
 	}
-	if ( get_bit(quest_rules,qr_OLDSPRITEDRAWS) ) drawzcboss(dest);
+	if ( get_bit(quest_rules,qr_OLDSPRITEDRAWS) ) 
+	{
+		drawzcboss(dest);
+		return;
+	}
 	int sx = real_x(x+xofs);
 	int sy = real_y(y+yofs)-real_z(z+zofs);
 	BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
@@ -812,7 +817,7 @@ void sprite::draw(BITMAP* dest)
 					BITMAP* sprBMP = create_bitmap_ex(8,txsz*16,tysz*16);
 					//BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
 					clear_bitmap(sprBMP);
-					clear_bitmap(sprBMP2);
+					if ( sprBMP2 ) clear_bitmap(sprBMP2);
 					if(drawstyle==0 || drawstyle==3)
 						overtile16(sprBMP,tile,0,0,cs,flip);
 					else if(drawstyle==1)
