@@ -482,13 +482,13 @@ void sprite::draw(BITMAP* dest)
 	{
 		switch(e)
 		{
-			BITMAP *temp;
+			BITMAP *temp = NULL;
             
 			case 1:
 				temp = create_bitmap_ex(8,16,32);
 				//blit(dest, temp, sx, sy-16, 0, 0, 16, 32);
-				clear_bitmap(temp);
-				clear_bitmap(sprBMP2);
+				if ( temp ) clear_bitmap(temp);
+				if ( sprBMP2 ) clear_bitmap(sprBMP2);
             
 				//Draw sprite tiles to the temp (scratch) bitmap.
 				if(drawstyle==0 || drawstyle==3)
@@ -515,20 +515,26 @@ void sprite::draw(BITMAP* dest)
 					if ( scale ) 
 					{
 						double new_scale = scale / 100.0;
-						rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+						if (sprBMP2) rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 					}
-					else rotate_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation));
-					draw_sprite(dest, sprBMP2, sx, sy);
+					else 
+					{
+						if ( sprBMP2 ) rotate_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation));
+					}
+						if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 				}
 				else
 				{
 					if ( scale ) 
 					{
 						double new_scale = scale / 100.0;
-						rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-						draw_sprite(dest, sprBMP2, sx, sy);
+						if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+						if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 					}
-					else masked_blit(temp, dest, 0, 0, sx, sy-16, 16, 32);
+					else 
+					{
+						if ( temp ) masked_blit(temp, dest, 0, 0, sx, sy-16, 16, 32);
+					}
 				}
 				//clean-up
 				destroy_bitmap(sprBMP2);
@@ -538,37 +544,46 @@ void sprite::draw(BITMAP* dest)
 			case 2:
 				temp = create_bitmap_ex(8,48,32);
 				//blit(dest, temp, sx-16, sy-16, 0, 0, 48, 32);
-				clear_bitmap(temp);
-				clear_bitmap(sprBMP2);
+				if ( temp ) clear_bitmap(temp);
+				if ( sprBMP2 ) clear_bitmap(sprBMP2);
             
 				if(drawstyle==0 || drawstyle==3)
 				{
-					overtile16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW,16,0,cs,((scriptflip > -1) ? scriptflip : flip));
-					overtile16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,0,cs,((scriptflip > -1) ? scriptflip : flip));
-					overtile16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,0,cs,((scriptflip > -1) ? scriptflip : flip));
-					overtile16(temp,((scripttile > -1) ? scripttile : tile),16,16,cs,((scriptflip > -1) ? scriptflip : flip));
-					overtile16(temp,((scripttile > -1) ? scripttile : tile)-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,16,cs,((scriptflip > -1) ? scriptflip : flip));
-					overtile16(temp,((scripttile > -1) ? scripttile : tile)+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,16,cs,((scriptflip > -1) ? scriptflip : flip));
+					if ( temp ) 
+					{
+						overtile16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW,16,0,cs,((scriptflip > -1) ? scriptflip : flip));
+						overtile16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,0,cs,((scriptflip > -1) ? scriptflip : flip));
+						overtile16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,0,cs,((scriptflip > -1) ? scriptflip : flip));
+						overtile16(temp,((scripttile > -1) ? scripttile : tile),16,16,cs,((scriptflip > -1) ? scriptflip : flip));
+						overtile16(temp,((scripttile > -1) ? scripttile : tile)-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,16,cs,((scriptflip > -1) ? scriptflip : flip));
+						overtile16(temp,((scripttile > -1) ? scripttile : tile)+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,16,cs,((scriptflip > -1) ? scriptflip : flip));
+					}
 				}
             
 				if(drawstyle==1)
 				{
-					overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW,16,0,cs,((scriptflip > -1) ? scriptflip : flip),128);
-					overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,0,cs,((scriptflip > -1) ? scriptflip : flip),128);
-					overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,0,cs,((scriptflip > -1) ? scriptflip : flip),128);
-					overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile),16,16,cs,((scriptflip > -1) ? scriptflip : flip),128);
-					overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,16,cs,((scriptflip > -1) ? scriptflip : flip),128);
-					overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,16,cs,((scriptflip > -1) ? scriptflip : flip),128);
+					if ( temp ) 
+					{
+						overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW,16,0,cs,((scriptflip > -1) ? scriptflip : flip),128);
+						overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,0,cs,((scriptflip > -1) ? scriptflip : flip),128);
+						overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,0,cs,((scriptflip > -1) ? scriptflip : flip),128);
+						overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile),16,16,cs,((scriptflip > -1) ? scriptflip : flip),128);
+						overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,16,cs,((scriptflip > -1) ? scriptflip : flip),128);
+						overtiletranslucent16(temp,((scripttile > -1) ? scripttile : tile)+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,16,cs,((scriptflip > -1) ? scriptflip : flip),128);
+					}
 				}
 				    
 				if(drawstyle==2)
 				{
-					overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW,16,0,((scriptflip > -1) ? scriptflip : flip));
-					overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,0,((scriptflip > -1) ? scriptflip : flip));
-					overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,0,((scriptflip > -1) ? scriptflip : flip));
-					overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile),16,16,((scriptflip > -1) ? scriptflip : flip));
-					overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,16,((scriptflip > -1) ? scriptflip : flip));
-					overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,16,((scriptflip > -1) ? scriptflip : flip));
+					if ( temp ) 
+					{
+						overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW,16,0,((scriptflip > -1) ? scriptflip : flip));
+						overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,0,((scriptflip > -1) ? scriptflip : flip));
+						overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-TILES_PER_ROW+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,0,((scriptflip > -1) ? scriptflip : flip));
+						overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile),16,16,((scriptflip > -1) ? scriptflip : flip));
+						overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)-( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),0,16,((scriptflip > -1) ? scriptflip : flip));
+						overtilecloaked16(temp,((scripttile > -1) ? scripttile : tile)+( ( scriptflip > -1 ) ? ( scriptflip ? -1 : 1 ) : ( flip?-1:1 ) ),32,16,((scriptflip > -1) ? scriptflip : flip));
+					}
 				}
 				if ( rotation )
 				{
@@ -576,10 +591,13 @@ void sprite::draw(BITMAP* dest)
 					if ( scale ) 
 					{
 						double new_scale = scale / 100.0;
-						rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+						if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 					}
-					else rotate_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation));
-					draw_sprite(dest, sprBMP2, sx, sy);
+					else 
+					{
+						if ( sprBMP2 ) rotate_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(rotation));
+					}
+					if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 					
 				}
 				else
@@ -587,15 +605,18 @@ void sprite::draw(BITMAP* dest)
 					if ( scale ) 
 					{
 						double new_scale = scale / 100.0;
-						rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-						draw_sprite(dest, sprBMP2, sx, sy);
+						if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, temp, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+						if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 					}
-					else masked_blit(temp, dest, 8, 0, sx-8, sy-16, 32, 32);
+					else 
+					{
+						if ( temp ) masked_blit(temp, dest, 8, 0, sx-8, sy-16, 32, 32);
+					}
 				}
 					
 				
-				destroy_bitmap(sprBMP2);
-				destroy_bitmap(temp);
+				if ( sprBMP2 ) destroy_bitmap(sprBMP2);
+				if ( temp ) destroy_bitmap(temp);
 				break;
             
 			case 3:
@@ -609,7 +630,7 @@ void sprite::draw(BITMAP* dest)
 						BITMAP* sprBMP = create_bitmap_ex(8,txsz*16,tysz*16);
 						//BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
 						clear_bitmap(sprBMP);
-						clear_bitmap(sprBMP2);
+						if ( sprBMP2 ) clear_bitmap(sprBMP2);
 						for(int i=0; i<tysz; i++)
 						{
 							for(int j=txsz-1; j>=0; j--)
@@ -629,10 +650,13 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+								if (sprBMP2) rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 							}
-							else rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
-							draw_sprite(dest, sprBMP2, sx, sy);
+							else 
+							{
+								if ( sprBMP2 ) rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
+							}
+							if ( temp ) draw_sprite(dest, sprBMP2, sx, sy);
 							
 						}
 						else
@@ -640,14 +664,17 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-								draw_sprite(dest, sprBMP2, sx, sy);
+								if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+								if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 							}
-							else draw_sprite(dest, sprBMP, sx, sy);
+							else 
+							{
+								draw_sprite(dest, sprBMP, sx, sy);
+							}
 						}
 							
-						destroy_bitmap(sprBMP);
-						destroy_bitmap(sprBMP2);
+						if ( sprBMP ) destroy_bitmap(sprBMP);
+						if ( sprBMP2 ) destroy_bitmap(sprBMP2);
 					} //end extend == 3 && flip == 1
 					break;
                 
@@ -656,7 +683,7 @@ void sprite::draw(BITMAP* dest)
 						BITMAP* sprBMP = create_bitmap_ex(8,txsz*16,tysz*16);
 						//BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
 						clear_bitmap(sprBMP);
-						clear_bitmap(sprBMP2);
+						if ( sprBMP2 ) clear_bitmap(sprBMP2);
 						for(int i=tysz-1; i>=0; i--)
 						{
 							for(int j=0; j<txsz; j++)
@@ -677,10 +704,13 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+								if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 							}
-							else rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
-							draw_sprite(dest, sprBMP2, sx, sy);
+							else 
+							{
+								if ( sprBMP2 ) rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
+							}
+							if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 							
 						}
 						else
@@ -688,14 +718,17 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-								draw_sprite(dest, sprBMP2, sx, sy);
+								if ( sprBMP2 ) 
+								{
+									rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+									draw_sprite(dest, sprBMP2, sx, sy);
+								}
 							}
 							else draw_sprite(dest, sprBMP, sx, sy);
 						}
 							
 						destroy_bitmap(sprBMP);
-						destroy_bitmap(sprBMP2);
+						if ( sprBMP2 ) destroy_bitmap(sprBMP2);
 					}//end extend == 3 &7 flip == 2
 					break;
                 
@@ -704,7 +737,7 @@ void sprite::draw(BITMAP* dest)
 						BITMAP* sprBMP = create_bitmap_ex(8,txsz*16,tysz*16);
 						//BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
 						clear_bitmap(sprBMP);
-						clear_bitmap(sprBMP2);
+						if ( sprBMP2 ) clear_bitmap(sprBMP2);
 						for(int i=tysz-1; i>=0; i--)
 						{
 							for(int j=txsz-1; j>=0; j--)
@@ -725,10 +758,13 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+								if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 							}
-							else rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
-							draw_sprite(dest, sprBMP2, sx, sy);
+							else
+							{
+								if ( sprBMP2 ) rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
+							}
+							if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 							
 						}
 						else
@@ -736,14 +772,17 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-								draw_sprite(dest, sprBMP2, sx, sy);
+								if ( sprBMP2 )
+								{
+									rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+									draw_sprite(dest, sprBMP2, sx, sy);
+								}
 							}
 							else draw_sprite(dest, sprBMP, sx, sy);
 						}
 							
 						destroy_bitmap(sprBMP);
-						destroy_bitmap(sprBMP2);
+						if ( sprBMP2 ) destroy_bitmap(sprBMP2);
 					} //end extend == 3 && flip == 3
 					break;
                 
@@ -752,7 +791,7 @@ void sprite::draw(BITMAP* dest)
 						BITMAP* sprBMP = create_bitmap_ex(8,txsz*16,tysz*16);
 						//BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
 						clear_bitmap(sprBMP);
-						clear_bitmap(sprBMP2);
+						if ( sprBMP2 ) clear_bitmap(sprBMP2);
 					
 						
 						
@@ -777,10 +816,13 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+								if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 							}
-							else rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
-							draw_sprite(dest, sprBMP2, sx, sy);
+							else 
+							{
+								if ( sprBMP2 ) rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
+							}
+							if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 							
 						}
 						else
@@ -788,14 +830,17 @@ void sprite::draw(BITMAP* dest)
 							if ( scale ) 
 							{
 								double new_scale = scale / 100.0;
-								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-								draw_sprite(dest, sprBMP2, sx, sy);
+								if ( sprBMP2 )
+								{
+									rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+									draw_sprite(dest, sprBMP2, sx, sy);
+								}
 							}
 							else draw_sprite(dest, sprBMP, sx, sy);
 						}
 						
 						destroy_bitmap(sprBMP);
-						destroy_bitmap(sprBMP2);
+						if ( sprBMP2 ) destroy_bitmap(sprBMP2);
                 
 						break;
 					} //end extend == 0 && flip == 3
@@ -812,7 +857,7 @@ void sprite::draw(BITMAP* dest)
 					BITMAP* sprBMP = create_bitmap_ex(8,txsz*16,tysz*16);
 					//BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
 					clear_bitmap(sprBMP);
-					clear_bitmap(sprBMP2);
+					if ( sprBMP2 ) clear_bitmap(sprBMP2);
 					if(drawstyle==0 || drawstyle==3)
 						overtile16(sprBMP,tile,0,0,cs,flip);
 					else if(drawstyle==1)
@@ -826,10 +871,13 @@ void sprite::draw(BITMAP* dest)
 						if ( scale ) 
 						{
 							double new_scale = scale / 100.0;
-							rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
+							if ( sprBMP2 ) rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation),ftofix(new_scale));
 						}
-						else rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
-						draw_sprite(dest, sprBMP2, sx, sy);
+						else 
+						{
+							if ( sprBMP2 ) rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
+						}
+						if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 						
 					}
 					else
@@ -837,13 +885,16 @@ void sprite::draw(BITMAP* dest)
 						if ( scale ) 
 						{
 							double new_scale = scale / 100.0;
-							rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
-							draw_sprite(dest, sprBMP2, sx, sy);
+							if ( sprBMP2 ) 
+							{
+								rotate_scaled_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(0),ftofix(new_scale));
+								draw_sprite(dest, sprBMP2, sx, sy);
+							}
 						}
 						else draw_sprite(dest, sprBMP, sx, sy);
 					}
 					destroy_bitmap(sprBMP);
-					destroy_bitmap(sprBMP2);
+					if ( sprBMP2 ) destroy_bitmap(sprBMP2);
 					break;
 				}
 			} //end extend == 3, and also extend == 0. Why? Because someone was more mental, than me. -Z (5th April, 2019)
