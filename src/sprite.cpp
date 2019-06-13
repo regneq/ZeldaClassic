@@ -476,11 +476,12 @@ void sprite::draw(BITMAP* dest)
 	}
 	int sx = real_x(x+xofs);
 	int sy = real_y(y+yofs)-real_z(z+zofs);
-	BITMAP* sprBMP2 = create_bitmap_ex(8,256,256);
+	
     
 	if(id<0)
 		return;
         
+	BITMAP* sprBMP2 = create_bitmap_ex(8,256,256); //Create only after we check the above failsafe. -Z
 	int e = extend>=3 ? 3 : extend;
 	int flip_type = ((scriptflip > -1) ? scriptflip : flip);
 	if(clk>=0)
