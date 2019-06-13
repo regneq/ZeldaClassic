@@ -482,7 +482,7 @@ void sprite::draw(BITMAP* dest)
 	{
 		switch(e)
 		{
-			BITMAP *temp = NULL;
+			BITMAP *temp;
             
 			case 1:
 				temp = create_bitmap_ex(8,16,32);
@@ -656,7 +656,7 @@ void sprite::draw(BITMAP* dest)
 							{
 								if ( sprBMP2 ) rotate_sprite(sprBMP2, sprBMP, 0, 0, deg_to_fixed(rotation));
 							}
-							if ( temp ) draw_sprite(dest, sprBMP2, sx, sy);
+							if ( sprBMP2 ) draw_sprite(dest, sprBMP2, sx, sy);
 							
 						}
 						else
