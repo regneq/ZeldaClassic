@@ -1942,6 +1942,7 @@ script_variable variable_list[]=
 	
 	{"MAPDATASIDEWARPID", MAPDATASIDEWARPID, 0, 0 },
 	{"SCREENSIDEWARPID", SCREENSIDEWARPID, 0, 0 },
+	{ "GDEXP",                GDEXP(0),              15536,             0 },
 	
 	
 	{ " ",                       -1,             0,             0 }

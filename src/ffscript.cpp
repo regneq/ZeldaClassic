@@ -7600,6 +7600,7 @@ case BITMAPHEIGHT:
         if(arg >= D(0) && arg <= D(7))			ret = ri->d[arg - D(0)];
         else if(arg >= A(0) && arg <= A(1))		ret = ri->a[arg - A(0)];
         else if(arg >= GD(0) && arg <= GD(MAX_SCRIPT_REGISTERS))	ret = game->global_d[arg - GD(0)];
+        else if(arg >= GDEXP(0) && arg <= GDEXP(MAX_EXPANDED_GLOBAL_VARS))	ret = game->global_d[arg - GDEXP(0)+MAX_SCRIPT_REGISTERS];
         
         break;
     }
@@ -13510,6 +13511,7 @@ case AUDIOPAN:
         if(arg >= D(0) && arg <= D(7))			ri->d[arg - D(0)] = value;
         else if(arg >= A(0) && arg <= A(1))		ri->a[arg - A(0)] = value;
         else if(arg >= GD(0) && arg <= GD(MAX_SCRIPT_REGISTERS))	game->global_d[arg-GD(0)] = value;
+        else if(arg >= GDEXP(0) && arg <= GDEXP(MAX_EXPANDED_GLOBAL_VARS))	game->global_d[arg - GDEXP(0)+MAX_SCRIPT_REGISTERS] = value;
         
         break;
     }

@@ -1601,6 +1601,16 @@ int readsaves(gamedata *savedata, PACKFILE *f)
 			}
 		    }
 	    }
+	    if ( section_version >= 13 )
+	    {
+		    for(int j=0; j<(MAX_EXPANDED_GLOBAL_VARS-MAX_SCRIPT_REGISTERS); j++)
+		    {
+			if(!p_igetl(&savedata[i].global_d[j],f,true))
+			{
+			    return 45;
+			}
+		    }
+	    }
 	    else
 	    {
 		for(int j=0; j<256; j++)
@@ -2087,7 +2097,7 @@ int writesaves(gamedata *savedata, PACKFILE *f)
             }
         }
         
-        for(int j=0; j<MAX_SCRIPT_REGISTERS; j++)
+        for(int j=0; j<MAX_SCRIPT_REGISTERS+MAX_EXPANDED_GLOBAL_VARS; j++)
         {
             if(!p_iputl(savedata[i].global_d[j],f))
             {

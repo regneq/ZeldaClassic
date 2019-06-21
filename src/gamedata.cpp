@@ -63,7 +63,7 @@ void gamedata::Clear()
     
     for(int i=0; i<MAXDMAPS*MAPSCRSNORMAL; i++) std::fill(screen_d[i], screen_d[i]+8, 0);
     
-    std::fill(global_d, global_d+MAX_SCRIPT_REGISTERS, 0);
+    std::fill(global_d, global_d+MAX_SCRIPT_REGISTERS+MAX_EXPANDED_GLOBAL_VARS, 0);
     globalRAM.clear();
     awpn=0;
     bwpn=0;
@@ -139,7 +139,7 @@ void gamedata::Copy(const gamedata& g)
         for(byte j = 0; j < 8; j++)
             screen_d[i][j] = g.screen_d[i][j];
             
-    for(word i = 0; i < MAX_SCRIPT_REGISTERS; i++)
+    for(word i = 0; i < MAX_SCRIPT_REGISTERS+MAX_EXPANDED_GLOBAL_VARS; i++)
         global_d[i] = g.global_d[i];
         
     awpn = g.awpn;

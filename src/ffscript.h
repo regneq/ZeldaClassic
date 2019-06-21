@@ -3490,6 +3490,8 @@ enum ASM_DEFINE
 
 #define NUMVARIABLES         	0x135D
 
+#define GDEXP(n)              ((50000)+(n))
+
 // Script types
 
 

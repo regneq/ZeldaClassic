@@ -127,6 +127,7 @@
 
 #define MAX_SCRIPT_REGISTERS 1024
 #define MAX_SCRIPT_REGISTERS_250 256
+#define MAX_EXPANDED_GLOBAL_VARS 4096
 
 enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_211B9, ENC_METHOD_211B18, ENC_METHOD_MAX};
 
@@ -198,7 +199,7 @@ enum {ENC_METHOD_192B104=0, ENC_METHOD_192B105, ENC_METHOD_192B185, ENC_METHOD_2
 #define V_GUYS            41
 #define V_MIDIS            4
 #define V_CHEATS           1
-#define V_SAVEGAME        12
+#define V_SAVEGAME        13
 #define V_COMBOALIASES     3
 #define V_LINKSPRITES      5
 #define V_SUBSCREEN        6
@@ -3140,7 +3141,7 @@ struct gamedata
     byte  icon[128];
     byte  pal[48];
     long  screen_d[MAXDMAPS*MAPSCRSNORMAL][8];                // script-controlled screen variables
-    long  global_d[MAX_SCRIPT_REGISTERS];                                      // script-controlled global variables
+    long  global_d[MAX_SCRIPT_REGISTERS+MAX_EXPANDED_GLOBAL_VARS];                                      // script-controlled global variables
     std::vector< ZCArray <long> > globalRAM;
     
     byte awpn, bwpn;											// Currently selected weapon slots
