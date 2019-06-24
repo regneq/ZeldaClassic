@@ -24244,25 +24244,78 @@ bool FFScript::checkExtension(std::string &filename, const std::string &extensio
 }
 
 
-
+extern int writeguys(PACKFILE *f, zquestheader *Header);
 void FFScript::do_savegamestructs()
 {
 	long arrayptr = get_register(sarg1) / 10000;
 	string strA;
 	FFCore.getString(arrayptr, strA);
-	
-	if (true /*placeholder for packfile*/)
+	int cycles = 0;
+	if ( FFCore.checkExtension(strA, ".zcsram") )
 	{
-		if ( FFCore.checkExtension(strA, ".zcsram") )
+		PACKFILE *f = pack_fopen_password(strA.c_str(),F_WRITE, "");
+		if (f)
 		{
+			zquestheader h;
 			//write the file
-			set_register(sarg1, 10000);
+			if(writeguys(f, &h)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(writeitems(f, &h)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(writeweapons(f, &h)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(writemapszc(f, &h)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(writecombos(f, ZELDA_VERSION, VERSION_BUILD, 0, MAXCOMBOS)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			pack_fclose(f);
+			set_register(sarg1, cycles*10000);
 		}
-		else set_register(sarg1, 0);
+		else set_register(sarg1, -10000);
 	}
 	else
 	{
-		set_register(sarg1, 0);
+		set_register(sarg1, -20000);
 		
 	}
 }
@@ -24271,19 +24324,72 @@ void FFScript::do_loadgamestructs()
 	long arrayptr = get_register(sarg1) / 10000;
 	string strA;
 	FFCore.getString(arrayptr, strA);
-	
-	if (true /*placeholder for packfile*/)
+	int cycles = 0;
+	if ( FFCore.checkExtension(strA, ".zcsram") )
 	{
-		if ( FFCore.checkExtension(strA, ".zcsram") )
+		PACKFILE *f = pack_fopen_password(strA.c_str(),F_WRITE, "");
+		if (f)
 		{
-			//read the file
-			set_register(sarg1, 10000);
+			zquestheader h;
+			//write the file
+			if(readguys(f, &h, true)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(readitems(f, ZELDA_VERSION, VERSION_BUILD, true)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(readweapons(f, &h, true)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(readmaps(f, &h, true)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			if(readcombos(f, &h, ZELDA_VERSION, VERSION_BUILD, 0, MAXCOMBOS, true)==0)
+			{
+				++cycles;
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				return;
+			}
+			pack_fclose(f);
+			set_register(sarg1, cycles*10000);
 		}
-		else set_register(sarg1, 0);
+		else set_register(sarg1, -10000);
 	}
 	else
 	{
-		set_register(sarg1, 0);
+		set_register(sarg1, -20000);
 		
 	}
 }
