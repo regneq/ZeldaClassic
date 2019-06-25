@@ -24251,13 +24251,10 @@ void FFScript::do_savegamestructs()
 	string strA;
 	FFCore.getString(arrayptr, strA);
 	int cycles = 0;
-	zquestheader header;
-	header.zelda_version = ZELDA_VERSION;
-	header.build = VERSION_BUILD;
-	
+
 	if ( FFCore.checkExtension(strA, ".zcsram") )
 	{
-		PACKFILE *f = pack_fopen(strA.c_str(),F_WRITE);
+		PACKFILE *f = pack_fopen_password(strA.c_str(),F_WRITE, "");
 		if (f)
 		{
 			//int hr = readheader(f, &header, true);
@@ -24278,7 +24275,12 @@ void FFScript::do_savegamestructs()
 				return;
 			}
 			*/
-			if(writeguys(f, &header)==0)
+			
+			zquestheader zhead;
+			zhead.zelda_version = ZELDA_VERSION;
+			zhead.build = VERSION_BUILD;
+			
+			if(writeguys(f, &zhead)==0)
 			{
 				++cycles;
 				Z_scripterrlog("do_savegamestructs wrote %s\n", "guys");
@@ -24290,7 +24292,7 @@ void FFScript::do_savegamestructs()
 				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "guys");
 				return;
 			}
-			
+			/*
 			if(writeitems(f, &header)==0)
 			{
 				++cycles;
@@ -24344,6 +24346,7 @@ void FFScript::do_savegamestructs()
 				
 				return;
 			}
+			*/
 			
 			pack_fclose(f);
 			Z_scripterrlog("do_savegamestructs COMPLETED WRITING %s\n", "ALL");
@@ -24367,12 +24370,10 @@ void FFScript::do_loadgamestructs()
 	string strA;
 	FFCore.getString(arrayptr, strA);
 	int cycles = 0;
-	zquestheader header;
-	header.zelda_version = ZELDA_VERSION;
-	header.build = VERSION_BUILD;
+	
 	if ( FFCore.checkExtension(strA, ".zcsram") )
 	{
-		PACKFILE *f = pack_fopen(strA.c_str(),F_READ);
+		PACKFILE *f = pack_fopen_password(strA.c_str(),F_READ, "");
 		if (f)
 		{
 			//zquestheader h;
@@ -24393,7 +24394,10 @@ void FFScript::do_loadgamestructs()
 				return;
 			}
 			*/
-			if(readguys(f, &header, true)==0)
+			zquestheader zhead;
+			zhead.zelda_version = ZELDA_VERSION;
+			zhead.build = VERSION_BUILD;
+			if(readguys(f, &zhead, true)==0)
 			{
 				++cycles;
 				Z_scripterrlog("do_loadgamestructs read %s\n", "guys");
@@ -24405,7 +24409,7 @@ void FFScript::do_loadgamestructs()
 				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "guys");
 				return;
 			}
-			
+			/*
 			if(readitems(f, header.zelda_version, header.build, true)==0)
 			{
 				++cycles;
@@ -24432,7 +24436,7 @@ void FFScript::do_loadgamestructs()
 				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "sprites");
 				return;
 			}
-			/*
+			
 			if(readmaps(f, &header, true)==0)
 			{
 				++cycles;
