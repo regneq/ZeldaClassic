@@ -7776,6 +7776,16 @@ namespace ZScript
 			return new Oitoa(a->clone());
 		}
 	};
+	class OLoadQuest : public BinaryOpcode
+	{
+	public:
+		OLoadQuest(Argument *A, Argument *B) : BinaryOpcode(A,B) {}
+		string toString();
+		Opcode *clone()
+		{
+			return new OLoadQuest(a->clone(),b->clone());
+		}
+	};
 	class OSaveGameStructs : public BinaryOpcode
 	{
 	public:

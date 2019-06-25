@@ -4610,6 +4610,11 @@ string OReadGameStructs::toString()
     return "READGAMESTRUCTS " + getFirstArgument()->toString() + "," + getSecondArgument()->toString();
 }
 
+string OLoadQuest::toString()
+{
+    return "LOADQUEST " + getFirstArgument()->toString() + "," + getSecondArgument()->toString();
+}
+
 string Ostrcat::toString()
 {
     return "STRCAT " + getArgument()->toString();

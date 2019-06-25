@@ -624,6 +624,7 @@ static AccessorTable GlobalTable[] =
 	{ "itoa_c",                  ZVARTYPEID_FLOAT,            FUNCTION,     0,     1,          0,                                    2,           {  ZVARTYPEID_FLOAT,        ZVARTYPEID_FLOAT,         -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "SaveSRAM",     ZVARTYPEID_FLOAT,            FUNCTION,     0,     1,          0,                                    2,           {  ZVARTYPEID_FLOAT,        ZVARTYPEID_FLOAT,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "LoadSRAM",     ZVARTYPEID_FLOAT,            FUNCTION,     0,     1,          0,                                    2,           {  ZVARTYPEID_FLOAT,        ZVARTYPEID_FLOAT,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "LoadQuest",     ZVARTYPEID_FLOAT,            FUNCTION,     0,     1,          0,                                    2,           {  ZVARTYPEID_FLOAT,        ZVARTYPEID_FLOAT,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	
 	{ "strcat",                ZVARTYPEID_FLOAT,            FUNCTION,     0,     1,          0,                                    2,           {  ZVARTYPEID_FLOAT,        ZVARTYPEID_FLOAT,         -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "strchr",                ZVARTYPEID_FLOAT,            FUNCTION,     0,     1,          0,                                    2,           {  ZVARTYPEID_FLOAT,        ZVARTYPEID_FLOAT,         -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
@@ -1337,7 +1338,20 @@ void GlobalSymbols::generateCode()
         code.push_back(new OReturn());
         function->giveCode(code);
     } 
-    //int SaveSRAM(eweapon *ptr)
+    //int LoadQuest("filename", int)
+    {
+	    Function* function = getFunction("LoadQuest", 2);
+	    int label = function->getLabel();
+        vector<Opcode *> code;
+        Opcode *first = new OPopRegister(new VarArgument(EXP2));
+        first->setLabel(label);
+        code.push_back(first);
+        code.push_back(new OPopRegister(new VarArgument(EXP1)));
+        code.push_back(new OLoadQuest(new VarArgument(EXP1), new VarArgument(EXP2)));
+        code.push_back(new OReturn());
+        function->giveCode(code);
+    }
+    //int SaveSRAM("filename", int)
     {
 	    Function* function = getFunction("SaveSRAM", 2);
 	    int label = function->getLabel();
@@ -1350,7 +1364,7 @@ void GlobalSymbols::generateCode()
         code.push_back(new OReturn());
         function->giveCode(code);
     }
-    //int LoadSRAM(eweapon *ptr)
+    //int LoadSRAM("filename", int)
     {
 	    Function* function = getFunction("LoadSRAM", 2);
 	    int label = function->getLabel();

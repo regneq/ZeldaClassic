@@ -17772,6 +17772,10 @@ int run_script(const byte type, const word script, const long i)
 		case READGAMESTRUCTS:
 		    FFCore.do_loadgamestructs(false,false);
 		    break;
+		
+		case LOADQUEST:
+		    FFCore.do_loadquest(false,false);
+		    break;
 		case ARRAYSIZE:
 		    do_arraysize();
 		    break;
@@ -24243,6 +24247,25 @@ bool FFScript::checkExtension(std::string &filename, const std::string &extensio
     return exten == extension;
 }
 
+void FFScript::do_loadquest(bool v1,bool v2)
+{
+	long arrayptr = SH::get_arg(sarg1, v1) / 10000;
+	byte skip_flags[4] = {0};
+	for(int i=0; i<4; ++i)
+	{
+		skip_flags[i]=0;
+	}
+	skip_flags[0] = SH::get_arg(sarg2, v2) / 10000;
+	//Bitwise OR sections together
+	string strA;
+	FFCore.getString(arrayptr, strA);
+
+	if ( FFCore.checkExtension(strA, ".qst") )
+	{
+		//loadquest(strA.c_str(),&QHeader,&QMisc,tunes+ZC_MIDI_COUNT,false,true,true,true,skip_flags);
+		set_register(sarg1, -10000);
+	}
+}
 
 void FFScript::do_loadgamestructs(const bool v, const bool v2)
 {

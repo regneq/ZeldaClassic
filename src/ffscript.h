@@ -268,6 +268,7 @@ void write_mapscreens(PACKFILE *f,int vers_id);
 void read_mapscreens(PACKFILE *f, int vers_id);
 void do_savegamestructs(const bool v, const bool v2);
 void do_loadgamestructs(const bool v, const bool v2);
+void do_loadquest(const bool v, const bool v2);
 
 
 
@@ -2311,6 +2312,7 @@ enum ASM_DEFINE
 	SRNDRND,
 	SAVEGAMESTRUCTS,
 	READGAMESTRUCTS,
+	LOADQUEST,
 
 
 	NUMCOMMANDS           //0x0150
