@@ -9700,7 +9700,7 @@ int readguys(PACKFILE *f, zquestheader *Header, bool keepdata)
         {
             return qe_invalid;
         }
-        
+	Z_scripterrlog("guy_version is: %d\n", guyversion);
 	FFCore.quest_format[vGuys] = guyversion;
 	
         //al_trace("Guys version %d\n", guyversion);
