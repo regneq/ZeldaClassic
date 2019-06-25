@@ -24251,67 +24251,109 @@ void FFScript::do_savegamestructs()
 	string strA;
 	FFCore.getString(arrayptr, strA);
 	int cycles = 0;
+	zquestheader header;
+	header.zelda_version = ZELDA_VERSION;
+	header.build = VERSION_BUILD;
+	
 	if ( FFCore.checkExtension(strA, ".zcsram") )
 	{
-		PACKFILE *f = pack_fopen_password(strA.c_str(),F_WRITE, "");
+		PACKFILE *f = pack_fopen(strA.c_str(),F_WRITE);
 		if (f)
 		{
-			zquestheader h;
+			//int hr = readheader(f, &header, true);
+			//h.zelda_version = ZELDA_VERSION;
+			//h.build=VERSION_BUILD;
 			//write the file
-			if(writeguys(f, &h)==0)
+			/*
+			if(writeheaderzc(f, &header)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_savegamestructs wrote %s\n", "header");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "header");
 				return;
 			}
-			if(writeitems(f, &h)==0)
+			*/
+			if(writeguys(f, &header)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_savegamestructs wrote %s\n", "guys");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "guys");
 				return;
 			}
-			if(writeweapons(f, &h)==0)
+			
+			if(writeitems(f, &header)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_savegamestructs wrote %s\n", "items");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "items");
 				return;
 			}
-			if(writemapszc(f, &h)==0)
+			
+			if(writeweapons(f, &header)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_savegamestructs wrote %s\n", "sprites");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "sprites");
 				return;
 			}
+			
+			if(writemapszc(f, &header)==0)
+			{
+				++cycles;
+				Z_scripterrlog("do_savegamestructs wrote %s\n", "mapscr");
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "mapscr");
+				
+				return;
+			}
+			
 			if(writecombos(f, ZELDA_VERSION, VERSION_BUILD, 0, MAXCOMBOS)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_savegamestructs wrote %s\n", "combos");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_savegamestructs FAILED to write %s\n", "combos");
+				
 				return;
 			}
+			
 			pack_fclose(f);
+			Z_scripterrlog("do_savegamestructs COMPLETED WRITING %s\n", "ALL");
 			set_register(sarg1, cycles*10000);
 		}
-		else set_register(sarg1, -10000);
+		else 
+		{
+			Z_scripterrlog("FFCore.do_loadgamestructs could not read packfile!");
+			set_register(sarg1, -10000);
+		}
 	}
 	else
 	{
@@ -24325,67 +24367,107 @@ void FFScript::do_loadgamestructs()
 	string strA;
 	FFCore.getString(arrayptr, strA);
 	int cycles = 0;
+	zquestheader header;
+	header.zelda_version = ZELDA_VERSION;
+	header.build = VERSION_BUILD;
 	if ( FFCore.checkExtension(strA, ".zcsram") )
 	{
-		PACKFILE *f = pack_fopen_password(strA.c_str(),F_WRITE, "");
+		PACKFILE *f = pack_fopen(strA.c_str(),F_READ);
 		if (f)
 		{
-			zquestheader h;
+			//zquestheader h;
+			//h.zelda_version = ZELDA_VERSION;
+			//h.build=VERSION_BUILD;
 			//write the file
-			if(readguys(f, &h, true)==0)
+			/*
+			if(readheader(f, &header, true)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_loadgamestructs read %s\n", "header");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "header");
 				return;
 			}
-			if(readitems(f, ZELDA_VERSION, VERSION_BUILD, true)==0)
+			*/
+			if(readguys(f, &header, true)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_loadgamestructs read %s\n", "guys");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "guys");
 				return;
 			}
-			if(readweapons(f, &h, true)==0)
+			
+			if(readitems(f, header.zelda_version, header.build, true)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_loadgamestructs read %s\n", "items");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "items");
 				return;
 			}
-			if(readmaps(f, &h, true)==0)
+			
+			
+			if(readweapons(f, &header, true)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_loadgamestructs read %s\n", "sprites");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "sprites");
 				return;
 			}
-			if(readcombos(f, &h, ZELDA_VERSION, VERSION_BUILD, 0, MAXCOMBOS, true)==0)
+			/*
+			if(readmaps(f, &header, true)==0)
 			{
 				++cycles;
+				Z_scripterrlog("do_loadgamestructs read %s\n", "mapscr");
 			}
 			else
 			{
 				pack_fclose(f);
 				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "mapscr");
 				return;
 			}
+			
+			if(readcombos(f, &header, ZELDA_VERSION, VERSION_BUILD, 0, MAXCOMBOS, true)==0)
+			{
+				++cycles;
+				Z_scripterrlog("do_loadgamestructs read %s\n", "combos");
+			}
+			else
+			{
+				pack_fclose(f);
+				set_register(sarg1, cycles*10000);
+				Z_scripterrlog("do_loadgamestructs FAILED to read %s\n", "combos");
+				return;
+			}
+			*/
 			pack_fclose(f);
+			Z_scripterrlog("do_loadgamestructs COMPLETED READING %s\n", "ALL");
 			set_register(sarg1, cycles*10000);
 		}
-		else set_register(sarg1, -10000);
+		else 
+		{
+			Z_scripterrlog("FFCore.do_loadgamestructs could not create packfile!");
+			set_register(sarg1, -10000);
+		}
 	}
 	else
 	{

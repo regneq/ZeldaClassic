@@ -21,7 +21,7 @@ extern FFScript ffengine;
 
 int writemapscreen(PACKFILE *f, int i, int j);
 int writemapszc(PACKFILE *f, zquestheader *);
-
+int writeheaderzc(PACKFILE *f, zquestheader *Header);
 // define these in main code
 //extern bool init_tiles(bool validate);
 //extern bool init_combos(bool validate);

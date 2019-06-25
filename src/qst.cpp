@@ -18757,3 +18757,127 @@ int writemapszc(PACKFILE *f, zquestheader *)
     new_return(0);
 }
 
+int writeheaderzc(PACKFILE *f, zquestheader *Header)
+{
+    dword section_id=ID_HEADER;
+    dword section_version=V_HEADER;
+    dword section_cversion=CV_HEADER;
+    dword section_size=0;
+    
+    //file header string
+    if(!pfwrite(Header->id_str,sizeof(Header->id_str),f))
+    {
+        new_return(1);
+    }
+    
+    //section id
+    if(!p_mputl(section_id,f))
+    {
+        new_return(2);
+    }
+    
+    //section version info
+    if(!p_iputw(section_version,f))
+    {
+        new_return(3);
+    }
+    
+    if(!p_iputw(section_cversion,f))
+    {
+        new_return(4);
+    }
+    
+    for(int writecycle=0; writecycle<2; ++writecycle)
+    {
+        fake_pack_writing=(writecycle==0);
+        
+        //section size
+        if(!p_iputl(section_size,f))
+        {
+            new_return(5);
+        }
+        
+        writesize=0;
+        
+        //finally...  section data
+        if(!p_iputw(Header->zelda_version,f))
+        {
+            new_return(6);
+        }
+        
+        if(!p_putc(Header->build,f))
+        {
+            new_return(7);
+        }
+        
+        if(!pfwrite(Header->pwd_hash,sizeof(Header->pwd_hash),f))
+        {
+            new_return(8);
+        }
+        
+        if(!p_iputw(Header->internal,f))
+        {
+            new_return(10);
+        }
+        
+        if(!p_putc(Header->quest_number,f))
+        {
+            new_return(11);
+        }
+        
+        if(!pfwrite(Header->version,sizeof(Header->version),f))
+        {
+            new_return(12);
+        }
+        
+        if(!pfwrite(Header->minver,sizeof(Header->minver),f))
+        {
+            new_return(13);
+        }
+        
+        if(!pfwrite(Header->title,sizeof(Header->title),f))
+        {
+            new_return(14);
+        }
+        
+        if(!pfwrite(Header->author,sizeof(Header->author),f))
+        {
+            new_return(15);
+        }
+        
+        if(!p_putc(Header->use_keyfile,f))
+        {
+            new_return(16);
+        }
+        
+        if(!pfwrite(Header->data_flags,sizeof(Header->data_flags),f))
+        {
+            new_return(17);
+        }
+        
+        if(!pfwrite(Header->templatepath,sizeof(Header->templatepath),f))
+        {
+            new_return(19);
+        }
+        
+        if(!p_putc(0,f)) //why are we doing this?
+        {
+            new_return(20);
+        }
+        
+        if(writecycle==0)
+        {
+            section_size=writesize;
+        }
+    }
+    
+    if(writesize!=int(section_size) && save_warn)
+    {
+        char ebuf[80];
+        sprintf(ebuf, "%d != %d", writesize, int(section_size));
+        jwin_alert("Error:  writeheader()","writesize != section_size",ebuf,NULL,"O&K",NULL,'k',0,lfont);
+    }
+    
+    new_return(0);
+}
+
