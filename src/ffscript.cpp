@@ -17554,9 +17554,26 @@ void FFScript::do_loadmodule(const bool v)
 		zmc.init(false);
 		set_register(sarg1, 10000);
 	}
+	else
+	{
+
+		string pth;
+		strcpy(pth, "modules");
+		string fullpth = pth + filename_str;
+		if (FFCore.fileexists(fullpth.c_str()))
+		{
+			memset(moduledata.module_name, 0, sizeof(moduledata.module_name));
+			strcpy(moduledata.module_name, fullpth);
+			zmc.init(false);
+			set_register(sarg1, 10000);
+		}
+		else set_register(sarg1, 0); //if the extension is wrong, return false
+		
+	}		
+	
 	  //if not, return false
 	    //otherwise, load the module and return 1
-	else set_register(sarg1, 0); //if the extension is wrong, return false
+	
     }
     else set_register(sarg1, 0); //if the extension is wrong, return false
     
