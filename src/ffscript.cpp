@@ -17566,6 +17566,8 @@ void FFScript::do_loadmodule(const bool v)
 			strcpy(moduledata.module_name, fullpth);
 			zmc.init(false);
 			set_register(sarg1, 10000);
+			//init may not reload .dat files! We may need to re-do the initialisation of fonts and other data
+			//as part of ZModule::load
 		}
 		else set_register(sarg1, 0); //if the extension is wrong, return false
 		
