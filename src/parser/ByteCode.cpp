@@ -4855,6 +4855,15 @@ string OGETDMAPBYNAME::toString()
     return "GETDMAPBYNAME " + getArgument()->toString();
 }
 
+string OLoadModule::toString()
+{
+    return "LOADMODULE " + getArgument()->toString();
+}
+string OCheckModule::toString()
+{
+    return "CHECKMODULE " + getArgument()->toString();
+}
+
 
 
 string OReturn::toString()

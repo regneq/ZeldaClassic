@@ -3873,6 +3873,8 @@ static AccessorTable gameTable[] =
 	{ "PlayEnhancedMusic",             ZVARTYPEID_BOOL,          FUNCTION,     0,                    1,              0,                                    3,           {  ZVARTYPEID_GAME,          ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,    -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "GetDMapMusicFilename",          ZVARTYPEID_VOID,          FUNCTION,     0,                    1,              0,                                    3,           {  ZVARTYPEID_GAME,          ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,    -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "GetDMapMusicTrack",             ZVARTYPEID_FLOAT,         FUNCTION,     0,                    1,              0,                                    2,           {  ZVARTYPEID_GAME,          ZVARTYPEID_FLOAT,        -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "LoadModule",                    ZVARTYPEID_BOOL,          FUNCTION,     0,                    1,              0,                                    2,           {  ZVARTYPEID_GAME,          ZVARTYPEID_CHAR,         -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "CheckModule",                   ZVARTYPEID_BOOL,          FUNCTION,     0,                    1,              0,                                    2,           {  ZVARTYPEID_GAME,          ZVARTYPEID_CHAR,         -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "SetDMapEnhancedMusic",          ZVARTYPEID_VOID,          FUNCTION,     0,                    1,              0,                                    4,           {  ZVARTYPEID_GAME,          ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,    -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "GetComboData",                  ZVARTYPEID_FLOAT,         FUNCTION,     0,                    1,              0,                                    4,           {  ZVARTYPEID_GAME,          ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,    -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	{ "SetComboData",                  ZVARTYPEID_VOID,          FUNCTION,     0,                    1,              0,                                    5,           {  ZVARTYPEID_GAME,          ZVARTYPEID_FLOAT,         ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,     ZVARTYPEID_FLOAT,    -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
@@ -6203,6 +6205,35 @@ void GameSymbols::generateCode()
         //pop pointer, and ignore it
         code.push_back(new OPopRegister(new VarArgument(NUL)));
         code.push_back(new OSetEnhancedMusicSpeed(new VarArgument(EXP1)));
+        code.push_back(new OReturn());
+        function->giveCode(code);
+    }
+    //int LoadModule(game, char32])
+    {
+	    Function* function = getFunction("LoadModule", 2);
+        int label = function->getLabel();
+        vector<Opcode *> code;
+        Opcode *first = new OPopRegister(new VarArgument(EXP1));
+        first->setLabel(label);
+        code.push_back(first);
+        //pop pointer, and ignore it
+        code.push_back(new OPopRegister(new VarArgument(NUL)));
+        code.push_back(new OLoadModule(new VarArgument(EXP1)));
+        code.push_back(new OReturn());
+        function->giveCode(code);
+    }
+    
+    //int CheckModule(game, char32[])
+    {
+	    Function* function = getFunction("CheckModule", 2);
+        int label = function->getLabel();
+        vector<Opcode *> code;
+        Opcode *first = new OPopRegister(new VarArgument(EXP1));
+        first->setLabel(label);
+        code.push_back(first);
+        //pop pointer, and ignore it
+        code.push_back(new OPopRegister(new VarArgument(NUL)));
+        code.push_back(new OCheckModule(new VarArgument(EXP1)));
         code.push_back(new OReturn());
         function->giveCode(code);
     }

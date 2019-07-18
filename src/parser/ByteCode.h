@@ -8278,6 +8278,29 @@ namespace ZScript
 		}
 	};
 	
+	
+	class OLoadModule : public UnaryOpcode
+	{
+	public:
+		OLoadModule(Argument *A) : UnaryOpcode(A) {}
+		std::string toString();
+		Opcode *clone()
+		{
+			return new OLoadModule(a->clone());
+		}
+	};
+	
+	class OCheckModule : public UnaryOpcode
+	{
+	public:
+		OCheckModule(Argument *A) : UnaryOpcode(A) {}
+		std::string toString();
+		Opcode *clone()
+		{
+			return new OCheckModule(a->clone());
+		}
+	};
+	
 	class OReturn : public Opcode
 	{
 	public:

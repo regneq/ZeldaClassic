@@ -396,6 +396,8 @@ long do_create_bitmap();
 void do_adjustsfxvolume(const bool v);
 void do_adjustvolume(const bool v);
 void do_warp_ex(const bool v);
+void do_loadmodule(const bool v);
+void do_checkmodule(const bool v);
 //FFScript();
 //static void init();
 
@@ -2386,6 +2388,9 @@ enum ASM_DEFINE
 	MESSAGEWIDTHR,
 	MESSAGEHEIGHTR,
   ISVALIDARRAY,
+  LOADMODULE,
+  CHECKMODULE,
+  //
 
 
 	NUMCOMMANDS           //0x015B

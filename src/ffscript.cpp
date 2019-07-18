@@ -17532,6 +17532,30 @@ void do_get_enh_music_track(const bool v)
     set_register(sarg1, (DMaps[ID].tmusictrack+1)*10000);
 }
 
+void FFScript::do_loadmodule(const bool v)
+{
+    long arrayptr = = SH::get_arg(sarg1, v) / 10000;
+    string filename_str;
+    ArrayH::getString(arrayptr, filename_str, 256);
+    if ( FFCore.checkExtension(filename_str, ".zccfg") )
+    {
+	  //check if file exists
+	  //if not, return false
+	    //otherwise, load the module and return 1
+    }
+    set_register(sarg1, 0); //if the extension is wrong, return false
+}
+
+void FFScript::do_loadmodule(const bool v)
+{
+    long arrayptr = = SH::get_arg(sarg1, v) / 10000;
+    string filename_str;
+    ArrayH::getString(arrayptr, filename_str, 256);
+    //if the current loaded molule name == the string, return 1
+	//else
+    set_register(sarg1, 0); //if the extension is wrong, return false
+}
+
 void do_set_dmap_enh_music(const bool v)
 {
     long ID   = SH::read_stack(ri->sp + 2) / 10000;
@@ -18913,6 +18937,14 @@ int run_script(const byte type, const word script, const long i)
 		    
 		case GETMUSICTRACK:
 		    do_get_enh_music_track(false);
+		    break;
+		
+		case LOADMODULE:
+		    FFCore.do_loadmodule(false);
+		    break;
+		
+		case CHECKMODULE:
+		    FFCore.do_checkmodule(false);
 		    break;
 		    
 		case SETDMAPENHMUSIC:
