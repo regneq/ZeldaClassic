@@ -17575,6 +17575,7 @@ void FFScript::do_loadmodule(const bool v)
 	    //otherwise, load the module and return 1
 	
     }
+    Z_scripterrlog("Game->LoadModule(%s) filename must be of the type '.zmod'\n", filename_str.c_str());
     else set_register(sarg1, 0); //if the extension is wrong, return false
     
 }
