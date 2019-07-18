@@ -17537,7 +17537,7 @@ void FFScript::do_loadmodule(const bool v)
     long arrayptr = = SH::get_arg(sarg1, v) / 10000;
     string filename_str;
     ArrayH::getString(arrayptr, filename_str, 256);
-    if ( FFCore.checkExtension(filename_str, ".zccfg") )
+    if ( FFCore.checkExtension(filename_str, ".zmod") )
     {
 	  //check if file exists
 	  //if not, return false
