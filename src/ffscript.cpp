@@ -30,6 +30,12 @@ script_bitmaps scb;
 
 FONT *get_zc_font(int index);
 
+bool FFScript::fileexists(const char *filename) 
+{
+	std::ifstream ifile(filename);
+	return (bool)ifile;
+}
+
 const char scripttypenames[11][40]=
 {
 	"Global Script", "FFC Script", "Screen Script", "Hero Script", 
@@ -17540,8 +17546,8 @@ void FFScript::do_loadmodule(const bool v)
     if ( FFCore.checkExtension(filename_str, ".zmod") )
     {
 	  //check if file exists
-	PACKFILE *f = pack_fopen_password(filename_str.c_str(),F_READ, "");
-	if (f)
+	//PACKFILE *f = pack_fopen_password(filename_str.c_str(),F_READ, "");
+	if (FFCore.fileexists(filename_str.c_str()))
 	{
 		memset(moduledata.module_name, 0, sizeof(moduledata.module_name));
 		strcpy(moduledata.module_name, filename_str);

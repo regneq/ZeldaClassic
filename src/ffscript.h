@@ -382,6 +382,7 @@ void do_playogg_ex(const bool v);
 void do_set_oggex_position(const bool v);
 void go_get_oggex_position();
 void do_set_oggex_speed(const bool v);
+bool fileexists(const char *filename) 
 
 BITMAP* get_user_bitmap(int id);
 
