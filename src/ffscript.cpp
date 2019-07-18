@@ -17540,12 +17540,12 @@ void FFScript::do_loadmodule(const bool v)
     if ( FFCore.checkExtension(filename_str, ".zmod") )
     {
 	  //check if file exists
-	PACKFILE *f = pack_fopen_password(strA.c_str(),F_READ, "");
+	PACKFILE *f = pack_fopen_password(filename_str.c_str(),F_READ, "");
 	if (f)
 	{
 		memset(moduledata.module_name, 0, sizeof(moduledata.module_name));
 		strcpy(moduledata.module_name, filename_str);
-		zmc.init();
+		zmc.init(false);
 		set_register(sarg1, 10000);
 	}
 	  //if not, return false
