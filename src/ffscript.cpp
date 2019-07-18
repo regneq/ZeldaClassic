@@ -17534,26 +17534,41 @@ void do_get_enh_music_track(const bool v)
 
 void FFScript::do_loadmodule(const bool v)
 {
-    long arrayptr = = SH::get_arg(sarg1, v) / 10000;
+    long arrayptr = SH::get_arg(sarg1, v) / 10000;
     string filename_str;
     ArrayH::getString(arrayptr, filename_str, 256);
     if ( FFCore.checkExtension(filename_str, ".zmod") )
     {
 	  //check if file exists
+	PACKFILE *f = pack_fopen_password(strA.c_str(),F_READ, "");
+	if (f)
+	{
+		memset(moduledata.module_name, 0, sizeof(moduledata.module_name));
+		strcpy(moduledata.module_name, filename_str);
+		zmc.init();
+		set_register(sarg1, 10000);
+	}
 	  //if not, return false
 	    //otherwise, load the module and return 1
+	else set_register(sarg1, 0); //if the extension is wrong, return false
     }
-    set_register(sarg1, 0); //if the extension is wrong, return false
+    else set_register(sarg1, 0); //if the extension is wrong, return false
+    
 }
 
-void FFScript::do_loadmodule(const bool v)
+void FFScript::do_checkmodule(const bool v)
 {
-    long arrayptr = = SH::get_arg(sarg1, v) / 10000;
+    long arrayptr = SH::get_arg(sarg1, v) / 10000;
     string filename_str;
     ArrayH::getString(arrayptr, filename_str, 256);
+    if ( strncmp(moduledata.module_name, filename_str) == 0 ) 
+	    //should add 'module ID' as a string to modules, rather than filename stuff
+    {
+	set_register(sarg1, 10000);
+    }
     //if the current loaded molule name == the string, return 1
 	//else
-    set_register(sarg1, 0); //if the extension is wrong, return false
+    else set_register(sarg1, 0); //if the extension is wrong, return false
 }
 
 void do_set_dmap_enh_music(const bool v)
