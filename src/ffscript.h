@@ -1514,7 +1514,88 @@ long get_screennpc(mapscr *m, int index);
 void do_getscreennpc();
 
 
-    
+//config files
+
+
+typedef struct ZCCONFIG_ENTRY
+{
+   char *name;                      /* variable name (NULL if comment) */
+   char *data;                      /* variable value */
+   struct ZCCONFIG_ENTRY *next;       /* linked list */
+} ZCCONFIG_ENTRY;
+
+
+typedef struct ZCCONFIG
+{
+   ZCCONFIG_ENTRY *head;              /* linked list of config entries */
+   char *filename;                  /* where were we loaded from? */
+   int dirty;                       /* has our data changed? */
+} ZCCONFIG;
+
+
+typedef struct ZCCONFIG_HOOK
+{
+   char *section;                   /* hooked config section info */
+   int (*intgetter)(AL_CONST char *name, int def);
+   AL_CONST char *(*stringgetter)(AL_CONST char *name, AL_CONST char *def);
+   void (*stringsetter)(AL_CONST char *name, AL_CONST char *value);
+   struct ZCCONFIG_HOOK *next; 
+} ZCCONFIG_HOOK;
+
+
+#define MAX_ZCCONFIGS     4
+
+static ZCCONFIG *config[MAX_ZCCONFIGS] = { NULL, NULL, NULL, NULL };
+static ZCCONFIG *config_override = NULL;
+static ZCCONFIG *config_language = NULL;
+static ZCCONFIG *system_config = NULL;
+
+static ZCCONFIG_HOOK *config_hook = NULL;
+
+static int config_installed = FALSE;
+
+static char **config_argv = NULL;
+static char *argv_buf = NULL;
+static int argv_buf_size = 0;
+
+
+   extern "C" {
+
+
+AL_FUNC(void, zc_set_config_file, (AL_CONST char *filename));
+AL_FUNC(void, zc_set_config_data, (AL_CONST char *data, int length));
+AL_FUNC(void, zc_override_config_file, (AL_CONST char *filename));
+AL_FUNC(void, zc_override_config_data, (AL_CONST char *data, int length));
+AL_FUNC(void, zc_flush_config_file, (void));
+AL_FUNC(void, zc_reload_config_texts, (AL_CONST char *new_language));
+
+AL_FUNC(void, zc_push_config_state, (void));
+AL_FUNC(void, zc_pop_config_state, (void));
+
+AL_FUNC(void, zc_hook_config_section, (AL_CONST char *section, AL_METHOD(int, intgetter, (AL_CONST char *, int)), AL_METHOD(AL_CONST char *, stringgetter, (AL_CONST char *, AL_CONST char *)), AL_METHOD(void, stringsetter, (AL_CONST char *, AL_CONST char *))));
+AL_FUNC(int, zc_config_is_hooked, (AL_CONST char *section));
+
+AL_FUNC(AL_CONST char *, zc_get_config_string, (AL_CONST char *section, AL_CONST char *name, AL_CONST char *def));
+AL_FUNC(int, zc_get_config_int, (AL_CONST char *section, AL_CONST char *name, int def));
+AL_FUNC(int, zc_get_config_hex, (AL_CONST char *section, AL_CONST char *name, int def));
+AL_FUNC(float, zc_get_config_float, (AL_CONST char *section, AL_CONST char *name, float def));
+AL_FUNC(int, zc_get_config_id, (AL_CONST char *section, AL_CONST char *name, int def));
+AL_FUNC(char **, zc_get_config_argv, (AL_CONST char *section, AL_CONST char *name, int *argc));
+AL_FUNC(AL_CONST char *, zc_get_config_text, (AL_CONST char *msg));
+
+AL_FUNC(void, zc_set_config_string, (AL_CONST char *section, AL_CONST char *name, AL_CONST char *val));
+AL_FUNC(void, zc_set_config_int, (AL_CONST char *section, AL_CONST char *name, int val));
+AL_FUNC(void, zc_set_config_hex, (AL_CONST char *section, AL_CONST char *name, int val));
+AL_FUNC(void, zc_set_config_float, (AL_CONST char *section, AL_CONST char *name, float val));
+AL_FUNC(void, zc_set_config_id, (AL_CONST char *section, AL_CONST char *name, int val));
+
+AL_FUNC(int, zc_list_config_entries, (AL_CONST char *section, AL_CONST char ***names));
+AL_FUNC(int, zc_list_config_sections, (AL_CONST char ***names));
+AL_FUNC(void, zc_free_config_entries, (AL_CONST char ***names));
+
+
+   }
+
 
 
 
