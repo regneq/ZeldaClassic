@@ -4864,9 +4864,9 @@ bool LinkClass::animate(int)
 				}
 				draw_screen(tmpscr);
 				blit(subscrbmp,framebuf,0,0,0,0,256,passive_subscreen_height);
-				advanceframe(true);
+				advanceframe(true,true,true);
 				if (!link_doscript ) ++fc;
-				
+				if(Quit>0) break;
 			}
 			while(fc < 1 );
 		    gameover();
@@ -5615,7 +5615,7 @@ bool LinkClass::startwpn(int itemid)
         {
             advanceframe(true);
             
-            if(Quit)
+            if(Quit>0)
                 return false;
         }
         
@@ -11821,7 +11821,7 @@ void LinkClass::checkspecial2(int *ls)
         if(!skippedaframe && (tmpscr[t].tilewarptype[index]!=wtNOWARP))
         {
             draw_screen(tmpscr);
-            advanceframe(true);
+            advanceframe(true,true,true);
         }
         
         sdir = dir;
@@ -13069,9 +13069,9 @@ void LinkClass::stepforward(int steps, bool adjust)
 	}
 	
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
             return;
     }
     
@@ -13119,9 +13119,9 @@ void LinkClass::walkdown(bool opening) //entering cave
             ++y;
             
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
             break;
     }
     
@@ -13174,9 +13174,9 @@ void LinkClass::walkdown2(bool opening) //exiting cave 2
             ++y;
             
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
             break;
     }
     
@@ -13229,9 +13229,9 @@ void LinkClass::walkup(bool opening) //exiting cave
             --y;
             
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
             break;
     }
     
@@ -13277,9 +13277,9 @@ void LinkClass::walkup2(bool opening) //entering cave2
             --y;
             
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
             break;
     }
     
@@ -14332,9 +14332,9 @@ void LinkClass::scrollscr(int scrolldir, int destscr, int destdmap)
 	if(cx == scx)
 		rehydratelake(false);
 		
-	advanceframe(true);
+	advanceframe(true,true,true);
 	
-	if(Quit)
+	if(Quit>0)
 	{
 		screenscrolling = false;
 		return;
@@ -14353,9 +14353,9 @@ void LinkClass::scrollscr(int scrolldir, int destscr, int destdmap)
         if(cx == scx)
             rehydratelake(false);
             
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
         {
             screenscrolling = false;
             return;
@@ -14528,7 +14528,7 @@ fade((specialcave > 0) ? (specialcave >= GUYCAVE) ? 10 : 11 : currcset, true, fa
     
     for(word i = 0; cx >= 0 && delay != 0; i++, cx--) //Go!
     {
-        if(Quit)
+        if(Quit>0)
         {
             screenscrolling = false;
             return;
@@ -14782,7 +14782,7 @@ fade((specialcave > 0) ? (specialcave >= GUYCAVE) ? 10 : 11 : currcset, true, fa
             do_primitives(framebuf, 7, newscr, 0, playing_field_offset);
             
         //end drawing
-        advanceframe(true);
+        advanceframe(true,true,true);
     }//end main scrolling loop (2 spaces tab width makes me sad =( )
     
     
@@ -16779,7 +16779,7 @@ void LinkClass::getTriforce(int id2)
 		//so this is not necessary -DD
 		//put_passive_subscr(framebuf,&QMisc,0,passive_subscreen_offset,false,false);
 	
-		advanceframe(true);
+		advanceframe(true,true,true);
 		++f;
 	}
 	while(f<408 || midi_pos > 0 || (zcmusic!=NULL && zcmusic->position<800));   // 800 may not be just right, but it works
@@ -17310,11 +17310,11 @@ void LinkClass::gameover()
 			break;
 		}
 		//adv:
-		advanceframe(true);
+		advanceframe(true,true,true);
 		++f;
 		//if (!link_doscript ) ++f;
 	}
-	while(f<353 && !Quit);
+	while(f<353 && Quit>0);
     
 	destroy_bitmap(subscrbmp);
 	action=none; FFCore.setLinkAction(none);
@@ -17359,7 +17359,7 @@ void LinkClass::ganon_intro()
     //not good, as this only returns the highest level that Link possesses. -DD
     //getHighestLevelOfFamily(game, itemsbuf, itype_triforcepiece, false));
     
-    for(int f=0; f<271 && !Quit; f++)
+    for(int f=0; f<271 && Quit<=0; f++)
     {
         if(f==47)
         {
@@ -17408,7 +17408,7 @@ void LinkClass::ganon_intro()
         }
         
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
         if(rSbtn())
         {

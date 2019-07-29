@@ -268,9 +268,9 @@ void ending()
         }
         adv:
         draw_screen(tmpscr);
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit) return;
+        if(Quit>0) return;
     }
     
     clear_bitmap(msgdisplaybuf);
@@ -389,7 +389,7 @@ void ending()
         
         advanceframe(true);
         
-        if(Quit)
+        if(Quit>0)
         {
             return;
         }
@@ -422,7 +422,7 @@ void ending()
         
         advanceframe(true);
         
-        if(Quit)
+        if(Quit>0)
         {
             return;
         }
@@ -551,7 +551,7 @@ void ending()
         blit(scrollbuf,framebuf,0,0,0,0,256,224);
         advanceframe(true);
         
-        if(Quit)
+        if(Quit>0)
         {
             return;
         }
@@ -576,7 +576,7 @@ void ending()
         
         advanceframe(true);
         
-        if(Quit)
+        if(Quit>0)
         {
             return;
         }

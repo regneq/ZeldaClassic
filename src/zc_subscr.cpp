@@ -113,7 +113,7 @@ void dosubscr(miscQdata *misc)
         put_active_subscr(misc,y,sspSCROLLING);
         advanceframe(false);
         
-        if(Quit)
+        if(Quit>0)
             return;
     }
     
@@ -232,7 +232,7 @@ void dosubscr(miscQdata *misc)
             Quit=qQUIT;
         }
         
-        if(Quit)
+        if(Quit>0)
             return;
             
         if(rSbtn())
@@ -264,7 +264,7 @@ void dosubscr(miscQdata *misc)
         put_active_subscr(misc,y,sspSCROLLING);
         advanceframe(false);
         
-        if(Quit)
+        if(Quit>0)
             return;
     }
     

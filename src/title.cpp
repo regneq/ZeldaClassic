@@ -3901,7 +3901,7 @@ if ( FFCore.coreflags&FFCORE_SCRIPTED_MIDI_VOLUME )
         }
     }
     
-    if(!Quit)
+    if(Quit<=0)
     {
         if(lsave<1)
         {
@@ -3940,8 +3940,9 @@ if ( FFCore.coreflags&FFCORE_SCRIPTED_MIDI_VOLUME )
         }
     }
     
-    if(!Quit)
+    if(Quit<=0)
     {
+		Quit=0;
         init_game();
     }
 }

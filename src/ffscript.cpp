@@ -18246,7 +18246,7 @@ int run_script(const byte type, const word script, const long i)
         {
             numInstructions=0;
             checkQuitKeys();
-            if(Quit)
+            if(Quit>0)
                 scommand=0xFFFF;
         }
         

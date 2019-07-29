@@ -2066,7 +2066,7 @@ int init_game()
         Link.stepforward(get_bit(quest_rules,qr_LTTPWALK) ? 11: 12, false);
     }
     
-    if(!Quit)
+    if(Quit<=0)
         playLevelMusic();
         
     
@@ -2180,7 +2180,7 @@ int cont_game()
     dointro();
     loadguys();
     
-    if(!Quit)
+    if(Quit<=0)
     {
         //play_DmapMusic();
         playLevelMusic();
@@ -2253,7 +2253,7 @@ void restart_level()
     show_subscreen_life=true;
     loadguys();
     
-    if(!Quit)
+    if(Quit<=0)
     {
         //play_DmapMusic();
         playLevelMusic();
@@ -4770,21 +4770,32 @@ int main(int argc, char* argv[])
 			
 			if(Quit==qTRYQUIT)
 			{
+				Z_eventlog("----Trying F6!\n");
 				initZScriptGlobalScript(GLOBAL_SCRIPT_F6);
-				int frame = 0;
 				Quit = 0;
+				int fr = 0;
 				while(g_doscript & (1<<GLOBAL_SCRIPT_F6))
 				{
+					Z_eventlog("----Running F6 Script! Frame: %d\n",++fr);
 					script_drawing_commands.Clear(); //Maybe only one time, on a variable
 					ZScriptVersion::RunScript(SCRIPT_GLOBAL, GLOBAL_SCRIPT_F6, GLOBAL_SCRIPT_F6);
 					load_control_state(); 
 					draw_screen(tmpscr);
-					advanceframe(true);
-					if(Quit==qTRYQUIT) Quit=0; //Don't try running the F6 script while already in the F6 script!
-					if(Quit) break; //Something quit, end script running
+					advanceframe(true,true,true);
+					if(Quit==qTRYQUIT)
+					{
+						Z_eventlog("----Attempted F6 while in F6 menu!\n");
+						Quit=0; //Don't try running the F6 script while already in the F6 script!
+					}
+					if(Quit)
+					{
+						Z_eventlog("----Force-quitting F6 script!\n");
+						break; //Something quit, end script running
+					}
 				}
 				if(!Quit)
 				{
+					Z_eventlog("----Trying System F6 menu!\n");
 					if(!get_bit(quest_rules, qr_NOCONTINUE)) f_Quit(qQUIT);
 				}
 				zc_readkey(KEY_F6);

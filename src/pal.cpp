@@ -327,7 +327,7 @@ void fade(int level,bool blackall,bool fromblack)
         //put_passive_subscr(framebuf,0,passive_subscreen_offset,false,false);
         advanceframe(true);
         
-        if(Quit)
+        if(Quit>0)
             break;
             
         fromblack ? --cx : ++cx;

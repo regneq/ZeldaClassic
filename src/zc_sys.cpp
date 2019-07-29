@@ -1698,9 +1698,9 @@ void close_black_opening(int x, int y, bool wait)
             draw_screen(tmpscr);
             put_passive_subscr(framebuf,&QMisc,0,passive_subscreen_offset,false,sspUP);
             syskeys();
-            advanceframe(true);
+            advanceframe(true,true,true);
             
-            if(Quit)
+            if(Quit>0)
             {
                 break;
             }
@@ -1736,9 +1736,9 @@ void open_black_opening(int x, int y, bool wait)
             draw_screen(tmpscr);
             put_passive_subscr(framebuf,&QMisc,0,passive_subscreen_offset,false,sspUP);
             syskeys();
-            advanceframe(true);
+            advanceframe(true,true,true);
             
-            if(Quit)
+            if(Quit>0)
             {
                 break;
             }
@@ -4748,14 +4748,14 @@ bool CheatModifierKeys()
 // 99*360 + 59*60
 #define MAXTIME  21405240
 
-void advanceframe(bool allowwavy, bool sfxcleanup)
+void advanceframe(bool allowwavy, bool sfxcleanup, bool ignoreTryQuit)
 {
     if(zcmusic!=NULL)
     {
         zcmusic_poll();
     }
     
-    while(Paused && !Advance && !Quit)
+    while(Paused && !Advance && (Quit==0||(ignoreTryQuit&&Quit==qTRYQUIT)))
     {
         // have to call this, otherwise we'll get an infinite loop
         syskeys();
@@ -4779,9 +4779,10 @@ void advanceframe(bool allowwavy, bool sfxcleanup)
         }
     }
     
-    if(Quit)
-        return;
-        
+    if(!(Quit==0||(ignoreTryQuit&&Quit==qTRYQUIT)))
+	{
+		return;
+    }    
     if(Playing && game->get_time()<MAXTIME)
         game->change_time(1);
         
@@ -4819,9 +4820,9 @@ void zapout()
     {
         draw_fuzzy(i);
         syskeys();
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
         {
             break;
         }
@@ -4840,9 +4841,9 @@ void zapin()
     {
         draw_fuzzy(i);
         syskeys();
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
         {
             break;
         }
@@ -4903,11 +4904,13 @@ void wavyout(bool showlink)
         }
         
         syskeys();
-        advanceframe(true);
+        advanceframe(true,true,true);
         
         //    animate_combos();
-        if(Quit)
+        if(Quit>0)
+		{
             break;
+		}
     }
     
     destroy_bitmap(wavebuf);
@@ -4973,11 +4976,13 @@ void wavyin()
         }
         
         syskeys();
-        advanceframe(true);
+        advanceframe(true,true,true);
         //    animate_combos();
         
-        if(Quit)
+        if(Quit>0)
+		{
             break;
+		}
     }
     
     destroy_bitmap(wavebuf);
@@ -4998,10 +5003,12 @@ void blackscr(int fcnt,bool showsubscr)
         }
         
         syskeys();
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
+		{
             break;
+		}
             
         --fcnt;
     }
@@ -5053,9 +5060,9 @@ void openscreen()
           }
           */
         syskeys();
-        advanceframe(true);
+        advanceframe(true,true,true);
         
-        if(Quit)
+        if(Quit>0)
         {
             break;
         }
