@@ -4868,7 +4868,10 @@ string OGETDMAPBYNAME::toString()
     return "GETDMAPBYNAME " + getArgument()->toString();
 }
 
-
+string OMakeColour::toString()
+{
+    return "MAKECOLOUR " + getArgument()->toString();
+}
 
 string OReturn::toString()
 {

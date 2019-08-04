@@ -306,6 +306,7 @@ void do_getnpcbyname();
 void do_getitembyname();
 void do_getcombobyname();
 void do_getdmapbyname();
+void do_makecolour(const bool v);
 
 int getLinkOTile(long index1, long index2);
 int getLinkOFlip(long index1, long index2);
@@ -2396,6 +2397,7 @@ enum ASM_DEFINE
 	DIREXISTS,
 	GAMESAVEQUIT,
 	GAMESAVECONTINUE,
+	MAKECOLOUR,
 
 
 	NUMCOMMANDS           //0x015E

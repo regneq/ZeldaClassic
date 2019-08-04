@@ -16870,15 +16870,15 @@ void FFScript::AlloffLimited(int flagset)
 //valid warpTypes: tile, side, exit, cancel, instant
 bool FFScript::warp_link(int warpType, int dmapID, int scrID, int warpDestX, int warpDestY, int warpEffect, int warpSound, int warpFlags, int linkFacesDir)
 {
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpType", warpType);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "dmapID", dmapID);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "scrID", scrID);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpDestX", warpDestX);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpDestY", warpDestY);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpEffect", warpEffect);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpSound", warpSound);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpFlags", warpFlags);
-	Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "linkFacesDir", linkFacesDir);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpType", warpType);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "dmapID", dmapID);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "scrID", scrID);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpDestX", warpDestX);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpDestY", warpDestY);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpEffect", warpEffect);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpSound", warpSound);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "warpFlags", warpFlags);
+	//Z_scripterrlog("FFScript::warp_link() arg %s is: %d \n", "linkFacesDir", linkFacesDir);
 	byte t = 0;
 	t=(currscr<128)?0:1;
 	bool overlay=false;
@@ -19771,6 +19771,10 @@ int run_script(const byte type, const word script, const long i)
 			Quit = qSAVECONT;
 			skipcont = 1;
 			scommand =0xFFFF;
+			break;
+		
+		case MAKECOLOUR:
+			FFCore.do_makecolour(true);
 			break;
 		    
 		case SAVE:
@@ -25702,6 +25706,33 @@ void FFScript::do_getnpcbyname()
 	}
 	set_register(sarg1, (num * 10000));
 }	
+
+void FFScript::do_makecolour(bool v)
+{
+	int zscript_array_ptr = get_register(sarg1) / 10000;
+	int zscript_array_size = FFCore.getSize(zscript_array_ptr);
+	int colour_value = 0;
+	switch(zscript_array_size)
+	{
+		case 3:
+			//{int type, int dmap, int screen, int x, int y, int effect, int sound, int flags}
+		{
+			//colour_value = makecol(vbound((getElement(zscript_array_ptr,0)/10000),0,255),vbound((getElement(zscript_array_ptr,1)/10000),0,255),vbound((getElement(zscript_array_ptr,2)/10000),0,255));
+			
+			break;
+		}
+		
+		default: 
+		{
+			Z_scripterrlog("Array supplied to rgbdata->MakeColour() is the wrong size!\n The array size was: %d, and valid size is [3].\n",zscript_array_size);
+			break;
+		}
+		
+	}
+	//ri->rgbref = colour_value;
+	Z_scripterrlog("colour_value in do_makecolour() is: %d\n",colour_value);
+}	
+
 void FFScript::do_getitembyname()
 {
 	long arrayptr = get_register(sarg1) / 10000;

@@ -3799,7 +3799,7 @@ void ItemclassSymbols::generateCode()
         first->setLabel(label);
         code.push_back(first);
         //pop pointer, and ignore it
-        code.push_back(new OPopRegister(new VarArgument(NUL)));
+        code.push_back(new OPopRegister(new VarArgument(refVar)));
         code.push_back(new OGetItemName(new VarArgument(EXP1)));
         code.push_back(new OReturn());
         function->giveCode(code);
@@ -3814,7 +3814,7 @@ void ItemclassSymbols::generateCode()
         first->setLabel(label);
         code.push_back(first);
         //pop pointer, and ignore it
-        code.push_back(new OPopRegister(new VarArgument(NUL)));
+        code.push_back(new OPopRegister(new VarArgument(refVar)));
         code.push_back(new ORunItemScript(new VarArgument(EXP1)));
         code.push_back(new OReturn());
         function->giveCode(code);
@@ -6445,7 +6445,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new OGetNPCName(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6460,7 +6460,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCExplodeRegister(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6573,7 +6573,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCNewDir(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6588,7 +6588,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCConstWalk(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6604,7 +6604,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCConstWalk8(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6620,7 +6620,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCVarWalk(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6635,7 +6635,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCVarWalk8(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6650,7 +6650,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCHaltWalk(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6665,7 +6665,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCHaltWalk8(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6680,7 +6680,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCFloatWalk(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6695,7 +6695,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCBreatheFire(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6710,7 +6710,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCNewDir8(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6726,7 +6726,7 @@ void NPCSymbols::generateCode()
 		code.push_back(first);
 		code.push_back(new OPopRegister(new VarArgument(INDEX)));
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new OSetRegister(new VarArgument(EXP1), new VarArgument(NPCCOLLISION)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6742,7 +6742,7 @@ void NPCSymbols::generateCode()
 		code.push_back(first);
 		code.push_back(new OPopRegister(new VarArgument(INDEX)));
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new OSetRegister(new VarArgument(EXP1), new VarArgument(NPCLINEDUP)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6756,7 +6756,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCLinkInRange(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6773,7 +6773,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCAdd(new VarArgument(EXP1)));
 		code.push_back(new OSetRegister(new VarArgument(EXP1), new VarArgument(REFNPC)));
 		code.push_back(new OReturn());
@@ -6788,7 +6788,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCCanMove(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -6802,7 +6802,7 @@ void NPCSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
 		code.push_back(new ONPCHitWith(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -10832,7 +10832,7 @@ void NPCDataSymbols::generateCode()
 		first->setLabel(label);
 		code.push_back(first);
 		//pop pointer, and ignore it
-		code.push_back(new OPopRegister(new VarArgument(NUL)));
+		code.push_back(new OPopRegister(new VarArgument(refVar)));
 		code.push_back(new OGetNPCDataName(new VarArgument(EXP1)));
 		code.push_back(new OReturn());
 		function->giveCode(code);
@@ -12090,6 +12090,8 @@ static AccessorTable RGBTable[] =
 //	All of these return a function label error when used:
 //	  name,                     rettype,                  setorget,     var,              numindex,      funcFlags,                            numParams,   params
 	{ "getTest",                ZVARTYPEID_FLOAT,         GETTER,       DEBUGREFFFC,      1,             0,                                    1,           {  ZVARTYPEID_RGBDATA,         -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	{ "MakeColour",             ZVARTYPEID_VOID,          FUNCTION,     0,                1,             0,                                    2,           {  ZVARTYPEID_RGBDATA,         ZVARTYPEID_FLOAT,        -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
+	//{ "MakeColor",              ZVARTYPEID_VOID,          FUNCTION,     0,                1,             0,                                    2,           {  ZVARTYPEID_RGBDATA,         ZVARTYPEID_FLOAT,        -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } },
 	
 	{ "",                       -1,                       -1,           -1,               -1,            0,                                    0,           { -1,                               -1,                               -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1,                           -1                           } }
 };
@@ -12102,6 +12104,38 @@ RGBSymbols::RGBSymbols()
 
 void RGBSymbols::generateCode()
 {
+	//void MakeColour(npc, int)
+	{
+		Function* function = getFunction("MakeColour", 2);
+		int label = function->getLabel();
+		vector<Opcode *> code;
+		//pop off the param
+		Opcode *first = new OPopRegister(new VarArgument(EXP1));
+		first->setLabel(label);
+		code.push_back(first);
+		//pop pointer, and ignore it
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
+		code.push_back(new OMakeColour(new VarArgument(EXP1)));
+		code.push_back(new OReturn());
+		function->giveCode(code);
+	}
+	/*
+	//void MakeColor(npc, int)
+	{
+		Function* function = getFunction("MakeColor", 2);
+		int label = function->getLabel();
+		vector<Opcode *> code;
+		//pop off the param
+		Opcode *first = new OPopRegister(new VarArgument(EXP1));
+		first->setLabel(label);
+		code.push_back(first);
+		//pop pointer, and ignore it
+		code.push_back(new OPopRegister(new VarArgument(refVar))); //Should this be refVar ?
+		code.push_back(new OMakeColour(new VarArgument(EXP1)));
+		code.push_back(new OReturn());
+		function->giveCode(code);
+	}
+	*/
 }
 
 PaletteSymbols PaletteSymbols::singleton = PaletteSymbols();

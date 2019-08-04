@@ -3129,7 +3129,7 @@ namespace ZScript
 			return new OGetNPCName(a->clone());
 		}
 	};
-
+	
 	class OGetMessage : public BinaryOpcode
 	{
 	public:
@@ -8300,6 +8300,18 @@ namespace ZScript
 			return new OGETDMAPBYNAME(a->clone());
 		}
 	};
+	
+	class OMakeColour : public UnaryOpcode
+	{
+	public:
+		OMakeColour(Argument *A) : UnaryOpcode(A) {}
+		std::string toString();
+		Opcode *clone()
+		{
+			return new OMakeColour(a->clone());
+		}
+	};
+
 	
 	class OReturn : public Opcode
 	{

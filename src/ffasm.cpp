@@ -898,6 +898,7 @@ script_command command_list[NUMCOMMANDS+1]=
     { "DIREXISTS",         1,   0,   0,   0},
     { "GAMESAVEQUIT",         0,   0,   0,   0},
     { "GAMESAVECONTINUE",         0,   0,   0,   0},
+    { "MAKECOLOUR",             1,   0,   0,   0},
 //	{ "GETCONFIGINT",                2,   0,   0,   0},
 //	{ "SETCONFIGINT",                2,   0,   0,   0},
     { "",                    0,   0,   0,   0}
