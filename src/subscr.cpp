@@ -2946,7 +2946,7 @@ void update_subscr_items()
         
         if(Bwpn > 0)
         {
-            Bitem = new item((fix)0, (fix)0, (fix)0, Bwpn&0x0FFF, 0, 0);
+            Bitem = new item((zfix)0, (zfix)0, (zfix)0, Bwpn&0x0FFF, 0, 0);
             Bitem->dummy_bool[0]=false;
             
             switch(itemsbuf[Bwpn&0x0FFF].family)
@@ -2961,7 +2961,7 @@ void update_subscr_items()
 		//default: break;
             }
             
-            //      Bitem = new item((fix)(zinit.subscreen<ssdtBSZELDA?124:136), (fix)24,(fix)0, Bwpn, 0, 0);
+            //      Bitem = new item((zfix)(zinit.subscreen<ssdtBSZELDA?124:136), (zfix)24,(zfix)0, Bwpn, 0, 0);
             if(Bitem != NULL)
             {
                 Bid = Bwpn;
@@ -2983,7 +2983,7 @@ void update_subscr_items()
         
         if(Awpn > 0)
         {
-            Aitem = new item((fix)0, (fix)0,(fix)0,Awpn&0x0FFF, 0, 0);
+            Aitem = new item((zfix)0, (zfix)0,(zfix)0,Awpn&0x0FFF, 0, 0);
             
             switch(itemsbuf[Awpn&0x0FFF].family)
             {
@@ -3123,7 +3123,7 @@ void subscreenitem(BITMAP *dest, int x, int y, int itemtype)
         {
 	    //al_trace("Found an override item at subscreen.cpp linere 3120, itemtype: %d\n",itemtype);
 
-            add_subscr_item(new item((fix)x,(fix)y,(fix)0,(itemtype&0xFFF),0,0));
+            add_subscr_item(new item((zfix)x,(zfix)y,(zfix)0,(itemtype&0xFFF),0,0));
             overridecheck = Sitems.Count()-1;
             Sitems.spr(overridecheck)->misc = -1;
         }
@@ -3454,14 +3454,16 @@ void animate_selectors()
     }
     
     if(!sel_a)
-        sel_a = new item((fix)0, (fix)0, (fix)0, iSelectA, 0, 0);
+        sel_a = new item((zfix)0, (zfix)0, (zfix)0, iSelectA, 0, 0);
         
     if(!sel_b)
-        sel_b = new item((fix)0, (fix)0, (fix)0, iSelectB, 0, 0);
+        sel_b = new item((zfix)0, (zfix)0, (zfix)0, iSelectB, 0, 0);
         
     sel_a->yofs=0;
+	sel_a->subscreenItem=true;
     sel_a->animate(0);
     sel_b->yofs=0;
+	sel_b->subscreenItem=true;
     sel_b->animate(0);
 }
 
@@ -3475,12 +3477,12 @@ void show_custom_subscreen(BITMAP *dest, miscQdata *misc, subscreen_group *css, 
     set_trans_blender(0, 0, 0, 128);
     
     //doing animation here leads to 2x speed when drawing both active and passive subscreen -DD
-    /*static item sel_a((fix)0,(fix)0,(fix)0,iSelectA,0,0);
-    static item sel_b((fix)0,(fix)0,(fix)0,iSelectB,0,0);
+    /*static item sel_a((zfix)0,(zfix)0,(zfix)0,iSelectA,0,0);
+    static item sel_b((zfix)0,(zfix)0,(zfix)0,iSelectB,0,0);
     if (new_sel)
     {
-      sel_a=item((fix)0,(fix)0,(fix)0,iSelectA,0,0);
-      sel_b=item((fix)0,(fix)0,(fix)0,iSelectB,0,0);
+      sel_a=item((zfix)0,(zfix)0,(zfix)0,iSelectA,0,0);
+      sel_b=item((zfix)0,(zfix)0,(zfix)0,iSelectB,0,0);
       new_sel=false;
     }
     sel_a.yofs=0;
@@ -4015,10 +4017,16 @@ bool is_counter_item(int itemtype, int countertype)
     return false;
 }
 
+// itemtype1, itemtype2, itemtype3: Only itemtype1 is used. I'm unsure who made these, who disabled the code
+// for them, and when each occurred. They should probably be hidden, but some very old 2.11/2.50b quests
+// may have used this and we'd need to edit the uest to fix it as-is, so perrhaps hide them only conditionally?
+// or make them flipping work?
+// It seems that the original intent was to be able  to display a sum of multipe counters as one value. -Z (26th Jan, 2020).
 void counter(BITMAP *dest, int x, int y, FONT *tempfont, int color, int shadowcolor, int bgcolor, int alignment, int textstyle, int digits, char idigit, bool showzero, int itemtype1, int itemtype2, int itemtype3, int infiniteitem, bool onlyselected)
 {
     int value=0;
     bool infinite=false;
+	int itemtypes[3]={itemtype1, itemtype2, itemtype3};
     
     if(game != NULL && game->get_item(infiniteitem) && !item_disabled(infiniteitem))
     {
@@ -4055,6 +4063,13 @@ void counter(BITMAP *dest, int x, int y, FONT *tempfont, int color, int shadowco
     itemtype=itemtype1;
     /* commented out until I find out what it does - it's messing up custom subscreens now as
     itemtype2 and 3 are zero - so link's life gets added to the counters */
+    
+    /*	
+	Not sure who did that, but I implemented it in its own section, ignoring counter0] for now.
+	It will need a format change to counter lists in order to allow stacking LIFE on other counters.
+	For the present, counter 0 for item2 and item3 is NULL. -Z (26-Jan-2020)
+    */
+    
     
     switch(itemtype)
     {
@@ -4180,10 +4195,193 @@ void counter(BITMAP *dest, int x, int y, FONT *tempfont, int color, int shadowco
     case sscSCRIPT24:
     case sscSCRIPT25:
         value += game->get_counter(itemtype-3);
+        break;
         
     default:
         break;
     }
+    
+    //Re-implement item2 and item3 stacking counters. -Z 26-Jan-2020
+	if ( /*get_bit(quest_rules,qrSTACKSUBSCREENCOUNTERS) || (*/( FFCore.getQuestHeaderInfo(vZelda) == 0x250 && FFCore.getQuestHeaderInfo(vBuild) >= 33 ) //this ishowit looks in 2.53.1, Beta 25
+		|| ( FFCore.getQuestHeaderInfo(vZelda) > 0x250  ) ) /*)*/
+    
+	{
+		//add item2 and item3 values to item1 values
+		for (int i=1; i<3; ++i)
+		{
+		    
+			switch (i)
+			{
+				case 1:
+				{
+					if ( itemtypes[i] == itemtypes[i-1] )
+					{
+						itemtype = -2;
+						break;
+					}
+					else
+					{
+						itemtype=itemtype2;
+						break;
+					}
+				}
+				case 2:
+				{
+					if ( ( itemtypes[i] == itemtypes[i-1] ) || ( itemtypes[i] == itemtypes[i-2] ) )
+					{
+						itemtype = -3;
+						break;
+					}
+					else
+					{
+						itemtype=itemtype3;
+						break;
+					}
+				  
+				}
+			}
+		      
+			switch(itemtype)
+			{
+				case -3:
+				case -2:
+				case sscLIFE:
+				case sscRUPEES:
+				{
+					//do nothing if any of these three. -Z
+					//value+=game->get_life(); Life cannot stack. It's NULL. :/
+					break;
+				}
+				//case sscRUPEES:
+				//{
+				//	if(current_item_power(itype_wallet))
+				//	infinite=true;
+				//	value+=game->get_rupies();
+				//	break;
+				//}
+				case sscBOMBS:
+				{
+					if(current_item_power(itype_bombbag))
+					infinite=true;
+					value+=game->get_bombs();
+					break;
+				}
+				case sscSBOMBS:
+				{
+					int itemid = current_item_id(itype_bombbag);
+					if(itemid>-1 && itemsbuf[itemid].power>0 && itemsbuf[itemid].flags & ITEM_FLAG1)
+					infinite=true;
+					value+=game->get_sbombs();
+					break;
+				}
+				case sscMAGIC:
+				{
+					value+=game->get_magic();
+					break;
+				}
+				case sscMAXHP:
+				{
+					value+=game->get_maxlife();
+					break;
+				}
+				case sscMAXMP:
+				{
+					value+=game->get_maxmagic();
+					break;
+				}
+				case sscARROWS:
+					if((!get_bit(quest_rules,qr_TRUEARROWS) && current_item_power(itype_wallet)) || current_item_power(itype_quiver))
+					infinite=true;
+			    
+					// If Link somehow got ammunition before getting the arrow,
+					// or if the arrow was disabled in a DMap,
+					// we shouldn't put the value as zero.
+					//        if(/*current_item_id(itype_arrow)>-1*/ true)
+				{
+					if(get_bit(quest_rules,qr_TRUEARROWS))
+					{
+						value+=game->get_arrows();
+					}
+					else
+					{
+						value+=game->get_rupies();
+					}
+				}
+				break;
+
+				case sscGENKEYMAGIC:
+				case sscLEVKEYMAGIC:
+				case sscANYKEYMAGIC:
+				{
+					int itemid = current_item_id(itype_magickey);	
+					if(itemid>-1 && !infinite)
+					{
+						if(itemsbuf[itemid].flags&ITEM_FLAG1)
+						{
+							infinite = itemsbuf[itemid].power>=get_dlevel();
+						}
+						else
+						{
+							infinite = itemsbuf[itemid].power==get_dlevel();
+						}
+					}
+				}
+		    
+				//fall through
+				case sscANYKEYNOMAGIC:
+				case sscLEVKEYNOMAGIC:
+				case sscGENKEYNOMAGIC:
+					if(itemtype == sscGENKEYNOMAGIC || itemtype == sscANYKEYNOMAGIC
+						|| itemtype == sscGENKEYMAGIC || itemtype == sscANYKEYMAGIC)
+					{
+						value += game->get_keys();
+					}
+			    
+					if(itemtype == sscLEVKEYNOMAGIC || itemtype == sscANYKEYNOMAGIC
+						|| itemtype == sscLEVKEYMAGIC || itemtype == sscANYKEYMAGIC)
+					{
+						value += game->get_lkeys();
+					}
+				break;
+			
+				case sscSCRIPT1:
+				case sscSCRIPT2:
+				case sscSCRIPT3:
+				case sscSCRIPT4:
+				case sscSCRIPT5:
+				case sscSCRIPT6:
+				case sscSCRIPT7:
+				case sscSCRIPT8:
+				case sscSCRIPT9:
+				case sscSCRIPT10:
+				case sscSCRIPT11:
+				case sscSCRIPT12:
+				case sscSCRIPT13:
+				case sscSCRIPT14:
+				case sscSCRIPT15:
+				case sscSCRIPT16:
+				case sscSCRIPT17:
+				case sscSCRIPT18:
+				case sscSCRIPT19:
+				case sscSCRIPT20:
+				case sscSCRIPT21:
+				case sscSCRIPT22:
+				case sscSCRIPT23:
+				case sscSCRIPT24:
+				case sscSCRIPT25:
+				{
+					value += game->get_counter(itemtype-3);
+					break;
+				}
+			
+				default:
+				{
+					break;
+				}
+			}
+	      
+		}
+	}
     
     // (for loop) }
     if(!showzero&&!value&&!infinite)
@@ -4600,8 +4798,8 @@ void load_Sitems(miscQdata *misc)
     // HC Pieces
     if(misc->colors.new_HCpieces_tile)
     {
-        //      item *HCP = new item((fix)(inventory_x[5]-ofs),(fix)y,iMax,0,0);
-        item *HCP = new item((fix)0,(fix)0,(fix)0,iHCPiece,0,0);
+        //      item *HCP = new item((zfix)(inventory_x[5]-ofs),(zfix)y,iMax,0,0);
+        item *HCP = new item((zfix)0,(zfix)0,(zfix)0,iHCPiece,0,0);
         
         if(HCP)
         {
@@ -4616,17 +4814,17 @@ void load_Sitems(miscQdata *misc)
     
     if(has_item(itype_map, get_dlevel()))
     {
-        add_subscr_item(new item((fix)0,(fix)0,(fix)0,iMap,0,0));
+        add_subscr_item(new item((zfix)0,(zfix)0,(zfix)0,iMap,0,0));
     }
     
     if(has_item(itype_compass, get_dlevel()))
     {
-        add_subscr_item(new item((fix)0,(fix)0,(fix)0,iCompass,0,0));
+        add_subscr_item(new item((zfix)0,(zfix)0,(zfix)0,iCompass,0,0));
     }
     
     if(has_item(itype_bosskey, get_dlevel()))
     {
-        add_subscr_item(new item((fix)0,(fix)0,(fix)0,iBossKey,0,0));
+        add_subscr_item(new item((zfix)0,(zfix)0,(zfix)0,iBossKey,0,0));
     }
     
     for(int i=0; i<itype_max; i++)
@@ -4641,7 +4839,7 @@ void load_Sitems(miscQdata *misc)
             int j = current_item_id(i,false);
             //al_trace("About to check itemsbuf[j].tile in subscreen.cpp, line 4634, loop[%d]\n",j);
             if(itemsbuf[j].tile)
-                add_subscr_item(new item((fix)0, (fix)0,(fix)0,j,0,0));
+                add_subscr_item(new item((zfix)0, (zfix)0,(zfix)0,j,0,0));
         }
     }
     //al_trace("Finished load_Sitems(%d)\n",0);

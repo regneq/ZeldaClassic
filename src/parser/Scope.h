@@ -120,17 +120,17 @@ namespace ZScript
 		//virtual ZClass* addClass(string const& name, AST* node) = 0;
 		virtual Function* addGetter(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL)
 		= 0;
 		virtual Function* addSetter(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL)
 		= 0;
 		virtual Function* addFunction(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL)
 		= 0;
 		virtual void setDefaultOption(CompileOptionSetting value) = 0;
@@ -340,15 +340,15 @@ namespace ZScript
 			/*override*/;
 		virtual Function* addGetter(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL);
 		virtual Function* addSetter(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL);
 		virtual Function* addFunction(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL);
 		virtual void setDefaultOption(CompileOptionSetting value);
 		virtual void setOption(
@@ -414,15 +414,15 @@ namespace ZScript
 			/*override*/;
 		virtual Function* addGetter(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL);
 		virtual Function* addSetter(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL);
 		virtual Function* addFunction(
 				DataType const* returnType, std::string const& name,
-				std::vector<DataType const*> const& paramTypes,
+				std::vector<DataType const*> const& paramTypes, std::vector<std::string const*> const& paramNames,
 				int flags = 0, AST* node = NULL);
 		
 	protected:
@@ -481,7 +481,7 @@ namespace ZScript
 		bool registerFunction(Function* function);
 		
 		bool checkImport(ASTImportDecl* node, int headerGuard, CompileErrorHandler* errorHandler);
-		
+		bool isImported(std::string const& path);
 	private:
 		mutable optional<int> stackSize_;
 
@@ -575,6 +575,7 @@ namespace ZScript
 		ZCLASSID_FILESYSTEM,
 		ZCLASSID_SUBSCREENDATA,
 		ZCLASSID_FILE,
+		ZCLASSID_MODULE,
 		ZCLASSID_END
 	};
 

@@ -14,7 +14,10 @@
 
 #include "zdefs.h"
 #include "jwinfsel.h"
-extern MENU the_menu[];
+extern MENU the_player_menu[];
+extern MENU the_player_menu2[];
+extern MENU the_player_menu_zc_on_left[];
+extern MENU the_player_menu_zc_on_left2[];
 
 void large_dialog(DIALOG *d);
 void large_dialog(DIALOG *d, float RESIZE_AMT);
@@ -57,6 +60,7 @@ int  onTryQuit(bool inMenu = false);
 int  onReset();
 int  onExit();
 void fix_dialogs();
+int onMIDIPatch();
 
 int onCheatBombs();
 int onCheatArrows();
@@ -66,6 +70,9 @@ int  next_press_btn();
 bool joybtn(int b);
 bool zc_readkey(int k, bool ignoreDisable = false);
 bool zc_getkey(int k, bool ignoreDisable = false);
+bool zc_readrawkey(int k, bool ignoreDisable = false);
+bool zc_getrawkey(int k, bool ignoreDisable = false);
+void update_keys();
 bool zc_disablekey(int k, bool val);
 void eat_buttons();
 
@@ -73,8 +80,13 @@ extern bool control_state[18];
 extern bool disable_control[18];
 extern bool drunk_toggle_state[11];
 extern bool disabledKeys[127];
+extern bool KeyInput[127]; //ZScript 'Input->Key[]'
+extern bool KeyPress[127]; //ZScript 'Input->KeyPress[]'
+extern bool key_truestate[127]; //Internal, used for ZScript 'Input->KeyPress[]'
 extern bool button_press[18];
 extern int cheat_modifier_keys[4]; //two options each, default either control and either shift
+extern const char *qst_dir_name;
+extern char qst_files_path[2048];
 
 extern bool button_hold[18];
 
@@ -148,7 +160,7 @@ bool DrunkrPbtn();
 
 int after_time();
 
-enum {bosCIRCLE=0, bosOVAL, bosTRIANGLE, bosSMAS, bosMAX};
+enum {bosCIRCLE=0, bosOVAL, bosTRIANGLE, bosSMAS, bosFADEBLACK, bosMAX};
 
 void go();
 void comeback();
@@ -169,9 +181,11 @@ void wavyout(bool showlink);
 void wavyin();
 void blackscr(int fcnt,bool showsubscr);
 void black_opening(BITMAP *dest,int x,int y,int a,int max_a);
-void close_black_opening(int x, int y, bool wait);
-void open_black_opening(int x, int y, bool wait);
-void openscreen();
+void black_fade(int fadeamnt);
+void close_black_opening(int x, int y, bool wait, int shape = -1);
+void open_black_opening(int x, int y, bool wait, int shape = -1);
+void openscreen(int shape = -1);
+void closescreen(int shape = -1);
 int  TriforceCount();
 
 bool item_disabled(int item);

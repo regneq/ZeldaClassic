@@ -81,8 +81,7 @@ ScriptsData* ZScript::compile(string const& filename)
 	box_eol();
 	
 	SemanticAnalyzer semanticAnalyzer(program);
-	if (semanticAnalyzer.hasFailed() || semanticAnalyzer.hasSkipFailed()
-		|| regVisitor.hasSkipFailed())
+	if (semanticAnalyzer.hasFailed() || regVisitor.hasFailed())
 		return NULL;
     
 	FunctionData fd(program);
@@ -121,17 +120,85 @@ string ScriptParser::prepareFilename(string const& filename)
 {
 	string retval = filename;
 
-	for (int i = 0; retval[i]; ++i)
-	{
-#ifdef _ALLEGRO_WINDOWS
-		if (retval[i] == '/') retval[i] = '\\';
-#else
-		if (retval[i] == '\\') retval[i] = '/';
-#endif
-	}
+	regulate_path(retval);
 	return retval;
 }
-        
+
+bool ScriptParser::preprocess_one(ASTImportDecl& importDecl, int reclimit)
+{
+	// Parse the imported file.
+	string* fname = NULL;
+	string includePath;
+	string importname = prepareFilename(importDecl.getFilename());
+	if(!importDecl.isInclude()) //Check root dir first for imports
+	{
+		FILE* f = fopen(importname.c_str(), "r");
+		if(f)
+		{
+			fclose(f);
+			fname = &importname;
+		}
+	}
+	if(!fname)
+	{
+		// Scan include paths
+		int importfound = importname.find_first_not_of("/\\");
+		if(importfound != string::npos) //If the import is not just `/`'s and `\`'s...
+		{
+			if(importfound != 0)
+				importname = importname.substr(importfound); //Remove leading `/` and `\`
+			//Convert the include string to a proper import path
+			for ( int q = 0; q < MAX_INCLUDE_PATHS && !fname; ++q ) //Loop through all include paths, or until valid file is found
+			{
+				if( ZQincludePaths[q][0] != '\0' )
+				{
+					includePath = &*ZQincludePaths[q];
+					//Add a `/` to the end of the include path, if it is missing
+					int lastnot = includePath.find_last_not_of("/\\");
+					int last = includePath.find_last_of("/\\");
+					if(lastnot != string::npos)
+					{
+						if(last == string::npos || last < lastnot)
+							includePath += "/";
+					}
+					includePath = prepareFilename(includePath + importname);
+					FILE* f = fopen(includePath.c_str(), "r");
+					if(!f) continue;
+					fclose(f);
+					fname = &includePath;
+				}
+			}
+		}
+	}
+	//
+	string filename = fname ? *fname : prepareFilename(importname); //Check root dir last, if nothing has been found yet.
+	FILE* f = fopen(filename.c_str(), "r");
+	if(f)
+	{
+		fclose(f);
+	}
+	else
+	{
+		box_out_err(CompileError::CantOpenImport(&importDecl, filename));
+		return false;
+	}
+	auto_ptr<ASTFile> imported(parseFile(filename));
+	if (!imported.get())
+	{
+		box_out_err(CompileError::CantParseImport(&importDecl, filename));
+		return false;
+	}
+
+	// Save the AST in the import declaration.
+	importDecl.giveTree(imported.release());
+	
+	// Recurse on imports.
+	if (!preprocess(importDecl.getTree(), reclimit - 1))
+		return false;
+	
+	return true;
+}
+
 bool ScriptParser::preprocess(ASTFile* root, int reclimit)
 {
 	assert(root);
@@ -146,67 +213,7 @@ bool ScriptParser::preprocess(ASTFile* root, int reclimit)
 	for (vector<ASTImportDecl*>::iterator it = root->imports.begin();
 	     it != root->imports.end(); ++it)
 	{
-		ASTImportDecl& importDecl = **it;
-
-		// Parse the imported file.
-		string* fname = NULL;
-		string includePath;
-		string importname = prepareFilename(importDecl.getFilename());
-		if(!importDecl.isInclude()) //Check root dir first for imports
-		{
-			FILE* f = fopen(importname.c_str(), "r");
-			if(f)
-			{
-				fclose(f);
-				fname = &importname;
-			}
-		}
-		if(!fname)
-		{
-			// Scan include paths
-			int importfound = importname.find_first_not_of("/\\");
-			if(importfound != string::npos) //If the import is not just `/`'s and `\`'s...
-			{
-				if(importfound != 0)
-					importname = importname.substr(importfound); //Remove leading `/` and `\`
-				//Convert the include string to a proper import path
-				for ( int q = 0; q < MAX_INCLUDE_PATHS && !fname; ++q ) //Loop through all include paths, or until valid file is found
-				{
-					if( ZQincludePaths[q][0] != '\0' )
-					{
-						includePath = &*ZQincludePaths[q];
-						//Add a `/` to the end of the include path, if it is missing
-						int lastnot = includePath.find_last_not_of("/\\");
-						int last = includePath.find_last_of("/\\");
-						if(lastnot != string::npos)
-						{
-							if(last == string::npos || last < lastnot)
-								includePath += "/";
-						}
-						includePath = prepareFilename(includePath + importname);
-						FILE* f = fopen(includePath.c_str(), "r");
-						if(!f) continue;
-						fclose(f);
-						fname = &includePath;
-					}
-				}
-			}
-		}
-		//
-		string filename = fname ? *fname : prepareFilename(importname); //Check root dir last, if nothing has been found yet.
-		auto_ptr<ASTFile> imported(parseFile(filename));
-		if (!imported.get())
-		{
-			box_out_err(CompileError::CantOpenImport(&importDecl, filename));
-			return false;
-		}
-
-		// Save the AST in the import declaration.
-		importDecl.giveTree(imported.release());
-		
-		// Recurse on imports.
-		if (!preprocess(importDecl.getTree(), reclimit - 1))
-			return false;
+		if(!preprocess_one(**it, reclimit)) return false;
 	}
     
 	return true;
@@ -227,13 +234,14 @@ IntermediateData* ScriptParser::generateOCode(FunctionData& fdata)
 	IntermediateData *rval = new IntermediateData(fdata);
     
 	// Push 0s for init stack space.
+	/* Why? The stack should already be init'd to all 0, anyway?
 	rval->globalsInit.push_back(
 			new OSetImmediate(new VarArgument(EXP1),
 			                  new LiteralArgument(0)));
 	int globalStackSize = *program.getScope().getRootStackSize();
 	for (int i = 0; i < globalStackSize; ++i)
 		rval->globalsInit.push_back(
-				new OPushRegister(new VarArgument(EXP1)));
+				new OPushRegister(new VarArgument(EXP1)));*/
     
 	// Generate variable init code.
 	for (vector<Datum*>::iterator it = globalVariables.begin();
@@ -252,9 +260,10 @@ IntermediateData* ScriptParser::generateOCode(FunctionData& fdata)
 	}
     
 	// Pop off everything.
+	/* See above; why push this in the first place?
 	for (int i = 0; i < globalStackSize; ++i)
 		rval->globalsInit.push_back(
-				new OPopRegister(new VarArgument(EXP2)));
+				new OPopRegister(new VarArgument(EXP2)));*/
         
 	//globals have been initialized, now we repeat for the functions
 	vector<Function*> funs = program.getUserFunctions();
@@ -464,8 +473,8 @@ void ScriptParser::assemble(IntermediateData *id)
 		Script& script = **it;
 		if (script.getName() == "~Init") continue;
 		if(script.getType() == ScriptType::untyped) continue;
-		Function& run = *getRunFunction(script);
-		int numparams = getRunFunction(script)->paramTypes.size();
+		Function& run = *script.getRun();
+		int numparams = script.getRun()->paramTypes.size();
 		script.code = assembleOne(program, run.getCode(), numparams);
 	}
 }
@@ -651,7 +660,35 @@ ScriptsData::ScriptsData(Program& program)
 	{
 		Script& script = **it;
 		string const& name = script.getName();
-		theScripts[name] = script.code;
+		zasm_meta& meta = theScripts[name].first;
+		theScripts[name].second = script.code;
+		meta.autogen();
+		meta.script_type = script.getType().getTrueId();
+		string const& author = script.getAuthor().substr(0,32);
+		strcpy(meta.script_name, name.substr(0,32).c_str());
+		strcpy(meta.author, author.c_str());
+		al_trace(meta.script_name);
+		al_trace(meta.author);
+		al_trace(name.c_str());
+		al_trace(author.c_str());
+		if(Function* run = script.getRun())
+		{
+			int ind = 0;
+			for(vector<string const*>::const_iterator it = run->paramNames.begin();
+				it != run->paramNames.end(); ++it)
+			{
+				char* dest = meta.run_idens[ind++];
+				strcpy(dest, (**it).c_str());	
+			}
+			ind = 0;
+			for(vector<DataType const*>::const_iterator it = run->paramTypes.begin();
+				it != run->paramTypes.end(); ++it)
+			{
+				optional<DataTypeId> id = program.getTypeStore().getTypeId(**it);
+				meta.run_types[ind++] = id ? *id : ZVARTYPEID_VOID;
+			}
+		}
+		
 		script.code = vector<Opcode*>();
 		scriptTypes[name] = script.getType();
 	}

@@ -17,6 +17,7 @@
 
 #include "zdefs.h"
 #include "sprite.h"
+#include "zfix.h"
 
 /**************************************/
 /***********  Weapon Class  ***********/
@@ -45,7 +46,7 @@ public:
     int parentid, //Enemy who created it
         parentitem; //Item which created it
     int dragging;
-    fix step;
+    zfix step;
     bool bounce, ignoreLink;
     word flash,wid,aframe,csclk;
     int o_tile, o_cset, o_speed, o_type, frames, o_flip;
@@ -53,6 +54,8 @@ public:
     int temp1;
     bool behind;
 	byte linkedItem;
+	byte wscreengrid[22];
+	byte wscreengrid_layer[2][22];
 
 	//!Dimentio: More variables? That suuuuuure won't break anything. Nope.
     int count1; 
@@ -65,6 +68,8 @@ public:
     //Weapon Editor -Z
     byte useweapon; //lweapon id type -Z
     byte usedefence; //default defence type -Z
+    word linked_parent;
+    byte quantity_iterator;
     int weap_pattern[ITEM_MOVEMENT_PATTERNS]; //formation, arg1, arg2 -Z
     int weaprange; //default range -Z
     int weapduration; //default duration, 0 = infinite. 
@@ -82,8 +87,11 @@ public:
     //! End weapon editor. -Z
     
     int script_UID;
+    int parent_script_UID;
     int getScriptUID();
+    int getParentScriptUID();
     void setScriptUID(int new_id);
+    void setParentScriptUID(int new_id);
     bool isLinkWeapon();
     bool isLinkMelee();
     //2.6 ZScript -Z
@@ -97,14 +105,16 @@ public:
     byte ScriptGenerated; //Used to permit creating LinkClass weapons, or other weapon types that the engine does not control.
     byte isLWeapon;
 	bool weapon_dying_frame; //a last_hurrah for weapons -V
-    
-    
+    byte specialinfo;
+    void convertType(bool toLW);
     weapon(weapon const &other);
-    //weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentid, int prntid, bool isDummy=false);
-    weapon(fix X,fix Y,fix Z,int Id,int Type,int pow,int Dir, int Parentid, int prntid, bool isDummy=false, byte script_gen=0, byte isLW=0);
-    weapon(fix X,fix Y,fix Z,int Id,int usesprite, int Dir, int step, int prntid, int height, int width, int a, int b, int c, int d, int e, int f, int g);
+    //weapon(zfix X,zfix Y,zfix Z,int Id,int Type,int pow,int Dir, int Parentid, int prntid, bool isDummy=false);
+    weapon(zfix X,zfix Y,zfix Z,int Id,int Type,int pow,int Dir, int Parentid, int prntid, bool isDummy=false, byte script_gen=0, byte isLW=0, byte special = 0);
+    weapon(zfix X,zfix Y,zfix Z,int Id,int usesprite, int Dir, int step, int prntid, int height, int width, int a, int b, int c, int d, int e, int f, int g);
     virtual ~weapon();
+	void cleanup_sfx();
     void LOADGFX(int wpn);
+    void findcombotriggers();
     bool Dead();
     bool isScriptGenerated();
     bool clip();
@@ -120,6 +130,7 @@ public:
     virtual bool hit(int tx,int ty,int tz,int txsz,int tysz,int tzsz);
     virtual void draw(BITMAP *dest);
     virtual void update_weapon_frame(int change, int orig);
+	virtual int run_script(int mode);
 };
 
 void putweapon(BITMAP *dest,int x,int y,int weapon_id, int type, int dir, int &aclk, int &aframe,

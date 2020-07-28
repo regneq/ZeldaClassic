@@ -26,13 +26,15 @@
 #include "guys.h"
 #include "zdefs.h"
 #include "maps.h"
+#include "items.h"
+#include "zscriptversion.h"
 #include <stdio.h>
 
 extern sprite_list  guys;
 extern sprite_list  items;
 
 /*
-  void movefairy(fix &x,fix &y,int misc) {
+  void movefairy(zfix &x,zfix &y,int misc) {
   return;
   }
 
@@ -40,7 +42,7 @@ extern sprite_list  items;
   return;
   }
   */
-bool addfairy(fix x, fix y, int misc3, int id)
+bool addfairy(zfix x, zfix y, int misc3, int id)
 {
     addenemy(x,y,eITEMFAIRY,id);
     ((enemy*)guys.spr(guys.Count()-1))->dstep=misc3;
@@ -49,14 +51,14 @@ bool addfairy(fix x, fix y, int misc3, int id)
     return true;
 }
 
-bool can_drop(fix x, fix y)
+bool can_drop(zfix x, zfix y)
 {
     return !(_walkflag(x,y+16,0) ||
 		((!get_bit(quest_rules, qr_ITEMS_IGNORE_SIDEVIEW_PLATFORMS) && int(y)%16==0) &&
 		((checkSVLadderPlatform(x+4,y+16)) || (checkSVLadderPlatform(x+12,y+16)))));
 }
 
-void item_fall(fix& x, fix& y, fix& fall)
+void item_fall(zfix& x, zfix& y, zfix& fall)
 {
 	if(!get_bit(quest_rules, qr_ITEMS_IGNORE_SIDEVIEW_PLATFORMS) && checkSVLadderPlatform(x+4,y+(fall/100)+15))
 	{
@@ -78,7 +80,7 @@ void item_fall(fix& x, fix& y, fix& fall)
 	}
 }
 
-int select_dropitem(int item_set, int x, int y)
+int select_dropitem(int item_set)
 {
     int total_chance=0;
     
@@ -154,6 +156,12 @@ int select_dropitem(int item_set, int x, int y)
         }
     }
     
+    return drop_item;
+}
+int select_dropitem(int item_set, int x, int y)
+{
+	int drop_item = select_dropitem(item_set);
+	
     if(drop_item>=0 && itemsbuf[drop_item].family==itype_fairy)
     {
         for(int j=0; j<items.Count(); ++j)
@@ -165,13 +173,27 @@ int select_dropitem(int item_set, int x, int y)
             }
         }
     }
-    
-    return drop_item;
+	
+	return drop_item;
 }
-
-bool is_side_view()
+int item::run_script(int mode)
 {
-    return (tmpscr->flags7&fSIDEVIEW)!=0;
+	if (script <= 0 || !doscript || FFCore.getQuestHeaderInfo(vZelda) < 0x255 || FFCore.system_suspend[susptITEMSPRITESCRIPTS])
+		return RUNSCRIPT_OK;
+	int ret = RUNSCRIPT_OK;
+	switch(mode)
+	{
+		case MODE_NORMAL:
+			return ZScriptVersion::RunScript(SCRIPT_ITEMSPRITE, script, getUID());
+		case MODE_WAITDRAW:
+			if(waitdraw)
+			{
+				ret = ZScriptVersion::RunScript(SCRIPT_ITEMSPRITE, script, getUID());
+				waitdraw = 0;
+			}
+			break;
+	}
+    return ret;
 }
 /*** end of sprite.cc ***/
 

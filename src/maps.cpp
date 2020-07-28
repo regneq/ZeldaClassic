@@ -33,6 +33,7 @@
 #include "link.h"
 #include "guys.h"
 #include "ffscript.h"
+extern word combo_doscript[176];
 extern refInfo screenScriptData;
 extern FFScript FFCore;
 #include "particles.h"
@@ -163,6 +164,11 @@ int isdungeon(int dmap, int scr) // The arg is only used by loadscr2 and loadscr
     return 0;
 }
 
+bool canPermSecret(int dmap, int scr)
+{
+	return (!isdungeon(dmap, scr) || get_bit(quest_rules,qr_DUNGEON_DMAPS_PERM_SECRETS));
+}
+
 int MAPCOMBO(int x,int y)
 {
     //extend combos outwards if out of bounds -DD
@@ -175,6 +181,80 @@ int MAPCOMBO(int x,int y)
         
     return tmpscr->data[combo];                               // entire combo code
 }
+
+//specific layers 1 to 6
+int MAPCOMBOL(int layer,int x,int y)
+{
+    
+    if(tmpscr2[layer-1].data.empty()) return 0;
+    
+    if(tmpscr2[layer-1].valid==0) return 0;
+    
+    int combo = COMBOPOS(x,y);
+    
+    if(combo>175 || combo < 0)
+        return 0;
+        
+    return tmpscr2[layer-1].data[combo];                        // entire combo code
+}
+
+int MAPCSETL(int layer,int x,int y)
+{
+    
+    if(tmpscr2[layer-1].cset.empty()) return 0;
+    
+    if(tmpscr2[layer-1].valid==0) return 0;
+    
+    int combo = COMBOPOS(x,y);
+    
+    if(combo>175 || combo < 0)
+        return 0;
+        
+    return tmpscr2[layer-1].cset[combo];                        // entire combo code
+}
+
+int MAPFLAGL(int layer,int x,int y)
+{
+    
+    if(tmpscr2[layer-1].sflag.empty()) return 0;
+    
+    if(tmpscr2[layer-1].valid==0) return 0;
+    
+    int combo = COMBOPOS(x,y);
+    
+    if(combo>175 || combo < 0)
+        return 0;
+        
+    return tmpscr2[layer-1].sflag[combo];                       // flag
+}
+
+int COMBOTYPEL(int layer,int x,int y)
+{
+    
+    if(tmpscr2[layer-1].valid==0)
+    {
+        return 0;
+    }
+    
+    return combobuf[MAPCOMBO2(layer,x,y)].type;
+}
+
+int MAPCOMBOFLAGL(int layer,int x,int y)
+{
+    if(layer==-1) return MAPCOMBOFLAG(x,y);
+    
+    if(tmpscr2[layer-1].data.empty()) return 0;
+    
+    if(tmpscr2[layer-1].valid==0) return 0;
+    
+    int combo = COMBOPOS(x,y);
+    
+    if(combo>175 || combo < 0)
+        return 0;
+        
+    return combobuf[tmpscr2[layer-1].data[combo]].flag;                        // entire combo code
+}
+
 
 // True if the FFC covers x, y and is not ethereal or a changer.
 // Used by MAPFFCOMBO(), MAPFFCOMBOFLAG, and getFFCAt().
@@ -231,6 +311,38 @@ int COMBOTYPE(int x,int y)
 int FFCOMBOTYPE(int x,int y)
 {
     return combobuf[MAPFFCOMBO(x,y)].type;
+}
+
+int FFORCOMBO(int x, int y)
+{
+	for(int i=0; i<32; i++)
+    {
+        if(ffcIsAt(i, x, y))
+            return tmpscr->ffdata[i];
+    }
+	
+	return MAPCOMBO(x,y);
+}
+
+int FFORCOMBOTYPE(int x, int y)
+{
+	return combobuf[FFORCOMBO(x,y)].type;
+}
+
+int FFORCOMBO_L(int layer, int x, int y)
+{
+	for(int i=0; i<32; i++)
+    {
+        if(ffcIsAt(i, x, y))
+            return tmpscr->ffdata[i];
+    }
+	
+	return layer ? MAPCOMBOL(layer, x, y) : MAPCOMBO(x,y);
+}
+
+int FFORCOMBOTYPE_L(int layer, int x, int y)
+{
+	return combobuf[FFORCOMBO_L(layer,x,y)].type;
 }
 
 int MAPCOMBOFLAG(int x,int y)
@@ -556,13 +668,13 @@ void update_combo_cycling()
     for(int i=0; i<176; i++)
     {
         x=tmpscr->data[i];
-        y=animated_combo_table[x][0];
+        //y=animated_combo_table[x][0];
         
         if(combobuf[x].animflags & AF_FRESH) continue;
         
         //time to restart
-        if((animated_combo_table4[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -579,13 +691,13 @@ void update_combo_cycling()
     for(int i=0; i<176; i++)
     {
         x=tmpscr->data[i];
-        y=animated_combo_table2[x][0];
+        //y=animated_combo_table2[x][0];
         
         if(!(combobuf[x].animflags & AF_FRESH)) continue;
         
         //time to restart
-        if((animated_combo_table24[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table2[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -616,13 +728,13 @@ void update_combo_cycling()
     for(int i=0; i<32; i++)
     {
         x=tmpscr->ffdata[i];
-        y=animated_combo_table[x][0];
+        //y=animated_combo_table[x][0];
         
         if(combobuf[x].animflags & AF_FRESH) continue;
         
         //time to restart
-        if((animated_combo_table4[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -639,13 +751,13 @@ void update_combo_cycling()
     for(int i=0; i<32; i++)
     {
         x=tmpscr->ffdata[i];
-        y=animated_combo_table2[x][0];
+        //y=animated_combo_table2[x][0];
         
         if(!(combobuf[x].animflags & AF_FRESH)) continue;
         
         //time to restart
-        if((animated_combo_table24[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table2[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -680,13 +792,13 @@ void update_combo_cycling()
             for(int i=0; i<176; i++)
             {
                 x=(tmpscr2+j)->data[i];
-                y=animated_combo_table[x][0];
+               // y=animated_combo_table[x][0];
                 
                 if(combobuf[x].animflags & AF_FRESH) continue;
                 
                 //time to restart
-                if((animated_combo_table4[y][1]>=combobuf[x].speed) &&
-                        (combobuf[x].tile-combobuf[x].frames>=animated_combo_table[x][1]-1) &&
+                if((combobuf[x].aclk>=combobuf[x].speed) &&
+                        (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                         (combobuf[x].nextcombo!=0))
                 {
                     newdata[i]=combobuf[x].nextcombo;
@@ -703,13 +815,13 @@ void update_combo_cycling()
             for(int i=0; i<176; i++)
             {
                 x=(tmpscr2+j)->data[i];
-                y=animated_combo_table2[x][0];
+                //y=animated_combo_table2[x][0];
                 
                 if(!(combobuf[x].animflags & AF_FRESH)) continue;
                 
                 //time to restart
-                if((animated_combo_table24[y][1]>=combobuf[x].speed) &&
-                        (combobuf[x].tile-combobuf[x].frames>=animated_combo_table2[x][1]-1) &&
+                if((combobuf[x].aclk>=combobuf[x].speed) &&
+                        (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                         (combobuf[x].nextcombo!=0))
                 {
                     newdata2[i]=combobuf[x].nextcombo;
@@ -725,7 +837,7 @@ void update_combo_cycling()
                     if(combobuf[c].type==cSPINTILE1)
                     {
                         // Uses animated_combo_table2
-                        addenemy((i&15)<<4,i&0xF0,(cs<<12)+eSPINTILE1,animated_combo_table2[c][1]+zc_max(1,combobuf[c].frames));
+                        addenemy((i&15)<<4,i&0xF0,(cs<<12)+eSPINTILE1,combobuf[c].o_tile+zc_max(1,combobuf[c].frames));
                     }
                 }
             }
@@ -758,15 +870,15 @@ void update_combo_cycling()
     {
         if(restartanim[i])
         {
-            combobuf[i].tile = animated_combo_table[i][1];
-            animated_combo_table4[animated_combo_table[i][0]][1]=0;
+            combobuf[i].tile = combobuf[i].o_tile;
+			combobuf[i].aclk = 0;
             restartanim[i]=false;
         }
         
         if(restartanim2[i])
         {
-            combobuf[i].tile = animated_combo_table2[i][1];
-            animated_combo_table4[animated_combo_table[i][0]][1]=0;
+            combobuf[i].tile = combobuf[i].o_tile;
+			combobuf[i].aclk = 0;
             restartanim2[i]=false;
         }
     }
@@ -781,6 +893,38 @@ bool iswater_type(int type)
 bool iswater(int combo)
 {
     return iswater_type(combobuf[combo].type) && !DRIEDLAKE;
+}
+
+bool ispitfall_type(int type)
+{
+	return combo_class_buf[type].pit != 0;
+}
+
+bool ispitfall(int combo)
+{
+    return ispitfall_type(combobuf[combo].type);
+}
+
+bool ispitfall(int x, int y)
+{
+	if(int c = MAPFFCOMBO(x,y))
+		return ispitfall(c);
+	return ispitfall(MAPCOMBO(x,y)) || ispitfall(MAPCOMBOL(1,x,y)) || ispitfall(MAPCOMBOL(2,x,y));
+}
+
+int getpitfall(int x, int y) //Return the highest-layer active pit combo at the given position
+{
+	if(int c = MAPFFCOMBO(x,y))
+	{
+		return ispitfall(c) ? c : 0;
+	}
+	int c = MAPCOMBOL(2,x,y);
+	if(ispitfall(c)) return c;
+	c = MAPCOMBOL(1,x,y);
+	if(ispitfall(c)) return c;
+	c = MAPCOMBO(x,y);
+	if(ispitfall(c)) return c;
+	return 0;
 }
 
 bool isSVLadder(int x, int y)
@@ -820,7 +964,16 @@ bool checkSVLadderPlatform(int x, int y)
 
 bool isstepable(int combo)                                  //can use ladder on it
 {
-    return (combo_class_buf[combobuf[combo].type].ladder_pass!=0);
+    if(combo_class_buf[combobuf[combo].type].ladder_pass) return true;
+	if(combo_class_buf[combobuf[combo].type].pit)
+	{
+		if(combobuf[combo].usrflags&cflag4)
+		{
+			int ldrid = current_item_id(itype_ladder);
+			return (ldrid > -1 && itemsbuf[ldrid].flags & ITEM_FLAG1);
+		}
+	}
+	return false;
 }
 
 bool ishookshottable(int bx, int by)
@@ -1377,7 +1530,7 @@ void hidden_entrance(int tmp,bool , bool high16only,int single) //Perhaps better
                         int cs=t[j].cset[i];
                         
                         if(combobuf[c].type==cSPINTILE1)  //Surely this means we can have spin tiles on layers 3+? Isn't that bad? ~Joe123
-                            addenemy((i&15)<<4,i&0xF0,(cs<<12)+eSPINTILE1,animated_combo_table[c][1]+zc_max(1,combobuf[c].frames));
+                            addenemy((i&15)<<4,i&0xF0,(cs<<12)+eSPINTILE1,combobuf[c].o_tile+zc_max(1,combobuf[c].frames));
                     }
                 }
                 
@@ -1815,7 +1968,7 @@ bool findentrance(int x, int y, int flag, bool setflag)
         }
     }
     
-    if(setflag && !isdungeon())
+    if(setflag && canPermSecret())
         if(!(tmpscr->flags5&fTEMPSECRETS))
             setmapflag(mSECRET);
             
@@ -2863,7 +3016,7 @@ void do_walkflags(BITMAP *dest,mapscr* layer,int x, int y, int tempscreen)
 
 void draw_screen(mapscr* this_screen, bool showlink)
 {
-	if(GameFlags & GAMEFLAG_SCRIPTMENU_ACTIVE)
+	if((GameFlags & (GAMEFLAG_SCRIPTMENU_ACTIVE|GAMEFLAG_F6SCRIPT_ACTIVE))!=0)
 	{
 		FFCore.doScriptMenuDraws();
 		return;
@@ -2895,11 +3048,11 @@ void draw_screen(mapscr* this_screen, bool showlink)
     
     //0: Sideview Grvity from DMaps.
     
-    if ( DMaps[currdmap].sideview != 0 ) 
+    /* DON'T MODIFY THE SCREEN DIRECTLY!
+	if ( DMaps[currdmap].sideview != 0 ) 
     {
-	if ( this_screen->flags7&fSIDEVIEW ) this_screen->flags7 |= ~fSIDEVIEW;
-	else this_screen->flags7 |= fSIDEVIEW;
-    }
+		this_screen->flags7 |= fSIDEVIEW;
+    }*/
     //1. Draw some layers onto temp_buf
     clear_bitmap(scrollbuf);
     
@@ -3270,7 +3423,7 @@ void draw_screen(mapscr* this_screen, bool showlink)
     set_clip_rect(framebuf,0,0,256,224);
     
     //Jumping Link and jumping enemies are drawn on this layer.
-    if(Link.getZ() > (fix)zinit.jump_link_layer_threshold)
+    if(Link.getZ() > (zfix)zinit.jump_link_layer_threshold)
     {
         decorations.draw2(framebuf,false);
         Link.draw(framebuf);
@@ -3278,7 +3431,7 @@ void draw_screen(mapscr* this_screen, bool showlink)
         
         for(int i=0; i<Lwpns.Count(); i++)
         {
-            if(Lwpns.spr(i)->z > (fix)zinit.jump_link_layer_threshold)
+            if(Lwpns.spr(i)->z > (zfix)zinit.jump_link_layer_threshold)
             {
                 Lwpns.spr(i)->draw(framebuf);
             }
@@ -3289,7 +3442,7 @@ void draw_screen(mapscr* this_screen, bool showlink)
     
     if(!get_bit(quest_rules,qr_ENEMIESZAXIS)) for(int i=0; i<guys.Count(); i++)
         {
-            if((isflier(guys.spr(i)->id)) || guys.spr(i)->z > (fix)zinit.jump_link_layer_threshold)
+            if((isflier(guys.spr(i)->id)) || guys.spr(i)->z > (zfix)zinit.jump_link_layer_threshold)
             {
                 guys.spr(i)->draw(framebuf);
             }
@@ -3354,10 +3507,22 @@ void draw_screen(mapscr* this_screen, bool showlink)
     set_clip_rect(framebuf,0,0,256,224);
     set_clip_rect(scrollbuf,0,0,256,224);
     
-    if(!(msgdisplaybuf->clip))
+    if(!(msg_bg_display_buf->clip))
     {
-        masked_blit(msgdisplaybuf,framebuf,0,0,0,playing_field_offset,256,168);
-        masked_blit(msgdisplaybuf,scrollbuf,0,0,0,playing_field_offset,256,168);
+		blit_msgstr_bg(framebuf,0,0,0,playing_field_offset,256,168);
+		blit_msgstr_bg(scrollbuf,0,0,0,playing_field_offset,256,168);
+    }
+    
+    if(!(msg_portrait_display_buf->clip))
+    {
+		blit_msgstr_prt(framebuf,0,0,0,playing_field_offset,256,168);
+		blit_msgstr_prt(scrollbuf,0,0,0,playing_field_offset,256,168);
+    }
+    
+    if(!(msg_txt_display_buf->clip))
+    {
+		blit_msgstr_fg(framebuf,0,0,0,playing_field_offset,256,168);
+		blit_msgstr_fg(scrollbuf,0,0,0,playing_field_offset,256,168);
     }
     
     //12. Draw the subscreen, without clipping
@@ -3858,12 +4023,14 @@ void openshutters()
 
 void loadscr(int tmp,int destdmap, int scr,int ldir,bool overlay=false)
 {
+	
+    
     //  introclk=intropos=msgclk=msgpos=dmapmsgclk=0;
     for(word x=0; x<animated_combos; x++)
     {
         if(combobuf[animated_combo_table4[x][0]].nextcombo!=0)
         {
-            animated_combo_table4[x][1]=0;
+			combobuf[animated_combo_table4[x][0]].aclk = 0;
         }
     }
     
@@ -3871,7 +4038,7 @@ void loadscr(int tmp,int destdmap, int scr,int ldir,bool overlay=false)
     {
         if(combobuf[animated_combo_table24[x][0]].nextcombo!=0)
         {
-            animated_combo_table24[x][1]=0;
+			combobuf[animated_combo_table24[x][0]].aclk = 0;
         }
     }
     
@@ -3891,6 +4058,8 @@ void loadscr(int tmp,int destdmap, int scr,int ldir,bool overlay=false)
     FFCore.clear_screen_stack();
     screenScriptData.Clear();
     FFCore.deallocateAllArrays(SCRIPT_SCREEN, 0);
+    //reset combo script doscripts
+    FFCore.init_combo_doscript();
     if ( TheMaps[currmap*MAPSCRS+scr].script > 0 )
     {
 	    tmpscr[tmp].script = TheMaps[currmap*MAPSCRS+scr].script;
@@ -4065,7 +4234,7 @@ void loadscr(int tmp,int destdmap, int scr,int ldir,bool overlay=false)
         }
     }
     
-    if(!isdungeon(destdmap,scr)/*||TheMaps[(currmap*MAPSCRS)+currscr].flags6&fTRIGGERFPERM*/)
+    if(canPermSecret(destdmap,scr)/*||TheMaps[(currmap*MAPSCRS)+currscr].flags6&fTRIGGERFPERM*/)
     {
         if(game->maps[(currmap*MAPSCRSNORMAL)+scr]&mSECRET)               // if special stuff done before
         {
@@ -4198,7 +4367,7 @@ void loadscr2(int tmp,int scr,int)
     {
         if(combobuf[animated_combo_table4[x][0]].nextcombo!=0)
         {
-            animated_combo_table4[x][1]=0;
+			combobuf[animated_combo_table4[x][0]].aclk=0;
         }
     }
     
@@ -4237,7 +4406,7 @@ void loadscr2(int tmp,int scr,int)
         }
     }
     
-    if(!isdungeon(scr))
+    if(canPermSecret(-1,scr))
     {
         if(game->maps[(currmap*MAPSCRSNORMAL)+scr]&mSECRET)               // if special stuff done before
         {
@@ -4480,7 +4649,7 @@ bool _walkflag(int x,int y,int cnt)
 }
 
 //used by mapdata->isSolid(x,y) in ZScript:
-bool _walkflag(int x,int y,int cnt, int mapref)
+bool _walkflag(int x,int y,int cnt, mapscr* m)
 {
     //  walkflagx=x; walkflagy=y;
     if(get_bit(quest_rules,qr_LTTPWALK))
@@ -4503,8 +4672,6 @@ bool _walkflag(int x,int y,int cnt, int mapref)
         
         if(y>168) return false;
     }
-    
-    mapscr *m = &TheMaps[mapref]; 
     
     mapscr *s1, *s2;
     
@@ -4554,6 +4721,125 @@ bool _walkflag(int x,int y,int cnt, int mapref)
     }
     
     return ((c.walk&b)||(c1.walk&b)||(c2.walk&b)) ? !dried : false;
+}
+
+bool _walkflag(int x,int y,int cnt, mapscr* m, mapscr* s1, mapscr* s2)
+{
+    //  walkflagx=x; walkflagy=y;
+    if(get_bit(quest_rules,qr_LTTPWALK))
+    {
+        if(x<0||y<0) return false;
+        
+        if(x>255) return false;
+        
+        if(x>247&&cnt==2) return false;
+        
+        if(y>175) return false;
+    }
+    else
+    {
+        if(x<0||y<0) return false;
+        
+        if(x>248) return false;
+        
+        if(x>240&&cnt==2) return false;
+        
+        if(y>168) return false;
+    }
+    
+    if(!s1) s1 = m;
+	if(!s2) s2 = m;
+    
+    int bx=(x>>4)+(y&0xF0);
+    newcombo c = combobuf[m->data[bx]];
+    newcombo c1 = combobuf[s1->data[bx]];
+    newcombo c2 = combobuf[s2->data[bx]];
+    bool dried = (((iswater_type(c.type)) || (iswater_type(c1.type)) ||
+                   (iswater_type(c2.type))) && DRIEDLAKE);
+    int b=1;
+    
+    if(x&8) b<<=2;
+    
+    if(y&8) b<<=1;
+    
+    if(((c.walk&b) || (c1.walk&b) || (c2.walk&b)) && !dried)
+        return true;
+        
+    if(cnt==1) return false;
+    
+    ++bx;
+    
+    if(!(x&8))
+        b<<=2;
+    else
+    {
+        c  = combobuf[m->data[bx]];
+        c1 = combobuf[s1->data[bx]];
+        c2 = combobuf[s2->data[bx]];
+        dried = (((iswater_type(c.type)) || (iswater_type(c1.type)) ||
+                  (iswater_type(c2.type))) && DRIEDLAKE);
+        b=1;
+        
+        if(y&8) b<<=1;
+    }
+    
+    return ((c.walk&b)||(c1.walk&b)||(c2.walk&b)) ? !dried : false;
+}
+
+//Only check the given mapscr*, not it's layer 1&2
+bool _walkflag_layer(int x,int y,int cnt, mapscr* m)
+{
+    //  walkflagx=x; walkflagy=y;
+    if(get_bit(quest_rules,qr_LTTPWALK))
+    {
+        if(x<0||y<0) return false;
+        
+        if(x>255) return false;
+        
+        if(x>247&&cnt==2) return false;
+        
+        if(y>175) return false;
+    }
+    else
+    {
+        if(x<0||y<0) return false;
+        
+        if(x>248) return false;
+        
+        if(x>240&&cnt==2) return false;
+        
+        if(y>168) return false;
+    }
+	if(!m) return true;
+    
+    int bx=(x>>4)+(y&0xF0);
+    newcombo c = combobuf[m->data[bx]];
+    bool dried = ((iswater_type(c.type)) && DRIEDLAKE);
+    int b=1;
+    
+    if(x&8) b<<=2;
+    
+    if(y&8) b<<=1;
+    
+    if((c.walk&b) && !dried)
+        return true;
+        
+    if(cnt==1) return false;
+    
+    ++bx;
+    
+    if(!(x&8))
+        b<<=2;
+    else
+    {
+        c  = combobuf[m->data[bx]];
+        dried = ((iswater_type(c.type)) && DRIEDLAKE);
+        b=1;
+        
+        if(y&8) b<<=1;
+    }
+    
+    return (c.walk&b) ? !dried : false;
 }
 
 bool water_walkflag(int x,int y,int cnt)
@@ -5001,6 +5287,17 @@ bool isFlowersType(int type)
     return false;
 }
 
+bool isGenericType(int type)
+{
+    switch(type)
+    {
+    case cTRIGGERGENERIC:
+        return true;
+    }
+    
+    return false;
+}
+
 bool isBushType(int type)
 {
     switch(type)
@@ -5009,6 +5306,7 @@ bool isBushType(int type)
     case cBUSHNEXT:
     case cBUSHTOUCHY:
     case cBUSHNEXTTOUCHY:
+
         return true;
     }
     

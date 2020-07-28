@@ -145,6 +145,7 @@ DataTypeClassConst DataType::GRAPHICS(ZCLASSID_GRAPHICS, "Graphics");
 DataTypeClassConst DataType::INPUT(ZCLASSID_INPUT, "Input");
 DataTypeClassConst DataType::TEXT(ZCLASSID_TEXT, "Text");
 DataTypeClassConst DataType::FILESYSTEM(ZCLASSID_FILESYSTEM, "FileSystem");
+DataTypeClassConst DataType::MODULE(ZCLASSID_MODULE, "Module");
 //Class: Types
 DataTypeClassConst DataType::CBITMAP(ZCLASSID_BITMAP, "const Bitmap");
 DataTypeClassConst DataType::CCHEATS(ZCLASSID_CHEATS, "const Cheats");
@@ -259,6 +260,7 @@ DataType const* DataType::get(DataTypeId id)
 		case ZVARTYPEID_GAMEDATA: return &GAMEDATA;
 		case ZVARTYPEID_CHEATS: return &CHEATS;
 		case ZVARTYPEID_FILESYSTEM: return &FILESYSTEM;
+		case ZVARTYPEID_MODULE: return &MODULE;
 		default: return NULL;
 	}
 }
@@ -303,6 +305,7 @@ DataTypeClass const* DataType::getClass(int classId)
 		case ZCLASSID_GAMEDATA: return &GAMEDATA;
 		case ZCLASSID_CHEATS: return &CHEATS;
 		case ZCLASSID_FILESYSTEM: return &FILESYSTEM;
+		case ZCLASSID_MODULE: return &MODULE;
 		default: return NULL;
 	}
 }
@@ -443,8 +446,8 @@ int DataTypeSimple::selfCompare(DataType const& rhs) const
 
 bool DataTypeSimple::canCastTo(DataType const& target) const
 {
-	if (isUntyped()) return true;
-	if (target.isUntyped()) return true;
+	if (isVoid() || target.isVoid()) return false;
+	if (isUntyped() || target.isUntyped()) return true;
 	if (simpleId == ZVARTYPEID_CHAR) return FLOAT.canCastTo(target); //Char casts the same as float.
 
 	if (DataTypeArray const* t =
@@ -503,14 +506,17 @@ DataTypeClass* DataTypeClass::resolve(Scope& scope, CompileErrorHandler* errorHa
 
 string DataTypeClass::getName() const
 {
+	/* This doesn't look good in errors/warns...
 	string name = className == "" ? "anonymous" : className;
 	char tmp[32];
 	sprintf(tmp, "%d", classId);
-	return name + "[class " + tmp + "]";
+	return name + "[class " + tmp + "]";*/
+	return className;
 }
 
 bool DataTypeClass::canCastTo(DataType const& target) const
 {
+	if (target.isVoid()) return false;
 	if (target.isUntyped()) return true;
 	
 	if (DataTypeArray const* t =
@@ -542,6 +548,7 @@ DataTypeClassConst::DataTypeClassConst(int classId, string const& name)
 
 bool DataTypeArray::canCastTo(DataType const& target) const
 {
+	if (target.isVoid()) return false;
 	if (target.isUntyped()) return true;
 	
 	if (DataTypeArray const* t =
@@ -570,6 +577,7 @@ DataType const& ZScript::getBaseType(DataType const& type)
 
 bool DataTypeCustom::canCastTo(DataType const& target) const
 {
+	if (target.isVoid()) return false;
 	if (target.isUntyped()) return true;
 
 	if (DataTypeArray const* t =
@@ -612,7 +620,7 @@ namespace // file local
 		string name;
 		DataTypeId thisTypeId;
 	};
-
+	//the 'this' 'this->' stuff. -Z
 	ScriptTypeData scriptTypes[ScriptType::idEnd] = {
 		{"invalid", ZVARTYPEID_VOID},
 		{"global", ZVARTYPEID_VOID},
@@ -626,6 +634,7 @@ namespace // file local
 		{"dmapdata", ZVARTYPEID_DMAPDATA},
 		{"itemsprite", ZVARTYPEID_ITEM},
 		{"untyped", ZVARTYPEID_VOID},
+		{"combodata", ZVARTYPEID_COMBOS},
 	};
 }
 

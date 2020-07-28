@@ -19,6 +19,7 @@
 #include "zdefs.h"
 #include <set>
 #include <map>
+#include "zfix.h"
 
 using std::map;
 // this code needs some patching for use in zquest.cc
@@ -34,6 +35,10 @@ extern int conveyclk;
 /**********************************/
 /******* Sprite Base Class ********/
 /**********************************/
+
+//Sprite Offscreen Bits
+#define SPRITE_MOVESOFFSCREEN 0x01
+
 // Forward reference
 class refInfo;
 
@@ -51,10 +56,11 @@ public:
         return uid;
     }
     
-    fix x,y,z,fall;
-    int tile,shadowtile,cs,flip,c_clk,clk,misc;
+   
     
-    fix xofs,yofs,zofs;
+    zfix x,y,z,fall;
+    int tile,shadowtile,cs,flip,c_clk,clk,misc;
+    zfix xofs,yofs,zofs;
     // no hzofs - it's always equal to zofs.
     int hxofs,hyofs,hxsz,hysz,hzsz;
     int txsz,tysz;
@@ -69,7 +75,7 @@ public:
     double angle;
     int lasthit, lasthitclk;
     int dummy_int[10];
-    fix dummy_fix[10];
+    zfix dummy_fix[10];
     float dummy_float[10];
     bool dummy_bool[10];
     int drawstyle;                                          //0=normal, 1=translucent, 2=cloaked
@@ -110,11 +116,26 @@ public:
     byte do_animation;
     int rotation;
     int scale; 
-    byte obeys_gravity;
+    byte moveflags;
+    byte drawflags;
+	byte knockbackflags;
+	byte screenedge;
+	byte shadowsprite;
+	int scriptshadowtile;
+#define FLAG_NOSLIDE 0x01
+#define FLAG_NOSCRIPTKNOCKBACK 0x02
+	byte knockbackSpeed;
+	int script_knockback_clk;
+	int script_knockback_speed;
+	int pit_pulldir; // Pitfall pull direction
+	int pit_pullclk; // Pitfall pull clk
+	int fallclk; // Pitfall fall clk
+	int fallCombo; // Pitfall fallen combo
+	int old_cset; // Storage var for an old cset; used by pitfalls
     
     sprite();
     sprite(sprite const & other);
-    sprite(fix X,fix Y,int T,int CS,int F,int Clk,int Yofs);
+    sprite(zfix X,zfix Y,int T,int CS,int F,int Clk,int Yofs);
     virtual ~sprite();
     virtual void draw(BITMAP* dest);                        // main layer
     virtual void drawzcboss(BITMAP* dest);                        // main layer
@@ -126,19 +147,31 @@ public:
     virtual void drawcloaked2(BITMAP* dest);                // top layer for special needs
     virtual bool animate(int index);
     virtual void check_conveyor();
-    int real_x(fix fx);
-    int real_y(fix fy);
-    int real_ground_y(fix fy);
-    int real_z(fix fz);
+	virtual int get_pit(); //Returns combo ID of pit that sprite WOULD fall into; no side-effects
+	virtual int check_pits(); //Returns combo ID of pit fallen into; 0 for not fallen.
+    int real_x(zfix fx);
+    int real_y(zfix fy);
+    int real_ground_y(zfix fy);
+    int real_z(zfix fz);
     virtual bool hit(sprite *s);
     virtual bool hit(int tx,int ty,int tz,int txsz,int tysz,int tzsz);
     
     
     virtual int hitdir(int tx,int ty,int txsz,int tysz,int dir);
-    virtual void move(fix dx,fix dy);
-    virtual void move(fix s);
+    virtual void move(zfix dx,zfix dy);
+    virtual void move(zfix s);
+	virtual bool knockback(int time, int dir, int speed);
+	virtual bool runKnockback();
     void explode(int mode);
     //void explode(int type);
+	
+	virtual int run_script(int mode);
+};
+
+enum //run_script modes
+{
+	MODE_NORMAL,
+	MODE_WAITDRAW
 };
 
 /***************************************************************************/
@@ -147,12 +180,14 @@ public:
 /********** Sprite List ***********/
 /**********************************/
 
-#define SLMAX 255*256
+#define SLMAX 255*(511*4)+1
 
 class sprite_list
 {
     sprite *sprites[SLMAX];
     int count;
+	int active_iterator;
+	long max_sprites;
     map<long, int> containedUIDs;
     // Cache requests from scripts
     mutable long lastUIDRequested;
@@ -168,10 +203,12 @@ public:
     bool add(sprite *s);
     // removes pointer from list but doesn't delete it
     bool remove(sprite *s);
-    fix getX(int j);
-    fix getY(int j);
+    zfix getX(int j);
+    zfix getY(int j);
     int getID(int j);
     int getMisc(int j);
+	long getMax() {return max_sprites;}
+	void setMax(long max) {max_sprites = (max < SLMAX ? max : SLMAX);}
     bool del(int j);
     void draw(BITMAP* dest,bool lowfirst);
     void drawshadow(BITMAP* dest,bool translucent, bool lowfirst);
@@ -179,7 +216,9 @@ public:
     void drawcloaked2(BITMAP* dest,bool lowfirst);
     void animate();
     void check_conveyor();
+	void run_script(int mode);
     int Count();
+	bool has_space(int space = 1);
     int hit(sprite *s);
     int hit(int x,int y,int z,int xsize, int ysize, int zsize);
     // returns the number of sprites with matching id
@@ -215,7 +254,7 @@ public:
     byte undercset;
     
     movingblock();
-    void push(fix bx,fix by,int d,int f);
+    void push(zfix bx,zfix by,int d,int f);
     virtual bool animate(int index);
     virtual void draw(BITMAP *dest);
 };

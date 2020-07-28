@@ -23,6 +23,10 @@
 #include <stdexcept>
 #include <map>
 
+#include "metadata/sigs/devsig.h.sig"
+#include "metadata/sigs/compilersig.h.sig"
+#include "metadata/versionsig.h"
+
 #include "gui.h"
 #include "zq_class.h"
 #include "zq_misc.h"
@@ -43,6 +47,8 @@
 #include "zq_subscr.h"
 #include "mem_debug.h"
 #include "ffscript.h"
+#include "util.h"
+using namespace util;
 extern FFScript FFCore;
 
 extern ZModule zcm;
@@ -58,16 +64,6 @@ using std::pair;
 extern char msgbuf[MSGSIZE*3];
 
 extern string zScript;
-extern std::map<int, pair<string, string> > ffcmap;
-extern std::map<int, pair<string, string> > globalmap;
-extern std::map<int, pair<string, string> > itemmap;
-extern std::map<int, pair<string, string> > npcmap;
-extern std::map<int, pair<string, string> > ewpnmap;
-extern std::map<int, pair<string, string> > lwpnmap;
-extern std::map<int, pair<string, string> > linkmap;
-extern std::map<int, pair<string, string> > dmapmap;
-extern std::map<int, pair<string, string> > screenmap;
-extern std::map<int, pair<string, string> > itemspritemap;
 
 zmap Map;
 int prv_mode=0;
@@ -894,8 +890,10 @@ int zmap::load(const char *path)
         mapscr tmpimportscr;
         
         if(readmapscreen(f,&header,&tmpimportscr,&temp_map,version)==qe_invalid)
+	{
+		al_trace("failed zmap::load\n");
             goto file_error;
-            
+	}
         bool copied = false;
         
         switch(ImportMapBias)
@@ -1433,6 +1431,22 @@ void copy_mapscr(mapscr *dest, const mapscr *src)
     dest->old_cpage=src->old_cpage;
     dest->screen_midi=src->screen_midi;
     dest->lens_layer=src->lens_layer;
+    for ( int q = 0; q < 10; q++ ) dest->npcstrings[q]=src->npcstrings[q];
+    for ( int q = 0; q < 10; q++ ) dest->new_items[q]=src->new_items[q];
+    for ( int q = 0; q < 10; q++ ) dest->new_item_x[q]=src->new_item_x[q];
+    for ( int q = 0; q < 10; q++ ) dest->new_item_y[q]=src->new_item_y[q];
+    
+    dest->script=src->script;
+    
+    for ( int q = 0; q < 8; q++ ) dest->screeninitd[q]=src->screeninitd[q];
+    
+    dest->screen_waitdraw=src->screen_waitdraw;
+    dest->preloadscript=src->preloadscript;
+    dest->ffcswaitdraw=src->ffcswaitdraw;
+    dest->screendatascriptInitialised=src->screendatascriptInitialised;
+    dest->hidelayers=src->hidelayers;
+    dest->hidescriptlayers=src->hidescriptlayers;
+    dest->doscript=src->doscript;
 }
 
 void zmap::put_door(BITMAP *dest,int pos,int side,int type,int xofs,int yofs,bool ignorepos, int scr)
@@ -1917,7 +1931,7 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
             {
                 if(misaligned(currmap, scr, checkcombo, up))
                 {
-                    masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,0*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                    masked_blit(arrow_bmp[0],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 }
             }
             
@@ -1925,7 +1939,7 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
             {
                 if(misaligned(currmap, scr, checkcombo, down))
                 {
-                    masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,1*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                    masked_blit(arrow_bmp[1],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 }
             }
             
@@ -1933,7 +1947,7 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
             {
                 if(misaligned(currmap, scr, checkcombo, left))
                 {
-                    masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,2*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                    masked_blit(arrow_bmp[2],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 }
             }
             
@@ -1941,7 +1955,7 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
             {
                 if(misaligned(currmap, scr, checkcombo, right))
                 {
-                    masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,3*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                    masked_blit(arrow_bmp[3],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 }
             }
             
@@ -1959,15 +1973,15 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
                 break;
                 
             case 1:                                             //up
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,0*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[0],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 2:                                             //left
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,2*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[2],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 3:                                             //up-left
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,4*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[4],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
             }
             
@@ -1983,15 +1997,15 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
                 break;
                 
             case 1:                                             //up
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,0*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[0],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 2:                                             //right
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,3*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[3],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 3:                                             //up-right
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,5*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[5],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
             }
             
@@ -2007,15 +2021,15 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
                 break;
                 
             case 1:                                             //down
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,1*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[1],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 2:                                             //left
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,2*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[2],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 3:                                             //down-left
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,6*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[6],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
             }
             
@@ -2032,15 +2046,15 @@ void zmap::check_alignments(BITMAP* dest,int x,int y,int scr)
                 break;
                 
             case 1:                                             //down
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,1*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[1],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 2:                                             //right
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,3*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[3],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
                 
             case 3:                                             //down-right
-                masked_blit((BITMAP*)zcdata[BMP_ARROWS].dat,dest,7*17+1,1,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
+                masked_blit(arrow_bmp[7],dest,0,0,((checkcombo&15)<<4)+x,(checkcombo&0xF0)+y,16,16);
                 break;
             }
         }
@@ -2160,6 +2174,11 @@ void zmap::draw(BITMAP* dest,int x,int y,int flags,int map,int scr)
         return;
     }
     
+    if(LayerMaskInt[0]==0)
+    {
+        rectfill(dest,x,y,x+255,y+175,0);
+    }
+	
     resize_mouse_pos=true;
     
     for(int k=1; k<3; k++)
@@ -2237,10 +2256,6 @@ void zmap::draw(BITMAP* dest,int x,int y,int flags,int map,int scr)
                 overcombo(dest,((i&15)<<4)+x,(i&0xF0)+y,cmbdat,cmbcset);
             else put_combo(dest,((i&15)<<4)+x,(i&0xF0)+y,cmbdat,cmbcset,antiflags,cmbflag);
         }
-    }
-    else
-    {
-        rectfill(dest,x,y,x+255,y+175,0);
     }
     
     // int cs=2;
@@ -2689,17 +2704,7 @@ void zmap::drawrow(BITMAP* dest,int x,int y,int flags,int c,int map,int scr)
     
     resize_mouse_pos=true;
     
-    if(LayerMaskInt[0]!=0)
-    {
-        for(int i=c; i<(c&0xF0)+16; i++)
-        {
-            word cmbdat = (i < (int)layer->data.size() ? layer->data[i] : 0);
-            byte cmbcset = (i < (int)layer->data.size() ? layer->cset[i] : 0);
-            int cmbflag = (i < (int)layer->data.size() ? layer->sflag[i] : 0);
-            put_combo(dest,((i&15)<<4)+x,y,cmbdat,cmbcset,flags|dark,cmbflag);
-        }
-    }
-    else
+    if(LayerMaskInt[0]==0)
     {
         rectfill(dest,x,y,x+255,y+15,0);
     }
@@ -2728,6 +2733,19 @@ void zmap::drawrow(BITMAP* dest,int x,int y,int flags,int c,int map,int scr)
                     }
                 }
             }
+        }
+    }
+	
+	if(LayerMaskInt[0]!=0)
+    {
+        for(int i=c; i<(c&0xF0)+16; i++)
+        {
+            word cmbdat = (i < (int)layer->data.size() ? layer->data[i] : 0);
+            byte cmbcset = (i < (int)layer->data.size() ? layer->cset[i] : 0);
+            int cmbflag = (i < (int)layer->data.size() ? layer->sflag[i] : 0);
+			if(layer->flags7&fLAYER3BG||layer->flags7&fLAYER2BG)
+				overcombo(dest,((i&15)<<4)+x,y,cmbdat,cmbcset);
+			else put_combo(dest,((i&15)<<4)+x,y,cmbdat,cmbcset,flags|dark,cmbflag);
         }
     }
     
@@ -2989,17 +3007,7 @@ void zmap::drawcolumn(BITMAP* dest,int x,int y,int flags,int c,int map,int scr)
     resize_mouse_pos=true;
     
     
-    if(LayerMaskInt[0]!=0)
-    {
-        for(int i=c; i<176; i+=16)
-        {
-            word cmbdat = layer->data[i];
-            byte cmbcset = layer->cset[i];
-            int cmbflag = layer->sflag[i];
-            put_combo(dest,x,(i&0xF0)+y,cmbdat,cmbcset,flags|dark,cmbflag);
-        }
-    }
-    else
+    if(LayerMaskInt[0]==0)
     {
         rectfill(dest,x,y,x+15,y+175,0);
     }
@@ -3031,6 +3039,18 @@ void zmap::drawcolumn(BITMAP* dest,int x,int y,int flags,int c,int map,int scr)
         }
     }
     
+    if(LayerMaskInt[0]!=0)
+    {
+        for(int i=c; i<176; i+=16)
+        {
+            word cmbdat = layer->data[i];
+            byte cmbcset = layer->cset[i];
+            int cmbflag = layer->sflag[i];
+			if(layer->flags7&fLAYER3BG||layer->flags7&fLAYER2BG)
+				overcombo(dest,x,(i&0xF0)+y,cmbdat,cmbcset);
+            else put_combo(dest,x,(i&0xF0)+y,cmbdat,cmbcset,flags|dark,cmbflag);
+        }
+    }
     
     for(int k=0; k<2; k++)
     {
@@ -3287,13 +3307,6 @@ void zmap::drawblock(BITMAP* dest,int x,int y,int flags,int c,int map,int scr)
     
     if(LayerMaskInt[0]!=0)
     {
-        word cmbdat = layer->data[c];
-        byte cmbcset = layer->cset[c];
-        int cmbflag = layer->sflag[c];
-        put_combo(dest,x,y,cmbdat,cmbcset,flags|dark,cmbflag);
-    }
-    else
-    {
         rectfill(dest,x,y,x+15,y+15,0);
     }
     
@@ -3321,6 +3334,16 @@ void zmap::drawblock(BITMAP* dest,int x,int y,int flags,int c,int map,int scr)
         }
     }
     
+    if(LayerMaskInt[0]!=0)
+    {
+        word cmbdat = layer->data[c];
+        byte cmbcset = layer->cset[c];
+        int cmbflag = layer->sflag[c];
+        if(layer->flags7&fLAYER3BG||layer->flags7&fLAYER2BG)
+			overcombo(dest,x,y,cmbdat,cmbcset);
+		else put_combo(dest,x,y,cmbdat,cmbcset,flags|dark,cmbflag);
+    }
+	
     for(int k=2; k<4; k++)
     {
         if(LayerMaskInt[k+1]!=0)
@@ -4311,11 +4334,11 @@ void zmap::update_combo_cycling()
         newcset[i]=-1;
         
         x=prvscr.data[i];
-        y=animated_combo_table[x][0];
+        //y=animated_combo_table[x][0];
         
         //time to restart
-        if((animated_combo_table4[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -4332,11 +4355,11 @@ void zmap::update_combo_cycling()
     for(int i=0; i<176; i++)
     {
         x=prvscr.data[i];
-        y=animated_combo_table2[x][0];
+        //y=animated_combo_table2[x][0];
         
         //time to restart
-        if((animated_combo_table24[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table2[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -4365,11 +4388,11 @@ void zmap::update_combo_cycling()
         newcset[i]=-1;
         
         x=prvscr.ffdata[i];
-        y=animated_combo_table[x][0];
+        //y=animated_combo_table[x][0];
         
         //time to restart
-        if((animated_combo_table4[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -4386,11 +4409,11 @@ void zmap::update_combo_cycling()
     for(int i=0; i<32; i++)
     {
         x=prvscr.ffdata[i];
-        y=animated_combo_table2[x][0];
+        //y=animated_combo_table2[x][0];
         
         //time to restart
-        if((animated_combo_table24[y][1]>=combobuf[x].speed) &&
-                (combobuf[x].tile-combobuf[x].frames>=animated_combo_table2[x][1]-1) &&
+        if((combobuf[x].aclk>=combobuf[x].speed) &&
+                (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                 (combobuf[x].nextcombo!=0))
         {
             newdata[i]=combobuf[x].nextcombo;
@@ -4426,11 +4449,11 @@ void zmap::update_combo_cycling()
                 newcset[i]=-1;
                 
                 x=(prvlayers[j]).data[i];
-                y=animated_combo_table[x][0];
+                //y=animated_combo_table[x][0];
                 
                 //time to restart
-                if((animated_combo_table4[y][1]>=combobuf[x].speed) &&
-                        (combobuf[x].tile-combobuf[x].frames>=animated_combo_table[x][1]-1)	&&
+                if((combobuf[x].aclk>=combobuf[x].speed) &&
+                        (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1)	&&
                         (combobuf[x].nextcombo!=0))
                 {
                     newdata[i]=combobuf[x].nextcombo;
@@ -4447,11 +4470,11 @@ void zmap::update_combo_cycling()
             for(int i=0; i<176; i++)
             {
                 x=(prvlayers[j]).data[i];
-                y=animated_combo_table2[x][0];
+                //y=animated_combo_table2[x][0];
                 
                 //time to restart
-                if((animated_combo_table24[y][1]>=combobuf[x].speed) &&
-                        (combobuf[x].tile-combobuf[x].frames>=animated_combo_table2[x][1]-1) &&
+                if((combobuf[x].aclk>=combobuf[x].speed) &&
+                        (combobuf[x].tile-combobuf[x].frames>=combobuf[x].o_tile-1) &&
                         (combobuf[x].nextcombo!=0))
                 {
                     newdata[i]=combobuf[x].nextcombo;
@@ -4480,14 +4503,14 @@ void zmap::update_combo_cycling()
     {
         if(restartanim[i])
         {
-            combobuf[i].tile = animated_combo_table[i][1];
-            animated_combo_table4[animated_combo_table[i][0]][1]=0;
+            combobuf[i].tile = combobuf[i].o_tile;
+            combobuf[i].aclk = 0;
         }
         
         if(restartanim2[i])
         {
-            combobuf[i].tile = animated_combo_table2[i][1];
-            animated_combo_table4[animated_combo_table[i][0]][1]=0;
+            combobuf[i].tile = combobuf[i].o_tile;
+            combobuf[i].aclk = 0;
         }
     }
     
@@ -4896,7 +4919,8 @@ bool load_pals(const char *path, int startcset)
     
     if(section_id==ID_CSETS)
     {
-        if(readcolordata(f, &misc, ZELDA_VERSION, VERSION_BUILD, startcset, newerpdTOTAL-startcset, true)==0)
+        //if(readcolordata(f, &misc, ZELDA_VERSION, VERSION_BUILD, startcset, newerpdTOTAL-startcset, true)==0)
+        if(readcolordata(f, &misc, 0x250, 33, startcset, newerpdTOTAL-startcset, true)==0)
         {
             pack_fclose(f);
             loadlvlpal(Color);
@@ -4948,7 +4972,8 @@ bool load_dmaps(const char *path, int startdmap)
     
     if(section_id==ID_DMAPS)
     {
-        if(readdmaps(f, NULL, ZELDA_VERSION, VERSION_BUILD, startdmap, MAXDMAPS-startdmap, true)==0)
+        //if(readdmaps(f, NULL, ZELDA_VERSION, VERSION_BUILD, startdmap, MAXDMAPS-startdmap, true)==0)
+        if(readdmaps(f, NULL, 0x250, 33, startdmap, MAXDMAPS-startdmap, true)==0)
         {
             pack_fclose(f);
             return true;
@@ -5001,7 +5026,8 @@ bool load_combos(const char *path, int startcombo)
     
     if(section_id==ID_COMBOS)
     {
-        if(readcombos(f, NULL, ZELDA_VERSION, VERSION_BUILD, startcombo, MAXCOMBOS-startcombo, true)==0)
+        //if(readcombos(f, NULL, ZELDA_VERSION, VERSION_BUILD, startcombo, MAXCOMBOS-startcombo, true)==0)
+        if(readcombos(f, NULL, 0x250, 33, startcombo, MAXCOMBOS-startcombo, true)==0)
         {
             pack_fclose(f);
             return true;
@@ -5054,7 +5080,8 @@ bool load_tiles(const char *path, int starttile)
     
     if(section_id==ID_TILES)
     {
-        if(readtiles(f, newtilebuf, NULL, ZELDA_VERSION, VERSION_BUILD, starttile, NEWMAXTILES-starttile, false, true)==0)
+        //if(readtiles(f, newtilebuf, NULL, ZELDA_VERSION, VERSION_BUILD, starttile, NEWMAXTILES-starttile, false, true)==0)
+        if(readtiles(f, newtilebuf, NULL, 0x250, 33, starttile, NEWMAXTILES-starttile, false, true)==0)
         {
             pack_fclose(f);
             return true;
@@ -6013,7 +6040,8 @@ int load_quest(const char *filename, bool compressed, bool encrypted)
     {
         skip_flags[i]=0;
     }
-    
+    for(int i=0; i<qr_MAX; i++)
+                set_bit(quest_rules,i,0);
     int ret=loadquest(filename,&header,&misc,customtunes,true,compressed,encrypted,true,skip_flags);
 //  setPackfilePassword(NULL);
 
@@ -6218,11 +6246,210 @@ int writeheader(PACKFILE *f, zquestheader *Header)
             new_return(19);
         }
         
-        if(!p_putc(0,f)) //why are we doing this?
+        if(!p_putc(0,f)) //why are we doing this? 
+		//this is for map count, it seems. -Z
         {
             new_return(20);
         }
-        
+	
+	//v4
+	
+	if(!p_iputl(V_ZC_FIRST,f))
+	{
+	    new_return(21);
+	}
+	if(!p_iputl(V_ZC_SECOND,f))
+	{
+	    new_return(22);
+	}
+	if(!p_iputl(V_ZC_THIRD,f))
+	{
+	    new_return(23);
+	}
+	if(!p_iputl(V_ZC_FOURTH,f))
+	{
+	    new_return(24);
+	}
+	if(!p_iputl(V_ZC_ALPHA,f))
+	{
+	    new_return(25);
+	}
+	if(!p_iputl(V_ZC_BETA,f))
+	{
+	    new_return(26);
+	}
+	if(!p_iputl(V_ZC_GAMMA,f))
+	{
+	    new_return(27);
+	}
+	if(!p_iputl(V_ZC_RELEASE,f))
+	{
+	    new_return(28);
+	}
+	if(!p_iputw(BUILDTM_YEAR,f))
+	{
+	    new_return(29);
+	}
+	if(!p_putc(BUILDTM_MONTH,f))
+	{
+	    new_return(30);
+	}
+	if(!p_putc(BUILDTM_DAY,f))
+	{
+	    new_return(31);
+	}
+	if(!p_putc(V_ZC_HOUR,f))
+	{
+	    new_return(32);
+	}
+	if(!p_putc(V_ZC_MINUTE,f))
+	{
+	    new_return(33);
+	}
+	
+	
+	
+	char tempsig[256];
+	memset(tempsig, 0, 256);
+	strcpy(tempsig, DEV_SIGNOFF);
+	
+	if(!pfwrite(&tempsig,256,f))
+        {
+            new_return(34);
+        }
+	
+	char tempcompilersig[256];
+	memset(tempcompilersig, 0, 256);
+	strcpy(tempcompilersig, COMPILER_NAME);
+	
+	if(!pfwrite(&tempcompilersig,256,f))
+        {
+            new_return(35);
+        }
+	
+	char tempcompilerversion[256];
+	memset(tempcompilerversion, 0, 256); 
+	#ifdef _MSC_VER
+		zc_itoa(_MSC_VER,tempcompilerversion,10);
+	#else
+		strcpy(tempcompilerversion, COMPILER_VERSION);
+	#endif
+	
+	
+	if(!pfwrite(&tempcompilerversion,256,f))
+        {
+            new_return(36);
+        }
+	
+	char tempproductname[1024];
+	memset(tempproductname, 0, 1024);
+	strcpy(tempproductname, PROJECT_NAME);
+	
+	if(!pfwrite(&tempproductname,1024,f))
+        {
+            new_return(37);
+        }
+	
+	if(!p_putc(V_ZC_COMPILERSIG,f))
+	{
+	    new_return(38);
+	}
+	#ifdef _MSC_VER
+		if(!p_iputl((_MSC_VER / 100),f))
+		{
+		    new_return(39);
+		}
+	#else
+		if(!p_iputl(COMPILER_V_FIRST,f))
+		{
+		    new_return(39);
+		}
+	#endif
+	
+	
+
+	#ifdef _MSC_VER
+	if(!p_iputl((_MSC_VER % 100),f)) 
+	{
+	    new_return(41);
+	}
+	#else
+	if(!p_iputl(COMPILER_V_SECOND,f)) 
+	{
+	    new_return(41);
+	}
+	#endif
+	
+	#ifdef _MSC_VER
+		# if _MSC_VER >= 1400
+		if(!p_iputl((_MSC_FULL_VER % 100000),f))
+		{
+		    new_return(40);
+		}
+		# else
+		if(!p_iputl((_MSC_FULL_VER % 10000),f))
+		{
+		    new_return(40);
+		}
+		#endif
+	#else	
+	if(!p_iputl(COMPILER_V_THIRD,f))
+	{
+		    new_return(40);
+	}
+	#endif
+	
+	#ifdef _MSC_VER
+	if(!p_iputl((_MSC_BUILD),f))
+	{
+	    new_return(42);
+	}
+	#else
+	if(!p_iputl(COMPILER_V_FOURTH,f))
+	{
+	    new_return(42);
+	}
+	#endif
+	if(!p_iputw(V_ZC_DEVSIG,f))
+	{
+	    new_return(43);
+	}
+	
+	char tempmodulename[1024];
+	memset(tempmodulename, 0, 1024);
+	strcpy(tempmodulename, moduledata.module_name);
+	
+	if(!pfwrite(&tempmodulename,1024,f))
+        {
+            new_return(44);
+        }
+	
+	char tempdate[256];
+	memset(tempdate, 0, 256);
+	strcpy(tempdate, __DATE__);
+	
+	if(!pfwrite(&tempdate,256,f))
+        {
+            new_return(45);
+        }
+	char temptime[256];
+	memset(temptime, 0, 256);
+	strcpy(temptime, __TIME__);
+	
+	if(!pfwrite(&temptime,256,f))
+        {
+            new_return(46);
+        }
+	
+	
+	char temptimezone[6];
+	memset(temptimezone, 0, 6);
+	strcpy(temptimezone, __TIMEZONE__);
+	if(!pfwrite(&temptimezone,6,f))
+        {
+            new_return(47);
+        }
+	
         if(writecycle==0)
         {
             section_size=writesize;
@@ -6783,6 +7010,31 @@ int writedmaps(PACKFILE *f, word version, word build, word start_dmap, word max_
 			}
 		}
 	    }
+			if(!p_iputw(DMaps[i].active_sub_script,f))
+			{
+				new_return(34);
+			}
+			if(!p_iputw(DMaps[i].passive_sub_script,f))
+			{
+				new_return(35);
+			}
+			for(int q = 0; q < 8; ++q)
+			{
+				if(!p_iputl(DMaps[i].sub_initD[q],f))
+				{
+					new_return(36);
+				}
+			}
+			for(int q = 0; q < 8; ++q)
+			{
+				for(int w = 0; w < 65; ++w)
+				{
+					if(!p_putc(DMaps[i].sub_initD_label[q][w],f))
+					{
+						new_return(37);
+					}
+				}
+			}
         }
         
         if(writecycle==0)
@@ -7295,7 +7547,14 @@ int writemisc(PACKFILE *f, zquestheader *Header, miscQdata *Misc)
 	//V_MISC >= 11
 	if(!p_iputl(Misc->zscript_last_compiled_version,f))
                      new_return(23);
-        
+		
+		//V_MISC >= 12
+		for(int q = 0; q < sprMAX; ++q)
+		{
+			if(!p_putc(Misc->sprites[q],f))
+				new_return(24);
+		}
+		
         if(writecycle==0)
         {
             section_size=writesize;
@@ -8754,6 +9013,37 @@ int writecombos(PACKFILE *f, word version, word build, word start_combo, word ma
 			new_return(24);
 	        }
 	    }
+	    for ( int q = 0; q < NUM_COMBO_ATTRIBUTES; q++ )
+	    {
+		if(!p_putc(combobuf[i].attribytes[q],f))
+		{
+			new_return(25);
+		}
+	    }
+	    if(!p_iputw(combobuf[i].script,f))
+		{
+			new_return(26);
+		}
+	    for ( int q = 0; q < 2; q++ )
+	    {
+		if(!p_iputl(combobuf[i].initd[q],f))
+		{
+			new_return(27);
+		}
+	    }
+	    if(!p_iputl(combobuf[i].o_tile,f))
+		{
+			new_return(28);
+		}
+	    if(!p_putc(combobuf[i].cur_frame,f))
+		{
+			new_return(29);
+		}
+	    if(!p_putc(combobuf[i].aclk,f))
+		{
+			new_return(30);
+		}
+	    
 		    
         }
         
@@ -9095,6 +9385,44 @@ int writestrings(PACKFILE *f, word version, word build, word start_msgstr, word 
             {
                 return qe_invalid;
             }
+			
+			for(int q = 0; q < 4; ++q)
+			{
+				if(!p_putc(MsgStrings[i].margins[q],f))
+				{
+					return qe_invalid;
+				}
+			}
+			
+			if(!p_iputl(MsgStrings[i].portrait_tile,f))
+			{
+				return qe_invalid;
+			}
+			
+			if(!p_putc(MsgStrings[i].portrait_cset,f))
+			{
+				return qe_invalid;
+			}
+			
+			if(!p_putc(MsgStrings[i].portrait_x,f))
+			{
+				return qe_invalid;
+			}
+			
+			if(!p_putc(MsgStrings[i].portrait_y,f))
+			{
+				return qe_invalid;
+			}
+			
+			if(!p_putc(MsgStrings[i].portrait_tw,f))
+			{
+				return qe_invalid;
+			}
+			
+			if(!p_putc(MsgStrings[i].portrait_th,f))
+			{
+				return qe_invalid;
+			}
             
             if(!p_putc(MsgStrings[i].sfx,f))
             {
@@ -10002,7 +10330,8 @@ int writeguys(PACKFILE *f, zquestheader *Header)
 			new_return(98);
 		}
 	    }
-		
+			if(!p_putc(guysbuf[i].moveflags,f))
+				new_return(99);
         }
         
         if(writecycle==0)
@@ -10063,7 +10392,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         //finally...  section data
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)walkspr[i][spr_tile],f))
+            if(!p_iputl(walkspr[i][spr_tile],f))
             {
                 new_return(5);
             }
@@ -10081,7 +10410,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)stabspr[i][spr_tile],f))
+            if(!p_iputl(stabspr[i][spr_tile],f))
             {
                 new_return(6);
             }
@@ -10099,7 +10428,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)slashspr[i][spr_tile],f))
+            if(!p_iputl(slashspr[i][spr_tile],f))
             {
                 new_return(7);
             }
@@ -10117,7 +10446,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)floatspr[i][spr_tile],f))
+            if(!p_iputl(floatspr[i][spr_tile],f))
             {
                 new_return(8);
             }
@@ -10135,7 +10464,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)swimspr[i][spr_tile],f))
+            if(!p_iputl(swimspr[i][spr_tile],f))
             {
                 new_return(8);
             }
@@ -10153,7 +10482,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)divespr[i][spr_tile],f))
+            if(!p_iputl(divespr[i][spr_tile],f))
             {
                 new_return(9);
             }
@@ -10171,7 +10500,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)poundspr[i][spr_tile],f))
+            if(!p_iputl(poundspr[i][spr_tile],f))
             {
                 new_return(10);
             }
@@ -10187,7 +10516,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
             }
         }
         
-        if(!p_iputw((word)castingspr[spr_tile],f))
+        if(!p_iputl(castingspr[spr_tile],f))
         {
             new_return(11);
         }
@@ -10204,9 +10533,9 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<2; i++)
         {
-            for(int j=0; j<2; j++)
+            for(int j=0; j<spr_holdmax; j++)
             {
-                if(!p_iputw((word)holdspr[i][j][spr_tile],f))
+                if(!p_iputl(holdspr[i][j][spr_tile],f))
                 {
                     new_return(12);
                 }
@@ -10225,7 +10554,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)jumpspr[i][spr_tile],f))
+            if(!p_iputl(jumpspr[i][spr_tile],f))
             {
                 new_return(13);
             }
@@ -10243,7 +10572,7 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         
         for(int i=0; i<4; i++)
         {
-            if(!p_iputw((word)chargespr[i][spr_tile],f))
+            if(!p_iputl(chargespr[i][spr_tile],f))
             {
                 new_return(13);
             }
@@ -10263,7 +10592,226 @@ int writelinksprites(PACKFILE *f, zquestheader *Header)
         {
             new_return(14);
         }
-        
+		
+		//{ V_LINKSPRITES >= 7
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(frozenspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)frozenspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)frozenspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(frozen_waterspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)frozen_waterspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)frozen_waterspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(onfirespr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)onfirespr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)onfirespr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(onfire_waterspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)onfire_waterspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)onfire_waterspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(diggingspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)diggingspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)diggingspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(usingrodspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)usingrodspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)usingrodspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(usingcanespr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)usingcanespr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)usingcanespr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(pushingspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)pushingspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)pushingspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(liftingspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)liftingspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)liftingspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(liftingheavyspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)liftingheavyspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)liftingheavyspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(stunnedspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)stunnedspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)stunnedspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(stunned_waterspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)stunned_waterspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)stunned_waterspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(drowningspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)drowningspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)drowningspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(drowning_lavaspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)drowning_lavaspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)drowning_lavaspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(fallingspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)fallingspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)fallingspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(shockedspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)shockedspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)shockedspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(shocked_waterspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)shocked_waterspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)shocked_waterspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(pullswordspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)pullswordspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)pullswordspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(readingspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)readingspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)readingspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(slash180spr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)slash180spr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)slash180spr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(slashZ4spr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)slashZ4spr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)slashZ4spr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(dashspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)dashspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)dashspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 4; ++q)
+		{
+			if(!p_iputl(bonkspr[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)bonkspr[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)bonkspr[q][spr_extend],f))
+				new_return(15);
+		}
+		for(int q = 0; q < 3; ++q) //Not directions; number of medallion sprs
+		{
+			if(!p_iputl(medallionsprs[q][spr_tile],f))
+				new_return(15);
+			if(!p_putc((byte)medallionsprs[q][spr_flip],f))
+				new_return(15);
+			if(!p_putc((byte)medallionsprs[q][spr_extend],f))
+				new_return(15);
+		}
+		//}
+		
         if(writecycle==0)
         {
             section_size=writesize;
@@ -10548,18 +11096,19 @@ int write_one_subscreen(PACKFILE *f, zquestheader *Header, int i)
     new_return(0);
 }
 
-extern ffscript *ffscripts[NUMSCRIPTFFC];
-extern ffscript *itemscripts[NUMSCRIPTITEM];
-extern ffscript *guyscripts[NUMSCRIPTGUYS];
-extern ffscript *wpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *wpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *lwpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *ewpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *globalscripts[NUMSCRIPTGLOBAL];
-extern ffscript *linkscripts[NUMSCRIPTLINK];
-extern ffscript *screenscripts[NUMSCRIPTSCREEN];
-extern ffscript *dmapscripts[NUMSCRIPTSDMAP];
-extern ffscript *itemspritescripts[NUMSCRIPTSITEMSPRITE];
+extern script_data *ffscripts[NUMSCRIPTFFC];
+extern script_data *itemscripts[NUMSCRIPTITEM];
+extern script_data *guyscripts[NUMSCRIPTGUYS];
+extern script_data *wpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *wpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *lwpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *ewpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *globalscripts[NUMSCRIPTGLOBAL];
+extern script_data *linkscripts[NUMSCRIPTLINK];
+extern script_data *screenscripts[NUMSCRIPTSCREEN];
+extern script_data *dmapscripts[NUMSCRIPTSDMAP];
+extern script_data *itemspritescripts[NUMSCRIPTSITEMSPRITE];
+extern script_data *comboscripts[NUMSCRIPTSCOMBODATA];
 
 int writeffscript(PACKFILE *f, zquestheader *Header)
 {
@@ -10567,6 +11116,7 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
     dword section_version  = V_FFSCRIPT;
     dword section_cversion = CV_FFSCRIPT;
     dword section_size     = 0;
+	dword zasmmeta_version = METADATA_V;
     byte numscripts        = 0;
     numscripts = numscripts; //to avoid unused variables warnings
     
@@ -10587,6 +11137,11 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         new_return(3);
     }
     
+    if(!p_iputw(zasmmeta_version,f))
+    {
+        new_return(4);
+    }
+    
     for(int writecycle=0; writecycle<2; ++writecycle)
     {
         fake_pack_writing=(writecycle==0);
@@ -10594,7 +11149,7 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         //section size
         if(!p_iputl(section_size,f))
         {
-            new_return(4);
+            new_return(5);
         }
         
         writesize=0;
@@ -10719,6 +11274,17 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
                 new_return(ret);
             }
         }
+	al_trace("About to write combo script pt 1.\n");
+	for(int i=0; i<NUMSCRIPTSCOMBODATA; i++)
+        {
+            int ret = write_one_ffscript(f, Header, i, &comboscripts[i]);
+            fake_pack_writing=(writecycle==0);
+            
+            if(ret!=0)
+            {
+                new_return(ret);
+            }
+        }
         
         if(!p_iputl((long)zScript.size(), f))
         {
@@ -10732,9 +11298,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         
         word numffcbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numffcbindings++;
             }
@@ -10745,21 +11311,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2003);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = ffcmap.begin(); it != ffcmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2004);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2005);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2006);
                 }
@@ -10768,9 +11334,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         
         word numglobalbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numglobalbindings++;
             }
@@ -10781,21 +11347,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2007);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = globalmap.begin(); it != globalmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2008);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2009);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2010);
                 }
@@ -10804,9 +11370,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         
         word numitembindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numitembindings++;
             }
@@ -10817,21 +11383,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2011);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = itemmap.begin(); it != itemmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2012);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2013);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2014);
                 }
@@ -10842,9 +11408,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         //npc scripts
         word numnpcbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = npcmap.begin(); it != npcmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = npcmap.begin(); it != npcmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numnpcbindings++;
             }
@@ -10855,21 +11421,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2015);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = npcmap.begin(); it != npcmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = npcmap.begin(); it != npcmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2016);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2017);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2018);
                 }
@@ -10880,9 +11446,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
 	
 	word numlwpnbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = lwpnmap.begin(); it != lwpnmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = lwpnmap.begin(); it != lwpnmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numlwpnbindings++;
             }
@@ -10893,21 +11459,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2019);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = lwpnmap.begin(); it != lwpnmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = lwpnmap.begin(); it != lwpnmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2020);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2021);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2022);
                 }
@@ -10921,9 +11487,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
 	
         word numewpnbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = ewpnmap.begin(); it != ewpnmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = ewpnmap.begin(); it != ewpnmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numewpnbindings++;
             }
@@ -10934,21 +11500,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2023);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = ewpnmap.begin(); it != ewpnmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = ewpnmap.begin(); it != ewpnmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2024);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2025);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2026);
                 }
@@ -10958,9 +11524,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
 	//link scripts
 	word numlinkbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = linkmap.begin(); it != linkmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = linkmap.begin(); it != linkmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numlinkbindings++;
             }
@@ -10971,21 +11537,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2027);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = linkmap.begin(); it != linkmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = linkmap.begin(); it != linkmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2028);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2029);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2030);
                 }
@@ -10995,9 +11561,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
 	//dmap scripts
 	word numdmapbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = dmapmap.begin(); it != dmapmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = dmapmap.begin(); it != dmapmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numdmapbindings++;
             }
@@ -11008,21 +11574,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2031);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = dmapmap.begin(); it != dmapmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = dmapmap.begin(); it != dmapmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2032);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2033);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2034);
                 }
@@ -11032,9 +11598,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
 	//screen scripts
 	word numscreenbindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = screenmap.begin(); it != screenmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = screenmap.begin(); it != screenmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numscreenbindings++;
             }
@@ -11045,21 +11611,21 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2035);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = screenmap.begin(); it != screenmap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = screenmap.begin(); it != screenmap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2036);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2037);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2038);
                 }
@@ -11068,9 +11634,9 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
         //item sprite scripts
 	word numitemspritebindings=0;
         
-        for(std::map<int, pair<string, string> >::iterator it = itemspritemap.begin(); it != itemspritemap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = itemspritemap.begin(); it != itemspritemap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 numitemspritebindings++;
             }
@@ -11081,23 +11647,61 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
             new_return(2039);
         }
         
-        for(std::map<int, pair<string, string> >::iterator it = itemspritemap.begin(); it != itemspritemap.end(); it++)
+        for(std::map<int, script_slot_data >::iterator it = itemspritemap.begin(); it != itemspritemap.end(); it++)
         {
-            if(it->second.second != "")
+            if(it->second.scriptname != "")
             {
                 if(!p_iputw(it->first,f))
                 {
                     new_return(2040);
                 }
                 
-                if(!p_iputl((long)it->second.second.size(), f))
+                if(!p_iputl((long)it->second.scriptname.size(), f))
                 {
                     new_return(2041);
                 }
                 
-                if(!pfwrite((void *)it->second.second.c_str(), (long)it->second.second.size(),f))
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
                 {
                     new_return(2042);
+                }
+            }
+        }
+	
+	//combo scripts
+	al_trace("About to write combo script pt 2.\n");
+	word numcombobindings=0;
+        
+        for(std::map<int, script_slot_data >::iterator it = comboscriptmap.begin(); it != comboscriptmap.end(); it++)
+        {
+            if(it->second.scriptname != "")
+            {
+                numcombobindings++;
+            }
+        }
+	al_trace("About to write combo script pt 3.\n");
+	if(!p_iputw(numcombobindings, f))
+        {
+            new_return(2043);
+        }
+        al_trace("About to write combo script pt 4.\n");
+        for(std::map<int, script_slot_data >::iterator it = comboscriptmap.begin(); it != comboscriptmap.end(); it++)
+        {
+            if(it->second.scriptname != "")
+            {
+                if(!p_iputw(it->first,f))
+                {
+                    new_return(2044);
+                }
+                
+                if(!p_iputl((long)it->second.scriptname.size(), f))
+                {
+                    new_return(2045);
+                }
+                
+                if(!pfwrite((void *)it->second.scriptname.c_str(), (long)it->second.scriptname.size(),f))
+                {
+                    new_return(2046);
                 }
             }
         }
@@ -11122,7 +11726,7 @@ int writeffscript(PACKFILE *f, zquestheader *Header)
     //the irony is that it causes an "unreachable code" warning.
 }
 
-int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, ffscript **script)
+int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, script_data **script)
 {
     //these are here to bypass compiler warnings about unused arguments
     Header=Header;
@@ -11132,7 +11736,7 @@ int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, ffscript **scri
     
     for(int j=0;; j++)
     {
-        if((*script)[j].command==0xFFFF)
+        if((*script)->zasm[j].command==0xFFFF)
         {
             num_commands = j+1;
             break;
@@ -11143,30 +11747,111 @@ int write_one_ffscript(PACKFILE *f, zquestheader *Header, int i, ffscript **scri
     {
         new_return(6);
     }
-    
+	
+	//Metadata
+	if(!p_iputw((*script)->meta.zasm_v,f))
+	{
+		new_return(7);
+	}
+	
+	if(!p_iputw((*script)->meta.meta_v,f))
+	{
+		new_return(8);
+	}
+	
+	if(!p_iputw((*script)->meta.ffscript_v,f))
+	{
+		new_return(9);
+	}
+	
+	if(!p_putc((*script)->meta.script_type,f))
+	{
+		new_return(10);
+	}
+	
+	for(int q = 0; q < 8; ++q)
+	{
+		for(int c = 0; c < 33; ++c)
+		{
+			if(!p_putc((*script)->meta.run_idens[q][c],f))
+			{
+				new_return(11);
+			}
+		}
+	}
+	
+	for(int q = 0; q < 8; ++q)
+	{
+		if(!p_putc((*script)->meta.run_types[q],f))
+		{
+			new_return(12);
+		}
+	}
+	
+	if(!p_putc((*script)->meta.flags,f))
+	{
+		new_return(13);
+	}
+	
+	if(!p_iputw((*script)->meta.compiler_v1,f))
+	{
+		new_return(14);
+	}
+	
+	if(!p_iputw((*script)->meta.compiler_v2,f))
+	{
+		new_return(15);
+	}
+	
+	if(!p_iputw((*script)->meta.compiler_v3,f))
+	{
+		new_return(16);
+	}
+	
+	if(!p_iputw((*script)->meta.compiler_v4,f))
+	{
+		new_return(17);
+	}
+	
+	for(int c = 0; c < 33; ++c)
+	{
+		if(!p_putc((*script)->meta.script_name[c],f))
+		{
+			new_return(18);
+		}
+	}
+	
+	for(int c = 0; c < 33; ++c)
+	{
+		if(!p_putc((*script)->meta.author[c],f))
+		{
+			new_return(19);
+		}
+	}
+	
     for(int j=0; j<num_commands; j++)
     {
         
-        if(!p_iputw((*script)[j].command,f))
+        if(!p_iputw((*script)->zasm[j].command,f))
         {
-            new_return(7);
+            new_return(20);
         }
         
-        if((*script)[j].command==0xFFFF)
+        if((*script)->zasm[j].command==0xFFFF)
         {
             break;
         }
         else
         {
-		//al_trace("Current FFScript XCommand Being Written: %d\n", (*script)[j].command);
-            if(!p_iputl((*script)[j].arg1,f))
+		//al_trace("Current FFScript XCommand Being Written: %d\n", (*script)->zasm[j].command);
+            if(!p_iputl((*script)->zasm[j].arg1,f))
             {
-                new_return(8);
+                new_return(21);
             }
             
-            if(!p_iputl((*script)[j].arg2,f))
+            if(!p_iputl((*script)->zasm[j].arg2,f))
             {
-                new_return(9);
+                new_return(22);
             }
         }
     }
@@ -11628,6 +12313,10 @@ int writeinitdata(PACKFILE *f, zquestheader *Header)
             new_return(72);
         }
 	if(!p_iputw(zinit.nArrowmax,f))
+        {
+            new_return(73);
+        }
+	if(!p_iputw(zinit.heroStep,f))
         {
             new_return(73);
         }

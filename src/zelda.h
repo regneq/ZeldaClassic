@@ -1,4 +1,4 @@
-//--------------------------------------------------------
+	//--------------------------------------------------------
 //  Zelda Classic
 //  by Jeremy Craner, 1999-2000
 //
@@ -26,10 +26,15 @@
 #include "gamedata.h"
 #include "zsys.h"
 #include "script_drawing.h"
+#include "zfix.h"
 
 int isFullScreen();
 int onFullscreen();
 
+#if DEVLEVEL > 0
+extern bool dev_logging;
+extern bool dev_debug;
+#endif
 
 #define  MAXMIDIS     ZC_MIDI_COUNT+MAXCUSTOMTUNES
 
@@ -65,7 +70,7 @@ int onFullscreen();
 /******** Enums & Structs ********/
 /*********************************/
 
-enum { qQUIT=1, qRESET, qEXIT, qGAMEOVER, qCONT, qSAVE, qSAVECONT, qWON, qERROR };
+enum { qQUIT=1, qRESET, qEXIT, qGAMEOVER, qCONT, qSAVE, qSAVECONT, qWON, qRELOAD, qERROR, qINCQST, qLAST };
 
 // "special" walk flags
 enum
@@ -111,15 +116,17 @@ void set_debug(bool d);
 
 void Z_eventlog(const char *format, ...);
 void Z_scripterrlog(const char * const format, ...);
+void zprint(const char * const format, ...);
+void zprint2(const char * const format, ...);
 
 // zelda.cc
 void addLwpn(int x,int y,int z,int id,int type,int power,int dir, int parentid);
 void addLwpnEx(int x,int y,int z,int id,int type,int power,int dir, int parentitem, int parentid, byte script_gen);
 void ALLOFF(bool messagesToo = true, bool decorationsToo = true);
 void centerLink();
-fix  LinkX();
-fix  LinkY();
-fix  LinkZ();
+zfix  LinkX();
+zfix  LinkY();
+zfix  LinkZ();
 int  LinkHClk();
 int  LinkNayrusLoveShieldClk();
 int  LinkHoverClk();
@@ -132,10 +139,10 @@ void setSwordClk(int newclk);
 void setItemClk(int newclk);
 int  LinkLStep();
 void LinkCheckItems();
-fix  LinkModifiedX();
-fix  LinkModifiedY();
-fix  GuyX(int j);
-fix  GuyY(int j);
+zfix  LinkModifiedX();
+zfix  LinkModifiedY();
+zfix  GuyX(int j);
+zfix  GuyY(int j);
 int  GuyID(int j);
 int  GuyMisc(int j);
 void StunGuy(int j,int stun);
@@ -143,17 +150,25 @@ bool  GuySuperman(int j);
 int  GuyCount();
 int  LinkDir();
 void add_grenade(int wx, int wy, int wz, int size, int parentid);
-fix distance(int x1, int y1, int x2, int y2);
+zfix distance(int x1, int y1, int x2, int y2);
 bool getClock();
 void setClock(bool state);
 void CatchBrang();;
 int LinkAction();
 
+extern int DMapEditorLastMaptileUsed;
+
 void do_dcounters();
+void game_loop();
 
 void clearmsgnext(int str);
 void donewmsg(int str);
 int donew_shop_msg(int itmstr, int shopstr);
+void msg_bg(MsgStr const& msg);
+void msg_prt();
+void blit_msgstr_bg(BITMAP* dest, int x, int y, int dx, int dy, int w, int h);
+void blit_msgstr_fg(BITMAP* dest, int x, int y, int dx, int dy, int w, int h);
+void blit_msgstr_prt(BITMAP* dest, int x, int y, int dx, int dy, int w, int h);
 void dismissmsg();
 void dointro();
 void init_dmap();
@@ -196,6 +211,8 @@ Graphics->Tint(TINT_MODE_DISTRIBUTED+TINT_VIOLET)
 extern short int lastMonoPreset;
 extern short int lastCustomTint[4];
 
+//extern byte __isZQuest;
+
 void setMonochromatic(int mode); //GFX are monochrome. 
 void setMonochrome(bool state); //GFX are monochrome. 
 bool isMonochrome();
@@ -206,6 +223,7 @@ void shiftColour(int rshift, int gshift, int bshift, int base);
 void doClearTint();
 void restoreTint();
 void restoreMonoPreset();
+void refreshTints();
 
 void doGFXMonohue(int _r, int _g, int _b, bool m);
 void doTint(int _r, int _g, int _b);
@@ -239,7 +257,8 @@ INLINE void sfx(int index,int pan)
     sfx(index,vbound(pan, 0, 255) ,false);
 }
 
-bool isSideViewGravity(int t);
+bool isSideViewGravity(int t = 0);
+bool isSideViewLink(int t = 0);
 
 //INLINE void SCRFIX() { putpixel(screen,0,0,getpixel(screen,0,0)); }
 
@@ -265,7 +284,8 @@ extern int strike_hint;
 
 extern RGB_MAP rgb_table;
 extern COLOR_MAP trans_table, trans_table2;
-extern BITMAP     *framebuf, *scrollbuf, *tmp_bmp, *tmp_scr, *screen2, *fps_undo, *msgbmpbuf, *msgdisplaybuf, *pricesdisplaybuf, *tb_page[3], *real_screen, *temp_buf, *temp_buf2, *prim_bmp, *script_menu_buf;
+extern BITMAP     *framebuf, *scrollbuf, *tmp_bmp, *tmp_scr, *screen2, *fps_undo, *msg_txt_bmp_buf, *msg_portrait_display_buf, *msg_txt_display_buf, *msg_bg_display_buf, *msg_bg_bmp_buf, *msg_portrait_bmp_buf, *pricesdisplaybuf, *tb_page[3], *real_screen, *temp_buf, *temp_buf2, *prim_bmp, *script_menu_buf, *f6_menu_buf;
+extern BITMAP *zcmouse[4];
 extern DATAFILE *data, *sfxdata, *fontsdata, *mididata;
 extern SAMPLE   wav_refill;
 extern FONT  *nfont, *zfont, *z3font, *z3smallfont, *deffont, *lfont, *lfont_l, *pfont, *mfont, *ztfont, *sfont, *sfont2, *sfont3, *spfont, *ssfont1, *ssfont2, *ssfont3, *ssfont4, *gblafont,
@@ -324,6 +344,9 @@ extern word     msgclk, msgstr, msgpos, msgptr, msg_count, msgcolour, msgspeed,m
        msg_ypos,
        cursor_x,
        cursor_y;
+extern byte msg_margins[4];
+extern int prt_tile;
+extern byte prt_cset, prt_x, prt_y, prt_tw, prt_th;
 extern bool msg_onscreen, msg_active,msgspace;
 extern FONT	*msgfont;
 extern word     door_combo_set_count;
@@ -332,6 +355,7 @@ extern short    lensclk;
 extern int     lensid;
 extern int    Bpos;
 extern byte screengrid[22];
+extern byte screengrid_layer[2][22];
 extern byte ffcgrid[4];
 extern volatile int logic_counter;
 #ifdef _SCRIPT_COUNTER
@@ -358,7 +382,7 @@ extern bool usebombpal;
 extern int slot_arg, slot_arg2;
 extern char *SAVE_FILE;
 
-extern int homescr,currscr,frame,currmap,dlevel,warpscr,worldscr;
+extern int homescr,currscr,frame,currmap,dlevel,warpscr,worldscr,scrolling_scr,scrolling_map;
 extern int newscr_clk,opendoors,currdmap,fadeclk,currgame,listpos;
 extern int lastentrance,lastentrance_dmap, prices[3],loadside, Bwpn, Awpn;
 extern int digi_volume,midi_volume,sfx_volume,emusic_volume,currmidi,hasitem,whistleclk,pan_style;
@@ -379,7 +403,7 @@ extern float avgfps;
 
 extern bool do_cheat_goto, do_cheat_light;
 extern bool blockmoving;
-extern bool Throttlefps, ClickToFreeze, Paused, Advance, ShowFPS, Showpal, Playing, FrameSkip, TransLayers, disableClickToFreeze;
+extern bool Throttlefps, MenuOpen, ClickToFreeze, Paused, Advance, ShowFPS, Showpal, Playing, FrameSkip, TransLayers, disableClickToFreeze;
 extern bool refreshpal,blockpath,__debug,loaded_guys,freeze_guys;
 extern bool loaded_enemies,drawguys,details,debug_enabled,watch;
 extern bool Udown,Ddown,Ldown,Rdown,Adown,Bdown,Sdown,Mdown,LBdown,RBdown,Pdown,Ex1down,Ex2down,Ex3down,Ex4down,AUdown,ADdown,ALdown,ARdown,F12,F11,F5,keyI, keyQ;
@@ -408,18 +432,20 @@ extern mapscr tmpscr[2];
 extern mapscr tmpscr2[6];
 extern mapscr tmpscr3[6];
 extern char   sig_str[44];
-extern ffscript *ffscripts[NUMSCRIPTFFC];
-extern ffscript *itemscripts[NUMSCRIPTITEM];
-extern ffscript *globalscripts[NUMSCRIPTGLOBAL];
+extern script_data *ffscripts[NUMSCRIPTFFC];
+extern script_data *itemscripts[NUMSCRIPTITEM];
+extern script_data *globalscripts[NUMSCRIPTGLOBAL];
 
-extern ffscript *guyscripts[NUMSCRIPTGUYS];
-extern ffscript *wpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *lwpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *ewpnscripts[NUMSCRIPTWEAPONS];
-extern ffscript *linkscripts[NUMSCRIPTLINK];
-extern ffscript *screenscripts[NUMSCRIPTSCREEN];
-extern ffscript *dmapscripts[NUMSCRIPTSDMAP];
-extern ffscript *itemspritescripts[NUMSCRIPTSITEMSPRITE];
+extern script_data *guyscripts[NUMSCRIPTGUYS];
+extern script_data *wpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *lwpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *ewpnscripts[NUMSCRIPTWEAPONS];
+extern script_data *linkscripts[NUMSCRIPTLINK];
+extern script_data *screenscripts[NUMSCRIPTSCREEN];
+extern script_data *dmapscripts[NUMSCRIPTSDMAP];
+extern script_data *itemspritescripts[NUMSCRIPTSITEMSPRITE];
+extern script_data *comboscripts[NUMSCRIPTSCOMBODATA];
+
 extern SAMPLE customsfxdata[WAV_COUNT];
 extern int sfxdat;
 
@@ -431,10 +457,10 @@ struct ScriptOwner
 	void clear();
 };
 
-#define MAX_ZCARRAY_SIZE	4096
+#define NUM_ZSCRIPT_ARRAYS	4096
 typedef ZCArray<long> ZScriptArray;
-extern ZScriptArray localRAM[MAX_ZCARRAY_SIZE];
-extern ScriptOwner arrayOwner[MAX_ZCARRAY_SIZE];
+extern ZScriptArray localRAM[NUM_ZSCRIPT_ARRAYS];
+extern ScriptOwner arrayOwner[NUM_ZSCRIPT_ARRAYS];
 
 dword getNumGlobalArrays();
 
